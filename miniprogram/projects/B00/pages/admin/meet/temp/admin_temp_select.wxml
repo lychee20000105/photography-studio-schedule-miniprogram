@@ -1,0 +1,16 @@
+<block wx:if="{{isAdmin}}">
+	<view class="page">
+		<view wx:for="{{list}}" wx:key="id" class="card">
+			<view class="main" bindtap="bindSelectTap" data-idx="{{index}}">
+				<view class="name">{{item.name}}</view>
+				<view class="meta">{{item.times.length}}个时段 · {{item.addTime}}</view>
+				<view class="times">
+					<text wx:for="{{item.times}}" wx:key="index">{{item.start}}-{{item.end}}</text>
+				</view>
+			</view>
+			<view class="del" bindtap="bindDeleteTap" data-id="{{item.id}}">删除</view>
+		</view>
+
+		<view wx:if="{{!list.length}}" class="empty">暂无可选模板</view>
+	</view>
+</block>

@@ -1,0 +1,60 @@
+page {
+	background: #f6f7f9;
+}
+
+.page {
+	padding: 24rpx;
+}
+
+.card {
+	background: #fff;
+	border-radius: 14rpx;
+	padding: 24rpx;
+	margin-bottom: 18rpx;
+	display: flex;
+	align-items: flex-start;
+}
+
+.main {
+	flex: 1;
+	min-width: 0;
+}
+
+.name {
+	font-size: 30rpx;
+	font-weight: 900;
+	color: #111827;
+}
+
+.meta {
+	font-size: 24rpx;
+	color: #8b9099;
+	margin-top: 8rpx;
+}
+
+.times {
+	margin-top: 12rpx;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8rpx;
+}
+
+.times text {
+	background: #eef6ff;
+	color: #2499f2;
+	border-radius: 8rpx;
+	padding: 6rpx 10rpx;
+	font-size: 22rpx;
+}
+
+.del {
+	color: #dc2626;
+	font-size: 26rpx;
+	margin-left: 20rpx;
+}
+
+.empty {
+	text-align: center;
+	color: #8b9099;
+	padding: 80rpx 0;
+}

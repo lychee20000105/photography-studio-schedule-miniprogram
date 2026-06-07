@@ -1,0 +1,40 @@
+<view class="page">
+	<view wx:if="{{!isLoad}}" class="empty">加载中...</view>
+	<view wx:if="{{isLoad}}">
+		<view class="block">
+			<view class="head">
+				<text>{{form._id?'编辑员工':'新增员工'}}</text>
+				<view bindtap="bindNewTap">清空</view>
+			</view>
+			<view class="tips">新员工保存后默认未绑定微信，请员工在“我的”里用手机号和绑定码绑定。</view>
+			<view class="row"><text>姓名</text><input value="{{form.STAFF_NAME}}" data-field="STAFF_NAME" bindinput="bindInput" placeholder="员工姓名" /></view>
+			<view class="row"><text>手机号</text><input type="number" value="{{form.STAFF_MOBILE}}" data-field="STAFF_MOBILE" bindinput="bindInput" placeholder="11位手机号" /></view>
+			<view class="row"><text>绑定码</text><input value="{{form.STAFF_BIND_CODE}}" data-field="STAFF_BIND_CODE" bindinput="bindInput" placeholder="工号或绑定码" /></view>
+			<view class="switches">
+				<view>小程序管理员 <switch checked="{{form.STAFF_IS_ADMIN==1}}" bindchange="bindAdminChange" color="#ff2d62" /></view>
+				<view>启用 <switch checked="{{form.STAFF_STATUS==1}}" bindchange="bindStatusChange" color="#ff2d62" /></view>
+			</view>
+			<view class="sub">岗位</view>
+			<view class="chips">
+				<view wx:for="{{roleNodes}}" wx:key="name" class="{{item.checked?'on':''}}" data-role="{{item.name}}" bindtap="bindRoleTap">{{item.name}}</view>
+			</view>
+			<view class="sub rule-head">提成规则 <text bindtap="bindAddRuleTap">添加</text></view>
+			<view wx:for="{{form.STAFF_RULES}}" wx:key="index" class="rule">
+				<picker range="{{roles}}" bindchange="bindRuleRoleChange" data-idx="{{index}}"><view>{{item.roleName}}</view></picker>
+				<picker range="{{modes}}" range-key="label" bindchange="bindRuleModeChange" data-idx="{{index}}"><view>{{item.mode=='fixed'?'固定金额':item.mode=='manual'?'手动填写':item.mode=='none'?'不计提成':'按比例'}}</view></picker>
+				<input type="digit" value="{{item.percent}}" placeholder="比例%" data-field="percent" data-idx="{{index}}" bindinput="bindRuleInput" />
+				<input type="digit" value="{{item.amount}}" placeholder="金额" data-field="amount" data-idx="{{index}}" bindinput="bindRuleInput" />
+				<text bindtap="bindRuleDelTap" data-idx="{{index}}">删</text>
+			</view>
+			<button class="submit" bindtap="bindSubmitTap">保存员工</button>
+		</view>
+
+		<view class="list-head">员工列表</view>
+		<view wx:if="{{list.length==0}}" class="empty">暂无员工</view>
+		<view wx:for="{{list}}" wx:key="_id" class="card" bindtap="bindEditTap" data-idx="{{index}}">
+			<view class="name">{{item.STAFF_NAME}} <text wx:if="{{item.STAFF_STATUS==0}}">停用</text><text wx:if="{{item.STAFF_IS_ADMIN==1}}">管理员</text></view>
+			<view class="meta">{{item.STAFF_MOBILE}} ｜ {{item.ROLE_TEXT}}</view>
+			<view class="meta">绑定码 {{item.STAFF_BIND_CODE}} ｜ {{item.BIND_TEXT}}</view>
+		</view>
+	</view>
+</view>

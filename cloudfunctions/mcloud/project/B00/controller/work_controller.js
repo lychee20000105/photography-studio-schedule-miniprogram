@@ -45,6 +45,15 @@ class WorkController extends BaseProjectController {
 		return await service.getDayList(this._userId, input.day, input.scope || 'all');
 	}
 
+	async getOrderList() {
+		let input = this.validateData({
+			month: 'string|name=月份',
+			scope: 'string|name=范围',
+		});
+		let service = new WorkService();
+		return await service.getOrderList(this._userId, input.month || '', input.scope || 'month');
+	}
+
 	async getOrderDetail() {
 		let input = this.validateData({
 			id: 'must|id|name=订单ID',

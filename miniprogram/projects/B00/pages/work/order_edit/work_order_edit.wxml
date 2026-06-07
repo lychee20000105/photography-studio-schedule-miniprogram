@@ -1,9 +1,9 @@
 <view class="page" wx:if="{{options}}">
 	<view class="block">
 		<view class="row">
-			<text class="label">日期时间 *</text>
+			<text class="label">档期日期</text>
 			<picker mode="date" value="{{order.ORDER_DATE}}" bindchange="bindDateChange">
-				<view class="value">{{order.ORDER_DATE || '请选择日期'}}</view>
+				<view class="value">{{order.ORDER_DATE || '未定档'}}</view>
 			</picker>
 		</view>
 		<view class="row">
@@ -70,6 +70,31 @@
 			<text class="label">后期加选/产品</text>
 			<input class="input" type="digit" value="{{order.ORDER_EXTRA}}" placeholder="加片、相册、产品等" data-field="ORDER_EXTRA" bindinput="bindInput" />
 		</view>
+	</view>
+
+	<view class="block">
+		<view class="block-head">
+			<text>收款明细</text>
+			<view class="small-btn" bindtap="bindAddPaymentTap">添加</view>
+		</view>
+		<view class="pay-tip">逐笔记录实际收款/退款/调整；已锁定收款只能查看。</view>
+		<view wx:for="{{order.ORDER_PAYMENTS}}" wx:key="clientKey" class="payment {{item.IS_DELETE==1?'deleted':''}}">
+			<view class="part-line">
+				<picker range="{{paymentTypeOptions}}" range-key="label" value="{{item.typeIndex}}" bindchange="bindPaymentTypeChange" data-idx="{{index}}" disabled="{{item.isLocked || item.PAYMENT_IS_LOCKED==1}}"><view class="part-value">{{item.typeLabel}}</view></picker>
+				<view class="part-value">{{item.directionLabel}}</view>
+				<view wx:if="{{!item.isLocked && item.PAYMENT_IS_LOCKED!=1}}" class="del" bindtap="bindDelPaymentTap" data-idx="{{index}}">{{item._id || item.PAYMENT_ID ? '作废' : '删除'}}</view>
+			</view>
+			<view class="part-line">
+				<input class="part-input" type="digit" value="{{item.amount}}" placeholder="金额" data-idx="{{index}}" data-field="amount" bindinput="bindPaymentInput" disabled="{{item.isLocked || item.PAYMENT_IS_LOCKED==1}}" />
+				<input class="part-input" value="{{item.date}}" placeholder="YYYY-MM-DD" data-idx="{{index}}" data-field="date" bindinput="bindPaymentInput" disabled="{{item.isLocked || item.PAYMENT_IS_LOCKED==1}}" />
+				<picker range="{{paymentBaseTypeOptions}}" range-key="label" value="{{item.baseTypeIndex}}" bindchange="bindPaymentBaseTypeChange" data-idx="{{index}}" disabled="{{item.isLocked || item.PAYMENT_IS_LOCKED==1}}"><view class="part-value">{{item.baseTypeLabel}}</view></picker>
+			</view>
+			<view class="part-line">
+				<input class="part-input note" value="{{item.note}}" placeholder="备注" data-idx="{{index}}" data-field="note" bindinput="bindPaymentInput" disabled="{{item.isLocked || item.PAYMENT_IS_LOCKED==1}}" />
+			</view>
+			<view wx:if="{{item.isLocked || item.PAYMENT_IS_LOCKED==1}}" class="lock-tip">已进工资/锁定，只能查看；如需处理请新增退款/冲减</view>
+		</view>
+		<view wx:if="{{!order.ORDER_PAYMENTS || order.ORDER_PAYMENTS.length==0}}" class="muted">暂无收款明细，旧金额字段仅作兼容展示</view>
 	</view>
 
 	<view class="block">

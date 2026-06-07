@@ -32,7 +32,7 @@ Page({
 		await this._loadMe();
 	},
 	bindAdminTap: function () {
-		wx.navigateTo({ url: '../../admin/index/login/admin_login' });
+		wx.navigateTo({ url: '../admin_home/work_admin_home' });
 	},
 	url: function (e) {
 		pageHelper.url(e, this);

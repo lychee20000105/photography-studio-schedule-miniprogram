@@ -19,8 +19,36 @@ const CODE = {
 	DATA: 1301, // 数据校验错误 
 	HEADER: 1302, // header 校验错误  
 
-	ADMIN_ERROR: 2401 //管理员错误
+	ADMIN_ERROR: 2401, //管理员错误
+	MINI_ADMIN_ERROR: 2402 //小程序内管理中心权限错误
 };
+
+// 小程序内管理中心无权限处理
+function handleMiniAdminError(result, hint) {
+	let goMy = function () {
+		wx.switchTab({
+			url: pageHelper.fmtURLByPID('/pages/work/my/work_my'),
+			fail() {
+				wx.navigateBack({
+					fail() {
+						wx.reLaunch({
+							url: pageHelper.fmtURLByPID('/pages/work/my/work_my'),
+						});
+					}
+				});
+			}
+		});
+	};
+
+	wx.showModal({
+		title: '温馨提示',
+		content: (result && result.msg) || '无管理权限',
+		showCancel: false,
+		success() {
+			goMy();
+		}
+	});
+}
 
 // 云函数提交请求(直接异步，无提示)
 function callCloudSumbitAsync(route, params = {}, options) {
@@ -93,7 +121,7 @@ function callCloud(route, params = {}, options) {
 	}
 
 	let token = '';
-	// 管理员token
+	// 管理员token：仅旧后台 admin/* 使用 CACHE_ADMIN；小程序内管理中心 work/admin_xxx 仍走普通用户 token
 	if (route.indexOf('admin/') > -1) {
 		let admin = cacheHelper.get(constants.CACHE_ADMIN);
 		if (admin && admin.token) token = admin.token;
@@ -141,6 +169,11 @@ function callCloud(route, params = {}, options) {
 					wx.reLaunch({
 						url: pageHelper.fmtURLByPID('/pages/admin/index/login/admin_login'),
 					});
+					reject(res.result);
+					return;
+				} else if (res.result.code == CODE.MINI_ADMIN_ERROR) {
+					// 小程序内管理中心权限错误：不能跳旧后台登录
+					handleMiniAdminError(res.result, hint);
 					reject(res.result);
 					return;
 				} else if (res.result.code != CODE.SUCC) {

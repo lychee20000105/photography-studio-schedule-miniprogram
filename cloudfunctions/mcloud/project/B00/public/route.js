@@ -5,7 +5,7 @@
  * Date: 2025-10-14 07:00:00
  */
 
-module.exports = { 
+module.exports = {
 
 	'home/setup_get': 'home_controller@getSetup',
 
@@ -40,6 +40,7 @@ module.exports = {
 	'work/options': 'work_controller@getOptions',
 	'work/calendar': 'work_controller@getCalendar',
 	'work/day_list': 'work_controller@getDayList',
+	'work/order_list': 'work_controller@getOrderList',
 	'work/order_detail': 'work_controller@getOrderDetail',
 	'work/order_save': 'work_controller@saveOrder',
 	'work/order_complete': 'work_controller@completeOrder',
@@ -53,6 +54,27 @@ module.exports = {
 	'work/messages': 'work_controller@getMessages',
 	'work/message_read': 'work_controller@readMessage',
 	'work/my_payroll': 'work_controller@getMyPayroll',
+	'work/performance_home': 'work_performance_controller@getHome',
+	'work/performance_summary': 'work_performance_controller@getSummary',
+	'work/performance_rank': 'work_performance_controller@getRank',
+	'work/payment_my_list': 'work_performance_controller@getMyPaymentList',
+	'work/commission_my_list': 'work_performance_controller@getMyCommissionList',
+	'work/admin_home': 'work_admin_controller@getHome',
+	'work/admin_performance_board': 'work_admin_controller@getPerformanceBoard',
+	'work/admin_order_search': 'work_admin_controller@searchOrder',
+	'work/admin_payment_list': 'work_admin_controller@getPaymentList',
+	'work/admin_payment_save': 'work_admin_controller@savePayment#demo',
+	'work/admin_payment_void': 'work_admin_controller@voidPayment#demo',
+	'work/admin_commission_list': 'work_admin_controller@getCommissionList',
+	'work/admin_frozen_list': 'work_admin_controller@getFrozenList',
+	'work/admin_staff_list': 'work_admin_controller@getStaffList',
+	'work/admin_staff_save': 'work_admin_controller@saveStaff#demo',
+	'work/admin_staff_options': 'work_admin_controller@getStaffOptions',
+	'work/admin_payroll_preview': 'work_admin_controller@previewPayroll',
+	'work/admin_payroll_pay': 'work_admin_controller@payPayroll#demo',
+	'work/admin_audit_list': 'work_admin_controller@getAuditList',
+	'work/admin_order_audit': 'work_admin_controller@auditOrder#demo',
+	'work/admin_order_cancel': 'work_admin_controller@cancelOrder#demo',
 
 	// 预约
 	'meet/list': 'meet_controller@getMeetList',
@@ -70,14 +92,14 @@ module.exports = {
 	'meet/my_join_checkin': 'meet_controller@userSelfCheckin',
 
 
-	//***########### ADMIN ################## */   
+	//***########### ADMIN ################## */
 	'admin/home': 'admin/admin_home_controller@adminHome',
 
 	'admin/login': 'admin/admin_mgr_controller@adminLogin',
 	'admin/mgr_list': 'admin/admin_mgr_controller@getMgrList',
 	'admin/mgr_insert': 'admin/admin_mgr_controller@insertMgr#demo',
 	'admin/mgr_del': 'admin/admin_mgr_controller@delMgr#demo',
-	'admin/mgr_detail': 'admin/admin_mgr_controller@getMgrDetail', 
+	'admin/mgr_detail': 'admin/admin_mgr_controller@getMgrDetail',
 	'admin/mgr_edit': 'admin/admin_mgr_controller@editMgr#demo',
 	'admin/mgr_status': 'admin/admin_mgr_controller@statusMgr#demo',
 	'admin/mgr_pwd': 'admin/admin_mgr_controller@pwdMgr#demo',

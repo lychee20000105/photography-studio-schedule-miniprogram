@@ -35,14 +35,14 @@ module.exports = {
 
 	// 内部档期记录表单字段
 	MEET_JOIN_FIELDS: [
-		{ type: 'text', title: '客户姓名', must: true, max: 30 },
-		{ type: 'mobile', title: '联系电话', must: true },
-		{ type: 'text', title: '拍摄地点', must: true, max: 100, desc: '如：XX酒店/XX户外/工作室' },
-		{ type: 'digit', title: '订单金额', must: false, desc: '单位：元' },
-		{ type: 'digit', title: '已收定金', must: false, desc: '单位：元' },
-		{ type: 'select', title: '后期进度', must: true, selectOptions: ['待拍摄', '已拍摄待修图', '修图中', '已修图待交付', '已交付'], desc: '当前处理到哪一步了' },
-		{ type: 'textarea', title: '备注', must: false, max: 200, desc: '其他需要记录的信息' },
-		{ type: 'image', title: '订单截图', must: false, max: 3, desc: '上传收据/合同等截图' },
+		{ mark: 'meetCustomerName', isDefault: true, type: 'text', title: '客户姓名', must: true, max: 30 },
+		{ mark: 'meetCustomerMobile', isDefault: true, type: 'mobile', title: '联系电话', must: true },
+		{ mark: 'meetShootPlace', isDefault: true, type: 'text', title: '拍摄地点', must: true, max: 100, desc: '如：XX酒店/XX户外/工作室' },
+		{ mark: 'meetOrderAmount', isDefault: true, type: 'digit', title: '订单金额', must: false, desc: '单位：元' },
+		{ mark: 'meetDepositAmount', isDefault: true, type: 'digit', title: '已收定金', must: false, desc: '单位：元' },
+		{ mark: 'meetPostProgress', isDefault: true, type: 'select', title: '后期进度', must: true, selectOptions: ['待拍摄', '已拍摄待修图', '修图中', '已修图待交付', '已交付'], desc: '当前处理到哪一步了' },
+		{ mark: 'meetRemark', isDefault: true, type: 'textarea', title: '备注', must: false, max: 200, desc: '其他需要记录的信息' },
+		{ mark: 'meetOrderImage', isDefault: true, type: 'image', title: '订单截图', must: false, max: 3, desc: '上传收据/合同等截图' },
 	],
 
 	// 样片

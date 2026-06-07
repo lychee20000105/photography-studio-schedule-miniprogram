@@ -1,0 +1,13 @@
+<view class="page">
+	<view class="filters">
+		<picker mode="date" fields="month" value="{{month}}" bindchange="bindMonthChange"><view>{{monthText}}</view></picker>
+		<input placeholder="员工ID" value="{{staffId}}" data-field="staffId" bindinput="bindInput" />
+		<button bindtap="_loadList">查</button>
+	</view>
+	<view wx:if="{{list.length==0}}" class="empty">暂无待释放提成</view>
+	<view wx:for="{{list}}" wx:key="_id" class="card">
+		<view class="title">{{item.COMMISSION_STAFF_NAME}}｜{{item.customerText}}</view>
+		<view class="meta">来源月 {{item.COMMISSION_MONTH}} · {{item.COMMISSION_ORDER_TYPE_NAME}} · {{item.COMMISSION_ROLE_NAME}}</view>
+		<view class="amount">¥{{item.frozenRemainText}}</view>
+	</view>
+</view>

@@ -67,7 +67,7 @@ Page({
 
 			formIsShowLimit: meet.MEET_IS_SHOW_LIMIT,
 
-			formFormSet: meet.MEET_FORM_SET,
+			formFormSet: AdminMeetBiz.tagDefaultFormSet(meet.MEET_FORM_SET),
 		});
 	},
 

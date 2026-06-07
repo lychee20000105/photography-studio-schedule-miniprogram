@@ -1,0 +1,18 @@
+<block wx:if="{{isAdmin}}">
+	<view class="page">
+		<view class="title">导出用户资料</view>
+		<view class="hint">按当前用户列表筛选条件导出。</view>
+
+		<button class="btn-primary" bindtap="bindExportTap">导出Excel文件</button>
+
+		<view class="file" wx:if="{{fileUrl}}">
+			<view class="file-title">当前导出文件</view>
+			<view class="file-time">生成时间：{{fileTime}}</view>
+			<button class="btn" bindtap="bindCopyTap">复制下载链接</button>
+			<button class="btn danger" bindtap="bindDeleteTap">删除导出文件</button>
+		</view>
+
+		<view class="empty" wx:else>暂无导出文件</view>
+		<button class="btn muted" bindtap="bindRefreshTap">刷新导出状态</button>
+	</view>
+</block>

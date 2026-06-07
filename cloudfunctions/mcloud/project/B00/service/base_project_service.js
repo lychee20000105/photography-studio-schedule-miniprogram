@@ -12,6 +12,9 @@ const MeetModel = require('../model/meet_model.js');
 const AlbumModel = require('../model/album_model.js');
 const ProductModel = require('../model/product_model.js');
 const WorkTypeModel = require('../model/work_type_model.js');
+const WorkPaymentModel = require('../model/work_payment_model.js');
+const WorkCommissionModel = require('../model/work_commission_model.js');
+const WorkFinanceLogModel = require('../model/work_finance_log_model.js');
 const BaseService = require('../../../framework/platform/service/base_service.js');
 const setupUtil = require('../../../framework/utils/setup/setup_util.js');
 
@@ -46,8 +49,9 @@ class BaseProjectService extends BaseService {
 	async initSetup() {
 
 		const SETUP_DONE_KEY = 'B00_INIT_SETUP_DONE';
-		const COLLECTIONS = 'bx_admin|bx_day|bx_join|bx_log|bx_meet|bx_news|bx_product|bx_album|bx_fav|bx_user|bx_work_staff|bx_work_type|bx_work_order|bx_work_note|bx_work_item|bx_work_rest|bx_work_message|bx_work_payroll|bx_work_customer';
-		const WORK_COLLECTIONS = 'bx_work_staff|bx_work_type|bx_work_order|bx_work_note|bx_work_item|bx_work_rest|bx_work_message|bx_work_payroll|bx_work_customer';
+		const COLLECTIONS = 'bx_admin|bx_day|bx_join|bx_log|bx_meet|bx_news|bx_product|bx_album|bx_fav|bx_user|bx_work_staff|bx_work_type|bx_work_order|bx_work_note|bx_work_item|bx_work_rest|bx_work_message|bx_work_payroll|bx_work_customer|bx_work_payment|bx_work_commission|bx_work_finance_log';
+		const WORK_COLLECTIONS = 'bx_work_staff|bx_work_type|bx_work_order|bx_work_note|bx_work_item|bx_work_rest|bx_work_message|bx_work_payroll|bx_work_customer|bx_work_payment|bx_work_commission|bx_work_finance_log';
+		const FINANCE_COLLECTIONS = [WorkPaymentModel.CL, WorkCommissionModel.CL, WorkFinanceLogModel.CL];
 		const CONST_PIC = '/images/cover.gif';
 
 		const NEWS_CATE = '1=本店动态,2=拍摄小贴士';
@@ -64,6 +68,11 @@ class BaseProjectService extends BaseService {
 
 		if (!await dbUtil.isExistCollection('bx_setup')) {
 			await dbUtil.createCollection('bx_setup');
+		}
+		for (let k in FINANCE_COLLECTIONS) {
+			if (!await dbUtil.isExistCollection(FINANCE_COLLECTIONS[k])) {
+				await dbUtil.createCollection(FINANCE_COLLECTIONS[k]);
+			}
 		}
 		if (await setupUtil.get(SETUP_DONE_KEY)) return;
 

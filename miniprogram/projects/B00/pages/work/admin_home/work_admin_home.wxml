@@ -1,0 +1,23 @@
+<view class="page">
+	<view wx:if="{{!isLoad}}" class="empty">加载中...</view>
+	<view wx:if="{{isLoad && data}}">
+		<picker mode="date" fields="month" value="{{month}}" bindchange="bindMonthChange"><view class="month">{{month}} 管理中心</view></picker>
+		<view class="hero">
+			<view class="label">本月净业绩</view>
+			<view class="money">¥{{data.stat.netPerformance || 0}}</view>
+			<view class="sub">收款 {{data.stat.incomeCount || 0}} 笔 · 退款 {{data.stat.refundCount || 0}} 笔 · 待审 {{data.stat.auditCount || 0}}</view>
+		</view>
+		<view class="grid">
+			<view class="metric"><text>应发提成</text><view>¥{{data.stat.payable || 0}}</view></view>
+			<view class="metric"><text>待释放</text><view>¥{{data.stat.frozenRemain || 0}}</view></view>
+			<view class="metric"><text>取消待处理</text><view>{{data.stat.cancelPendingCount || 0}}</view></view>
+		</view>
+		<view class="menu">
+			<view wx:for="{{data.menus}}" wx:key="title" class="item" bindtap="url" data-url="{{item.url}}">
+				<view><view class="title">{{item.title}}</view><view class="desc">{{item.desc}}</view></view>
+				<text class="arrow">›</text>
+			</view>
+		</view>
+		<view wx:if="{{isLoad && !data}}" class="empty">暂无管理数据，请检查权限或下拉刷新</view>
+	</view>
+</view>

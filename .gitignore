@@ -10,6 +10,9 @@ $RECYCLE.BIN/
 .TemporaryItems
 .Trashes
 
+# Local analysis/cache
+.codegraph/
+
 # Node.js
 node_modules/
 cloudfunctions/**/node_modules/
@@ -26,7 +29,9 @@ project.private.config.json
 *.key
 *.p12
 *.pfx
-export/
+/export/
 cloudfunctions/**/export/
-tmp/
-temp/
+/tmp/
+/temp/
+cloudfunctions/**/tmp/
+cloudfunctions/**/temp/

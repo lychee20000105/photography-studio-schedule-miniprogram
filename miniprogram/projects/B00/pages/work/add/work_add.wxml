@@ -1,24 +1,63 @@
 <view class="page">
-	<view class="grid">
-		<view class="card" bindtap="url" data-url="../order_edit/work_order_edit?day={{day}}">
-			<view class="icon blue">订</view>
-			<view class="title">订单档期</view>
-			<view class="desc">订单、客户、提成</view>
+	<view class="head">
+		<view class="head-main">
+			<view class="eyebrow">订单工作台</view>
+			<view class="title">订单信息</view>
+			<view class="sub">本月视图包含当前月订单和未定档订单</view>
 		</view>
-		<view class="card" bindtap="url" data-url="../item_edit/work_item_edit?day={{day}}">
-			<view class="icon yellow">事</view>
-			<view class="title">事项档期</view>
-			<view class="desc">非订单占用</view>
+		<view class="add-btn" bindtap="url" data-url="{{addOrderUrl}}">新增订单</view>
+	</view>
+
+	<view class="filters">
+		<view class="tab {{scope=='month'?'cur':''}}" data-scope="month" bindtap="bindScopeTap">本月</view>
+		<view class="tab {{scope=='all'?'cur':''}}" data-scope="all" bindtap="bindScopeTap">全部</view>
+		<picker mode="date" fields="month" value="{{month}}" bindchange="bindMonthChange">
+			<view class="month">{{month}}</view>
+		</picker>
+	</view>
+
+	<view class="summary">
+		<view class="summary-item">
+			<view class="summary-num">{{scope=='month'?monthOrderCount:orders.length}}</view>
+			<view class="summary-label">{{scope=='month'?'本月+未定档':'全部订单'}}</view>
 		</view>
-		<view class="card" bindtap="url" data-url="../note_edit/work_note_edit">
-			<view class="icon green">记</view>
-			<view class="title">小记</view>
-			<view class="desc">个人或团队记录</view>
+		<view class="summary-item">
+			<view class="summary-num">{{undatedOrderCount}}</view>
+			<view class="summary-label">未定档</view>
 		</view>
-		<view class="card" bindtap="url" data-url="../rest_edit/work_rest_edit?day={{day}}">
-			<view class="icon grey">休</view>
-			<view class="title">休息日期</view>
-			<view class="desc">请假、调休</view>
+	</view>
+
+	<view class="quick">
+		<view class="quick-title">快捷记录</view>
+		<view class="quick-actions">
+			<view class="quick-item" bindtap="url" data-url="../item_edit/work_item_edit?day={{day}}">事项</view>
+			<view class="quick-item" bindtap="url" data-url="../note_edit/work_note_edit">小记</view>
+			<view class="quick-item" bindtap="url" data-url="../rest_edit/work_rest_edit?day={{day}}">休息</view>
 		</view>
+	</view>
+
+	<view wx:if="{{orders.length>0}}" class="list">
+		<view wx:for="{{orders}}" wx:key="_id" class="order" bindtap="bindOrderTap" data-id="{{item._id}}">
+			<view class="order-top">
+				<view class="customer">{{item.ORDER_CUSTOMER_NAME || item.ORDER_CUSTOMER_SURNAME || '客户'}}</view>
+				<view class="status">{{item.ORDER_PROGRESS_TEXT}}</view>
+			</view>
+			<view class="line">
+				<text class="type" style="background:{{item.ORDER_TYPE_COLOR || '#49cdbf'}}">{{item.ORDER_TYPE_NAME || '其他'}}</text>
+				<text class="date {{item.ORDER_DATE?'':'undated'}}">{{item.ORDER_DATE_TEXT}}</text>
+				<text wx:if="{{item.ORDER_TIME}}">{{item.ORDER_TIME}}</text>
+			</view>
+			<view class="money">
+				<view>订单金额 <text>¥{{item.ORDER_AMOUNT || 0}}</text></view>
+				<view>已收/实收 <text class="paid">¥{{item.PAID_AMOUNT || 0}}</text></view>
+				<view>未收 <text class="unpaid">¥{{item.UNPAID_AMOUNT || 0}}</text></view>
+			</view>
+			<view class="settle">结算状态：{{item.ORDER_SETTLE_TEXT}}</view>
+		</view>
+	</view>
+
+	<view wx:if="{{isLoad && orders.length==0}}" class="empty">
+		<view>暂无订单</view>
+		<view class="empty-btn" bindtap="url" data-url="{{addOrderUrl}}">新增订单</view>
 	</view>
 </view>

@@ -4,11 +4,17 @@
 
 const BaseProjectAdminService = require('./base_project_admin_service.js');
 const WorkService = require('../work_service.js');
+const WorkPaymentService = require('../work_payment_service.js');
+const WorkCommissionService = require('../work_commission_service.js');
+const WorkPayrollService = require('../work_payroll_service.js');
+const financeConfig = require('../work_finance_config.js');
 const timeUtil = require('../../../../framework/utils/time_util.js');
 
 const WorkStaffModel = require('../../model/work_staff_model.js');
 const WorkTypeModel = require('../../model/work_type_model.js');
 const WorkOrderModel = require('../../model/work_order_model.js');
+const WorkPaymentModel = require('../../model/work_payment_model.js');
+const WorkCommissionModel = require('../../model/work_commission_model.js');
 const WorkItemModel = require('../../model/work_item_model.js');
 const WorkRestModel = require('../../model/work_rest_model.js');
 const WorkPayrollModel = require('../../model/work_payroll_model.js');
@@ -18,6 +24,10 @@ class AdminWorkService extends BaseProjectAdminService {
 	constructor() {
 		super();
 		this._work = new WorkService();
+		this._payment = this._work._payment || new WorkPaymentService();
+		this._commission = this._work._commission || new WorkCommissionService();
+		this._payroll = this._work._payroll || new WorkPayrollService();
+		this._financeConfig = financeConfig;
 	}
 
 	async getStaffList() {
@@ -49,9 +59,11 @@ class AdminWorkService extends BaseProjectAdminService {
 			STAFF_BIND_CODE: String(input.STAFF_BIND_CODE || '').trim(),
 			STAFF_ROLES: Array.isArray(input.STAFF_ROLES) ? input.STAFF_ROLES : [],
 			STAFF_RULES: this._cleanRules(input.STAFF_RULES),
-			STAFF_IS_ADMIN: Number(input.STAFF_IS_ADMIN || 0),
 			STAFF_STATUS: Number(input.STAFF_STATUS || 1),
 		};
+		if (!id || input.STAFF_IS_ADMIN !== undefined) data.STAFF_IS_ADMIN = Number(input.STAFF_IS_ADMIN || 0);
+		if (input.STAFF_TEAM_ID !== undefined) data.STAFF_TEAM_ID = String(input.STAFF_TEAM_ID || '').trim();
+		if (input.STAFF_TEAM_NAME !== undefined) data.STAFF_TEAM_NAME = String(input.STAFF_TEAM_NAME || '').trim();
 
 		if (id) {
 			await WorkStaffModel.edit(id, data);
@@ -144,23 +156,36 @@ class AdminWorkService extends BaseProjectAdminService {
 		if (!order) this.AppError('订单不存在');
 		if (order.ORDER_STATUS == WorkOrderModel.STATUS.CANCEL) this.AppError('订单已取消');
 
+		let oldOrder = JSON.parse(JSON.stringify(order));
+		if (oldOrder.ORDER_SETTLE_STATUS !== WorkOrderModel.SETTLE.WAIT_AUDIT) this.AppError('订单不是待审核状态，不能重复审核');
+
+		let oldParticipants = oldOrder.ORDER_PARTICIPANTS || [];
 		if (participants && Array.isArray(participants)) {
 			order.ORDER_PARTICIPANTS = participants;
 		}
 		order.ORDER_ACTUAL_AMOUNT = this._work._money(order.ORDER_DEPOSIT + order.ORDER_FINAL + order.ORDER_EXTRA);
-		order.ORDER_PARTICIPANTS = await this._work._buildParticipants(order.ORDER_PARTICIPANTS, order, order.ORDER_PARTICIPANTS);
+		let nextParticipants = await this._work._buildParticipants(order.ORDER_PARTICIPANTS, order, oldParticipants);
+		let participantsChanged = this._work._participantsChanged(oldParticipants, nextParticipants);
+		order.ORDER_PARTICIPANTS = nextParticipants;
 
 		if (!pass) {
-			await WorkOrderModel.edit(id, {
+			let updated = await WorkOrderModel.edit({
+				_id: id,
+				ORDER_STATUS: WorkOrderModel.STATUS.COMM,
+				ORDER_SETTLE_STATUS: WorkOrderModel.SETTLE.WAIT_AUDIT,
+			}, {
 				ORDER_SETTLE_STATUS: WorkOrderModel.SETTLE.REJECT,
 				ORDER_AUDIT_REASON: reason || '',
 				ORDER_AUDIT_ADMIN_ID: admin._id || '',
 				ORDER_AUDIT_ADMIN_NAME: admin.ADMIN_NAME || '',
 				ORDER_AUDIT_TIME: timeUtil.time(),
 			});
+			if (updated !== 1) this.AppError('订单审核状态已变化，请刷新后重试');
 			await this._notifyOrderPeople(order, '订单审核驳回', reason || '请查看订单后重新提交', id);
 			return;
 		}
+
+		if (participantsChanged) await this._work._assertCanChangeFinanceSnapshot(oldOrder, order, nextParticipants);
 
 		let adjustments = order.ORDER_ADJUSTMENTS || [];
 		for (let p of order.ORDER_PARTICIPANTS) {
@@ -186,7 +211,13 @@ class AdminWorkService extends BaseProjectAdminService {
 			}
 		}
 
-		await WorkOrderModel.edit(id, {
+		let auditTime = timeUtil.time();
+		let auditMonth = timeUtil.time('Y-M');
+		let updated = await WorkOrderModel.edit({
+			_id: id,
+			ORDER_STATUS: WorkOrderModel.STATUS.COMM,
+			ORDER_SETTLE_STATUS: WorkOrderModel.SETTLE.WAIT_AUDIT,
+		}, {
 			ORDER_PROGRESS: WorkOrderModel.PROGRESS.DONE,
 			ORDER_SETTLE_STATUS: WorkOrderModel.SETTLE.WAIT_PAY,
 			ORDER_ACTUAL_AMOUNT: order.ORDER_ACTUAL_AMOUNT,
@@ -195,8 +226,10 @@ class AdminWorkService extends BaseProjectAdminService {
 			ORDER_AUDIT_REASON: '',
 			ORDER_AUDIT_ADMIN_ID: admin._id || '',
 			ORDER_AUDIT_ADMIN_NAME: admin.ADMIN_NAME || '',
-			ORDER_AUDIT_TIME: timeUtil.time(),
+			ORDER_AUDIT_TIME: auditTime,
 		});
+		if (updated !== 1) this.AppError('订单审核状态已变化，请刷新后重试');
+		await this._commission.releaseFrozenByOrder(id, admin, { month: auditMonth });
 		await this._notifyOrderPeople(order, '订单审核通过', '该订单已进入待结算', id);
 	}
 
@@ -315,7 +348,28 @@ class AdminWorkService extends BaseProjectAdminService {
 		}
 	}
 
+	async _payNewLedgerStaffMonth(admin, staffId, month, actualAmount, note = '') {
+		let preview = await this._payroll.getPayrollForStaff(staffId, month);
+		let totalCent = Number(preview && preview.totalCent || 0);
+		if (!preview || preview.legacy) this.AppError('新版工资预览失败，请刷新后重试');
+
+		let hasActualAmount = !(actualAmount === '' || actualAmount === undefined || actualAmount === null);
+		if (hasActualAmount) {
+			let actualCent = this._work._moneyCentStrict(actualAmount, '实发金额');
+			if (actualCent != totalCent) this.AppError('新版工资差额请先新增调整项');
+		}
+
+		let operator = Object.assign({
+			ADMIN_ID: admin && admin._id || '',
+		}, admin || {});
+		return await this._payroll.payStaffMonth(staffId, month, preview.previewHash, operator, {
+			note,
+		});
+	}
+
 	async payStaffMonth(admin, staffId, month, actualAmount, note = '') {
+		month = month || timeUtil.time('Y-M');
+		if (this._financeConfig.isNewLedgerMonth(month)) return await this._payNewLedgerStaffMonth(admin, staffId, month, actualAmount, note);
 		let hasActualAmount = !(actualAmount === '' || actualAmount === undefined || actualAmount === null);
 		let data = await this._getPayablePayrollData(staffId, month);
 		let amount = this._work._money(data.total);
@@ -367,6 +421,61 @@ class AdminWorkService extends BaseProjectAdminService {
 		return { payrollId };
 	}
 
+	_payrollContainsOrder(payroll, order) {
+		let keys = [order && order._id, order && order.ORDER_ID].filter(item => item !== undefined && item !== null && String(item).trim() !== '').map(item => String(item));
+		if (!keys.length) return false;
+
+		let fields = ['orderId', 'ORDER_ID', 'ORDER_ORDER_ID', 'COMMISSION_ORDER_ID', 'PAYMENT_ORDER_ID'];
+		let arrays = [payroll.PAYROLL_ITEMS, payroll.PAYROLL_ADJUSTMENTS, payroll.PAYROLL_COMMISSION_REFS];
+		for (let arr of arrays) {
+			if (!Array.isArray(arr)) continue;
+			for (let item of arr) {
+				if (!item || typeof item != 'object') continue;
+				for (let field of fields) {
+					if (item[field] !== undefined && item[field] !== null && keys.includes(String(item[field]))) return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	async _hasPayrollOrderMarkerAll(order) {
+		let page = 1;
+		let size = 1000;
+		let total = 0;
+		let fields = 'PAYROLL_ID,PAYROLL_ITEMS,PAYROLL_ADJUSTMENTS,PAYROLL_COMMISSION_REFS,PAYROLL_STATUS';
+		let orderBy = {
+			PAYROLL_ADD_TIME: 'desc',
+		};
+
+		while (true) {
+			let data = await WorkPayrollModel.getList({}, fields, orderBy, page, size, page == 1, total);
+			let list = (data && data.list) || [];
+			if (page == 1) total = Number(data.total || 0);
+			if (list.some(payroll => this._payrollContainsOrder(payroll, order))) return true;
+			if (!list.length || list.length < size) break;
+			if (data.count && page >= data.count) break;
+			page++;
+		}
+
+		return false;
+	}
+
+	async _assertOrderCanPhysicalDelete(order) {
+		if (!order) this.AppError('订单不存在');
+		if (order.ORDER_STATUS !== WorkOrderModel.STATUS.CANCEL) this.AppError('请先取消订单后再删除');
+		if (await this._work._hasLegacySettlementLock(order)) this.AppError('该订单已有结算或工资记录，禁止物理删除，请走财务冲正/调整流程');
+		if (await this._hasPayrollOrderMarkerAll(order)) this.AppError('该订单已有工资发放引用，禁止物理删除，请走财务冲正/调整流程');
+
+		let paymentCount = await WorkPaymentModel.count({
+			PAYMENT_ORDER_ID: order._id,
+		});
+		let commissionCount = await WorkCommissionModel.count({
+			COMMISSION_ORDER_ID: order._id,
+		});
+		if (paymentCount > 0 || commissionCount > 0) this.AppError('该订单已有收款/提成账本记录，禁止物理删除，请先取消订单并完成财务冲正');
+	}
+
 	async getCanceledOrders() {
 		return await WorkOrderModel.getAll({
 			ORDER_STATUS: WorkOrderModel.STATUS.CANCEL,
@@ -376,7 +485,13 @@ class AdminWorkService extends BaseProjectAdminService {
 	}
 
 	async delOrder(id) {
-		await WorkOrderModel.del(id);
+		let order = await WorkOrderModel.getOne(id);
+		await this._assertOrderCanPhysicalDelete(order);
+
+		let latest = await WorkOrderModel.getOne(id);
+		await this._assertOrderCanPhysicalDelete(latest);
+
+		this.AppError('v1.2.0 启用财务账本后禁止后台物理删除订单，请使用取消订单并通过收款/提成冲正保留审计链');
 	}
 
 	async restoreOrder(id) {

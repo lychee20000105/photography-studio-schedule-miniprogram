@@ -1,7 +1,7 @@
 /**
  * Notes:预约后台管理模块业务逻辑
  * Ver : CCMiniCloud Framework 2.0.1 ALL RIGHTS RESERVED BY cclinux0730 (wechat)
- * Date: 2025-11-14 07:48:00 
+ * Date: 2025-11-14 07:48:00
  */
 
 const BaseBiz = require('../../../comm/biz/base_biz.js');
@@ -18,7 +18,7 @@ const TIME_NODE = {
 	limit: 50, //人数限制
 	isLimit: false,
 	status: 1,
-	stat: { //统计数据 
+	stat: { //统计数据
 		succCnt: 0,
 		cancelCnt: 0,
 		adminCancelCnt: 0,
@@ -67,6 +67,40 @@ class AdminMeetBiz extends BaseBiz {
 		day = day.replace(/-/g, '');
 		node.mark = 'T' + day + 'AAA' + dataHelper.genRandomAlpha(10).toUpperCase();
 		return node;
+	}
+
+	static getDefaultFormSet() {
+		let fields = formSetHelper.initFields(projectSetting.MEET_JOIN_FIELDS);
+		for (let k in fields) {
+			fields[k].isDefault = true;
+		}
+		return fields;
+	}
+
+	static tagDefaultFormSet(formSet) {
+		let fields = formSetHelper.initFields(formSet);
+		let defaultFields = projectSetting.MEET_JOIN_FIELDS;
+		let used = {};
+
+		for (let k in fields) {
+			for (let j in defaultFields) {
+				if (used[j]) continue;
+
+				let field = fields[k];
+				let def = defaultFields[j];
+				let isSameMark = (def.mark && field.mark == def.mark);
+				let isSameShape = (field.type == def.type && field.title == def.title);
+
+				if (field.isDefault || isSameMark || isSameShape) {
+					field.isDefault = true;
+					if (def.mark) field.mark = def.mark;
+					used[j] = true;
+					break;
+				}
+			}
+		}
+
+		return fields;
 	}
 
 	static getDaysTimeOptions() {
@@ -396,11 +430,11 @@ class AdminMeetBiz extends BaseBiz {
 		let typeIdOptions = AdminMeetBiz.getTypeList();
 		return {
 
-			// 选项数据  
+			// 选项数据
 			typeIdOptions,
 			beginDaySetOptions: AdminMeetBiz.getBeginDaySetOptions(),
 
-			// 表单数据  
+			// 表单数据
 			formTitle: '',
 			formTypeId: (typeIdOptions.length == 1) ? typeIdOptions[0].val : '',
 			formContent: '',
@@ -410,19 +444,19 @@ class AdminMeetBiz extends BaseBiz {
 				desc: ''
 			},
 
-			formDaysSet: [], // 时间设置 
+			formDaysSet: [], // 时间设置
 
 
 			formIsShowLimit: 1, //是否显示可预约数量
 
-			formFormSet: formSetHelper.initFields(projectSetting.MEET_JOIN_FIELDS)
+			formFormSet: dataHelper.deepClone(AdminMeetBiz.getDefaultFormSet())
 		}
 
 	}
 
-	/** 
+	/**
 	 * 样式更新
-	 * @param {string} meetId 
+	 * @param {string} meetId
 	 * @param {Array} content  富文本数组
 	 */
 	static async updateMeetStyleSet(that, meetId, styleSet) {
@@ -453,9 +487,9 @@ class AdminMeetBiz extends BaseBiz {
 		return true;
 	}
 
-	/** 
+	/**
 	 * 富文本中的图片上传
-	 * @param {string} meetId 
+	 * @param {string} meetId
 	 * @param {Array} content  富文本数组
 	 */
 	static async updateMeetCotnentPic(that, meetId, content) {
@@ -510,7 +544,7 @@ AdminMeetBiz.CHECK_FORM = {
 	daysSet: 'formDaysSet|must|array|name=预约时间设置',
 	isShowLimit: 'formIsShowLimit|must|int|in:0,1|name=是否显示可预约人数',
 
-	formSet: 'formFormSet|must|array|name=用户资料设置',
+	formSet: 'formFormSet|array|name=用户资料设置',
 };
 
 

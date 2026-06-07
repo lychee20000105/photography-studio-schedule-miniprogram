@@ -20,6 +20,7 @@ Page({
 		checkBoxLimitOptions: dataHelper.getSelectOptions('0=0项,1=1项,2=2项,3=3项,4=4项,5=5项,6=6项,7=7项,8=8项,9=9项,10=10项,11=11项,12=12项,13=13项,14=14项,15=15项,16=16项,17=17项,18=18项,19=19项,20=20项'),
 
 		onlySetDesc: '',
+		isDefaultField: false,
 
 		// 基本属性
 		formMark: '',
@@ -35,7 +36,7 @@ Page({
 
 		// type=select
 		formSelectOptions: ['', ''],
- 
+
 
 		// type=checkbox
 		formCheckBoxLimit: 2,
@@ -52,7 +53,7 @@ Page({
 		});
 
 		let parent = pageHelper.getPrevPage(2);
-		if (!parent) return; 
+		if (!parent) return;
 		_parentFormSet = parent.selectComponent("#form-set");
 
 		if (options && helper.isDefined(options.idx)) {
@@ -62,9 +63,11 @@ Page({
 			let node = fields[index];
 
 			if (!node.mark) node.mark = formSetHelper.mark();
+			let isDefaultField = _parentFormSet.isDefaultField(node);
 
 			this.setData({
 				index,
+				isDefaultField,
 				formMark: node.mark,
 				formType: node.type,
 				formTitle: node.title,
@@ -72,7 +75,7 @@ Page({
 				formMust: node.must,
 				formMax: node.max,
 				formOnlySet: node.onlySet,
-				formSelectOptions: node.selectOptions, 
+				formSelectOptions: node.selectOptions,
 				formCheckBoxLimit: node.checkBoxLimit,
 
 				onlySetDesc: formSetHelper.getOnlySetDesc(node.onlySet)
@@ -126,6 +129,7 @@ Page({
 
 	bindDelTap: function (e) {
 		if (this.data.index == -1) return;
+		if (this.data.isDefaultField) return pageHelper.showModal('系统默认字段不可删除');
 
 		let callback = () => {
 			let fields = _parentFormSet.get();
@@ -159,10 +163,10 @@ Page({
 					return pageHelper.showModal('选项' + (Number(k) + 1) + '不能超过30个字，精简一点!');
 				}
 			}
- 
+
 			this.data.formMax = 50;
-			
-			if (formType == 'select') this.data.formCheckBoxLimit = 2; 
+
+			if (formType == 'select') this.data.formCheckBoxLimit = 2;
 
 		} else if (formType == 'mobile') {
 			//非本类型的排除
@@ -171,7 +175,7 @@ Page({
 			this.data.formMax = 11;
 		} else {
 			//非本类型的排除
-			this.data.formSelectOptions = ['', '']; 
+			this.data.formSelectOptions = ['', ''];
 			this.data.formCheckBoxLimit = 2;
 
 			if (formType != 'text' && formType != 'textarea' && formType != 'int' && formType != 'digit') {
@@ -193,8 +197,9 @@ Page({
 			must: this.data.formMust,
 			max: Number(this.data.formMax),
 			onlySet: this.data.formOnlySet,
-			selectOptions: this.data.formSelectOptions, 
+			selectOptions: this.data.formSelectOptions,
 			checkBoxLimit: Number(this.data.formCheckBoxLimit),
+			isDefault: this.data.isDefaultField,
 		};
 
 

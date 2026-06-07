@@ -3,6 +3,11 @@
  */
 
 const BaseProjectService = require('./base_project_service.js');
+const WorkPermissionService = require('./work_permission_service.js');
+const WorkPaymentService = require('./work_payment_service.js');
+const WorkCommissionService = require('./work_commission_service.js');
+const WorkPayrollService = require('./work_payroll_service.js');
+const financeConfig = require('./work_finance_config.js');
 const timeUtil = require('../../../framework/utils/time_util.js');
 const dataUtil = require('../../../framework/utils/data_util.js');
 
@@ -14,6 +19,7 @@ const WorkItemModel = require('../model/work_item_model.js');
 const WorkRestModel = require('../model/work_rest_model.js');
 const WorkMessageModel = require('../model/work_message_model.js');
 const WorkPayrollModel = require('../model/work_payroll_model.js');
+const WorkCommissionModel = require('../model/work_commission_model.js');
 const WorkCustomerModel = require('../model/work_customer_model.js');
 
 const DEFAULT_ROLES = ['销售', '摄影', '摄像', '化妆', '选片', '后期', '助理', '运营'];
@@ -41,6 +47,14 @@ const DEFAULT_TYPES = [
 
 class WorkService extends BaseProjectService {
 
+	constructor() {
+		super();
+		this._permission = new WorkPermissionService();
+		this._payment = new WorkPaymentService();
+		this._commission = new WorkCommissionService();
+		this._payroll = new WorkPayrollService();
+	}
+
 	getDefaultRoles() {
 		return DEFAULT_ROLES;
 	}
@@ -65,9 +79,19 @@ class WorkService extends BaseProjectService {
 	}
 
 	_money(val) {
-		val = Number(val || 0);
-		if (isNaN(val)) val = 0;
+		if (val === undefined || val === null || String(val).trim() === '') return 0;
+		let str = String(val).trim().replace(/,/g, '');
+		if (!/^-?\d+(\.\d+)?$/.test(str)) this.AppError('金额必须是合法数字');
+		val = Number(str);
+		if (!Number.isFinite(val)) this.AppError('金额必须是合法数字');
 		return Math.round(val * 100) / 100;
+	}
+
+	_moneyCent(val, label = '金额') {
+		if (val === undefined || val === null || String(val).trim() === '') return 0;
+		let cent = this._moneyCentStrict(val, label);
+		if (cent < 0) this.AppError(label + '不能为负数');
+		return cent;
 	}
 
 	_getSurname(name) {
@@ -103,21 +127,14 @@ class WorkService extends BaseProjectService {
 	}
 
 	async getStaffByOpenId(openId, must = true) {
-		let staff = await WorkStaffModel.getOne({
-			STAFF_OPENID: openId,
-		});
-		if (!staff || staff.STAFF_STATUS != WorkStaffModel.STATUS.COMM) {
-			if (must) this.AppError('请先在「我的」里绑定员工手机号');
-			return null;
-		}
-		return staff;
+		return await this._permission.getStaffByOpenId(openId, must);
 	}
 
 	async getMe(openId) {
 		let staff = await this.getStaffByOpenId(openId, false);
 		if (!staff) return { isBind: false };
 
-		await WorkStaffModel.edit(staff._id, { STAFF_LOGIN_TIME: timeUtil.time() });
+		await this._permission.touchLogin(staff._id);
 		return {
 			isBind: true,
 			staff: this._cleanStaff(staff, true, true),
@@ -134,27 +151,26 @@ class WorkService extends BaseProjectService {
 
 		if (staff.STAFF_OPENID && staff.STAFF_OPENID != openId) this.AppError('该员工已绑定其他微信，请联系管理员');
 
-		await WorkStaffModel.edit(staff._id, {
+		let bindList = await this._permission.getEnabledStaffListByOpenId(openId);
+		let other = bindList.find(item => item._id != staff._id);
+		if (other) this.AppError('当前微信已绑定其他启用员工，请联系管理员');
+
+		let data = {
 			STAFF_OPENID: openId,
+			STAFF_OPENID_BIND_STATUS: 1,
 			STAFF_LOGIN_TIME: timeUtil.time(),
-		});
+		};
+		if (!staff.STAFF_OPENID_BIND_TIME) data.STAFF_OPENID_BIND_TIME = data.STAFF_LOGIN_TIME;
+
+		await WorkStaffModel.edit(staff._id, data);
 		staff.STAFF_OPENID = openId;
+		staff.STAFF_OPENID_BIND_STATUS = 1;
+		if (!staff.STAFF_OPENID_BIND_TIME) staff.STAFF_OPENID_BIND_TIME = data.STAFF_OPENID_BIND_TIME;
 		return this._cleanStaff(staff, true, true);
 	}
 
 	_cleanStaff(staff, withRules = false, withPrivate = false) {
-		if (!staff) return null;
-		let node = {
-			_id: staff._id,
-			STAFF_ID: staff.STAFF_ID,
-			STAFF_NAME: staff.STAFF_NAME,
-			STAFF_ROLES: staff.STAFF_ROLES || [],
-			STAFF_IS_ADMIN: staff.STAFF_IS_ADMIN || 0,
-			STAFF_STATUS: staff.STAFF_STATUS,
-		};
-		if (withPrivate) node.STAFF_MOBILE = staff.STAFF_MOBILE;
-		if (withRules) node.STAFF_RULES = staff.STAFF_RULES || [];
-		return node;
+		return this._permission.cleanStaff(staff, withRules, withPrivate);
 	}
 
 	async getOptions(openId) {
@@ -176,12 +192,24 @@ class WorkService extends BaseProjectService {
 			}, 1000);
 		}
 
+		let finance = {
+			cutover: { month: financeConfig.getCutoverMonth() },
+			cutoverMonth: financeConfig.getCutoverMonth(),
+			paymentTypes: financeConfig.PAYMENT_TYPE,
+			baseTypes: financeConfig.PAYMENT_BASE_TYPE,
+			directions: financeConfig.PAYMENT_DIRECTION,
+			paymentStatus: financeConfig.PAYMENT_STATUS,
+			orderFinanceStatus: financeConfig.ORDER_FINANCE_STATUS,
+			orderCommissionStatus: financeConfig.ORDER_COMMISSION_STATUS,
+		};
+
 		return {
 			staff: staff ? this._cleanStaff(staff, true, true) : null,
 			roles: DEFAULT_ROLES,
 			sources: DEFAULT_SOURCES,
 			types,
 			staffList: staffList.map(item => this._cleanStaff(item, false, staff.STAFF_IS_ADMIN == 1)),
+			finance,
 			progressOptions: [
 				{ label: '已定档', value: WorkOrderModel.PROGRESS.BOOKED },
 				{ label: '已拍摄', value: WorkOrderModel.PROGRESS.SHOT },
@@ -213,6 +241,462 @@ class WorkService extends BaseProjectService {
 	_isParticipant(order, staffId) {
 		let participants = order.ORDER_PARTICIPANTS || [];
 		return participants.some(item => item.staffId == staffId);
+	}
+
+	_hasInputValue(value) {
+		return value !== undefined && value !== null && String(value).trim() !== '';
+	}
+
+	_centInput(val, fallback, label = '金额分') {
+		if (val !== undefined && val !== null) {
+			let str = String(val).trim();
+			if (!str) this.AppError(label + '不能为空');
+			if (str.startsWith('-')) this.AppError(label + '不能为负数');
+			if (!/^\d+$/.test(str)) this.AppError(label + '必须是整数');
+			let cent = Number(str);
+			if (!Number.isSafeInteger(cent)) this.AppError(label + '必须是安全整数');
+			return cent;
+		}
+
+		if (fallback === undefined || fallback === null || String(fallback).trim() === '') return 0;
+		let str = String(fallback).trim();
+		if (str.startsWith('-')) this.AppError(label + '不能为负数');
+		if (!/^\d+$/.test(str)) this.AppError(label + '默认值不合法');
+		let cent = Number(str);
+		if (!Number.isSafeInteger(cent)) this.AppError(label + '默认值不合法');
+		return cent;
+	}
+
+	_safeCentSnapshot(value, fallback = 0, label = '金额分') {
+		if (value === undefined || value === null || String(value).trim() === '') return fallback;
+		return this._centInput(value, fallback, label);
+	}
+
+	_legacyYuanToCentSnapshot(value, label = '金额') {
+		if (value === undefined || value === null || String(value).trim() === '') return 0;
+		return this._moneyCent(value, label);
+	}
+
+	_financeDueCentSnapshot(centValue, legacyYuanValue, label = '金额分', legacyLabel = '金额', zeroMeansMissing = false) {
+		let legacyCent = this._legacyYuanToCentSnapshot(legacyYuanValue, legacyLabel);
+		let cent = this._safeCentSnapshot(centValue, null, label);
+		if (cent === null) return legacyCent;
+		if (zeroMeansMissing && cent === 0 && legacyCent > 0) return legacyCent;
+		return cent;
+	}
+
+	_normalizeParticipantBaseType(item = {}) {
+		let baseType = String(item.baseType || item.BASE_TYPE || item.base || item.PAYMENT_BASE_TYPE || item.COMMISSION_BASE_TYPE || '').trim().toLowerCase();
+		if (baseType == financeConfig.PAYMENT_BASE_TYPE.EXTRA || baseType == 'extra' || baseType == 'product' || baseType == 'products' || baseType == '加选' || baseType == '产品') return financeConfig.PAYMENT_BASE_TYPE.EXTRA;
+		if (baseType == financeConfig.PAYMENT_BASE_TYPE.ALL || baseType == 'all' || baseType == 'whole' || baseType == 'total' || baseType == 'order' || baseType == '整单' || baseType == '全部') return financeConfig.PAYMENT_BASE_TYPE.ALL;
+		if (baseType == financeConfig.PAYMENT_BASE_TYPE.SHOOT || baseType == 'shoot' || baseType == 'shooting' || baseType == 'photo' || baseType == '拍摄') return financeConfig.PAYMENT_BASE_TYPE.SHOOT;
+		return this._getRoleBase(item.roleName || item.ROLE_NAME || item.role || '');
+	}
+
+	_hasMeaningfulPaymentValue(value) {
+		if (value === undefined || value === null) return false;
+		if (typeof value == 'boolean') return value === true;
+		if (typeof value == 'number') return value !== 0;
+		if (typeof value == 'string') {
+			let str = value.trim();
+			if (str === '' || str.toLowerCase() === 'false') return false;
+			if (/^-?\d+(\.\d+)?$/.test(str)) return Number(str) !== 0;
+			return true;
+		}
+		if (Array.isArray(value)) return value.length > 0;
+		if (typeof value == 'object') return Object.keys(value).length > 0;
+		return true;
+	}
+
+	_pickPaymentValue(dto, fields) {
+		dto = dto || {};
+		for (let field of fields) {
+			if (this._hasInputValue(dto[field])) return dto[field];
+		}
+		return undefined;
+	}
+
+	_hasPaymentIdentifier(dto = {}) {
+		return this._pickPaymentValue(dto, ['_id', 'id', 'PAYMENT_ID', 'PAYMENT_BIZ_KEY', 'bizKey', 'PAYMENT_CLIENT_KEY', 'clientKey', 'key']) !== undefined;
+	}
+
+	_hasOrderPaymentDto(dto) {
+		if (!dto) return false;
+		if (typeof dto != 'object' || Array.isArray(dto)) return this._hasMeaningfulPaymentValue(dto);
+		let meaningfulFields = [
+			'_id', 'id', 'PAYMENT_ID', 'PAYMENT_BIZ_KEY', 'bizKey', 'PAYMENT_CLIENT_KEY', 'clientKey', 'key',
+			'PAYMENT_TYPE', 'type', 'PAYMENT_DIRECTION', 'direction', 'PAYMENT_BASE_TYPE', 'baseType',
+			'PAYMENT_AMOUNT', 'amount', 'paymentAmount', 'PAYMENT_DATE', 'PAYMENT_PAY_DATE', 'date', 'payDate',
+			'PAYMENT_MONTH', 'month', 'PAYMENT_STAFF_ID', 'PAYMENT_OWNER_STAFF_ID', 'staffId', 'ownerStaffId',
+			'PAYMENT_REF_PAYMENT_ID', 'refPaymentId', 'PAYMENT_NOTE', 'note', 'remark', 'IS_DELETE', 'status'
+		];
+		for (let field of meaningfulFields) {
+			if (this._hasMeaningfulPaymentValue(dto[field])) return true;
+		}
+		let centRaw = this._pickPaymentValue(dto, ['PAYMENT_AMOUNT_CENT', 'amountCent']);
+		if (centRaw === undefined) return false;
+		if (!this._hasMeaningfulPaymentValue(centRaw)) return false;
+		let str = String(centRaw).trim();
+		if (!str) return false;
+		if (/^-?\d+$/.test(str)) return Number(str) != 0;
+		return true;
+	}
+
+	_isDeletePaymentDto(dto = {}) {
+		return dto.IS_DELETE === true || dto.IS_DELETE == 1 || Number(dto.PAYMENT_STATUS || 0) == financeConfig.PAYMENT_STATUS.VOID || dto.status == 'delete' || dto.status == 'void';
+	}
+
+	_normalizePaymentTypeForValidate(type) {
+		type = String(type || '').trim().toLowerCase();
+		let valid = Object.values(financeConfig.PAYMENT_TYPE);
+		if (!type) this.AppError('收款类型不能为空');
+		if (!valid.includes(type)) this.AppError('收款类型不合法');
+		return type;
+	}
+
+	_normalizePaymentDirectionForValidate(direction) {
+		direction = String(direction || '').trim().toLowerCase();
+		let valid = Object.values(financeConfig.PAYMENT_DIRECTION);
+		if (!direction) this.AppError('收款方向不能为空');
+		if (!valid.includes(direction)) this.AppError('收款方向不合法');
+		return direction;
+	}
+
+	_moneyCentStrict(val, label = '金额') {
+		if (val === undefined || val === null || String(val).trim() === '') this.AppError(label + '不能为空');
+		let str = String(val).trim().replace(/,/g, '');
+		if (!/^-?\d+(\.\d{1,2})?$/.test(str)) this.AppError(label + '必须是合法金额');
+
+		let negative = str.startsWith('-');
+		if (negative) str = str.substring(1);
+		let parts = str.split('.');
+		let yuan = Number(parts[0] || 0);
+		let frac = (parts[1] || '').padEnd(2, '0');
+		let cent = yuan * 100 + Number(frac || 0);
+		if (negative) cent = -cent;
+		if (!Number.isSafeInteger(cent)) this.AppError(label + '金额过大');
+		return cent;
+	}
+
+	_paymentAmountCentForValidate(dto = {}) {
+		let centRaw = this._pickPaymentValue(dto, ['PAYMENT_AMOUNT_CENT', 'amountCent']);
+		if (centRaw !== undefined) {
+			let str = String(centRaw).trim();
+			if (!/^-?\d+$/.test(str)) this.AppError('收款金额分必须是整数');
+			let cent = Number(str);
+			if (!Number.isSafeInteger(cent)) this.AppError('收款金额分必须是安全整数');
+			return cent;
+		}
+
+		let yuanRaw = this._pickPaymentValue(dto, ['PAYMENT_AMOUNT', 'amount', 'paymentAmount']);
+		if (yuanRaw !== undefined) return this._moneyCentStrict(yuanRaw, '收款金额');
+		this.AppError('缺少收款金额');
+	}
+
+	async _validateOrderPaymentsBeforeSave(orderPayments, order = {}, operatorStaff = null) {
+		if (!orderPayments.length) return;
+		for (let dto of orderPayments) {
+			if (!dto || typeof dto != 'object' || Array.isArray(dto)) this.AppError('收款数据格式错误');
+
+			if (this._isDeletePaymentDto(dto)) {
+				if (!this._hasPaymentIdentifier(dto)) this.AppError('作废收款缺少记录标识');
+				continue;
+			}
+
+			let clientKey = this._pickPaymentValue(dto, ['PAYMENT_CLIENT_KEY', 'clientKey', 'key']);
+			if (!clientKey) this.AppError('缺少收款幂等key');
+
+			let type = this._normalizePaymentTypeForValidate(this._pickPaymentValue(dto, ['PAYMENT_TYPE', 'type']));
+			let direction = this._normalizePaymentDirectionForValidate(this._pickPaymentValue(dto, ['PAYMENT_DIRECTION', 'direction']));
+			if (type == financeConfig.PAYMENT_TYPE.REFUND && direction != financeConfig.PAYMENT_DIRECTION.REFUND) this.AppError('退款类型必须使用退款方向');
+			if (type == financeConfig.PAYMENT_TYPE.ADJUST && direction != financeConfig.PAYMENT_DIRECTION.ADJUST) this.AppError('冲减类型必须使用冲减方向');
+			if (direction == financeConfig.PAYMENT_DIRECTION.REFUND && type != financeConfig.PAYMENT_TYPE.REFUND) this.AppError('退款方向必须使用退款类型');
+			if (direction == financeConfig.PAYMENT_DIRECTION.ADJUST && type != financeConfig.PAYMENT_TYPE.ADJUST) this.AppError('冲减方向必须使用冲减类型');
+
+			let baseType = this._pickPaymentValue(dto, ['PAYMENT_BASE_TYPE', 'baseType']);
+			if (baseType !== undefined && !Object.values(financeConfig.PAYMENT_BASE_TYPE).includes(String(baseType).trim().toLowerCase())) this.AppError('收款基数类型不合法');
+
+			let amountCent = this._paymentAmountCentForValidate(dto);
+			if (direction == financeConfig.PAYMENT_DIRECTION.INCOME && amountCent <= 0) this.AppError('收入收款金额必须大于0');
+			if ((direction == financeConfig.PAYMENT_DIRECTION.REFUND || direction == financeConfig.PAYMENT_DIRECTION.ADJUST) && amountCent == 0) this.AppError('退款/冲减金额不能为0');
+
+			let date = this._pickPaymentValue(dto, ['PAYMENT_DATE', 'PAYMENT_PAY_DATE', 'date', 'payDate']);
+			if (date !== undefined) {
+				date = String(date).trim().replace(/\//g, '-');
+				if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) this.AppError('收款日期格式错误');
+			}
+
+			let month = this._pickPaymentValue(dto, ['PAYMENT_MONTH', 'month']);
+			if (month !== undefined && !financeConfig.normalizeMonth(month)) this.AppError('收款月份格式错误');
+
+			if (this._pickPaymentValue(dto, ['PAYMENT_STAFF_ID', 'PAYMENT_OWNER_STAFF_ID', 'staffId', 'ownerStaffId']) !== undefined
+				&& this._payment && typeof this._payment.resolvePaymentOwner == 'function') {
+				await this._payment.resolvePaymentOwner(dto, order, operatorStaff);
+			}
+		}
+	}
+
+	_participantFinanceSnapshot(participants) {
+		return (participants || []).map(item => ({
+			id: item.id || '',
+			staffId: item.staffId || '',
+			roleName: item.roleName || '',
+			calcMode: item.calcMode || '',
+			baseType: this._normalizeParticipantBaseType(item),
+			percent: this._money(item.percent),
+			fixedAmount: this._money(item.fixedAmount),
+			manualAmount: this._money(item.manualAmount),
+			amount: this._money(item.amount),
+		})).sort((a, b) => {
+			let ak = [a.id, a.staffId, a.roleName, a.baseType, a.calcMode].join('|');
+			let bk = [b.id, b.staffId, b.roleName, b.baseType, b.calcMode].join('|');
+			return ak > bk ? 1 : (ak < bk ? -1 : 0);
+		});
+	}
+
+	_participantsChanged(oldParticipants, newParticipants) {
+		let oldSnap = this._participantFinanceSnapshot(oldParticipants);
+		let newSnap = this._participantFinanceSnapshot(newParticipants);
+		return JSON.stringify(oldSnap) != JSON.stringify(newSnap);
+	}
+
+	_financeBaseSnapshot(order) {
+		order = order || {};
+		let shootCent = this._financeDueCentSnapshot(order.ORDER_SHOOT_DUE_CENT, order.ORDER_AMOUNT, '拍摄应收分', '订单总应收', true);
+		let extraCent = this._financeDueCentSnapshot(order.ORDER_EXTRA_DUE_CENT, order.ORDER_EXTRA, '加选应收分', '加选金额', true);
+
+		let amountCent = this._safeCentSnapshot(order.ORDER_AMOUNT_CENT, null, '订单总应收分');
+		if (amountCent === null) amountCent = shootCent + extraCent;
+		else if (amountCent === 0 && shootCent + extraCent > 0) amountCent = shootCent + extraCent;
+
+		return {
+			ORDER_AMOUNT_CENT: amountCent,
+			ORDER_SHOOT_DUE_CENT: shootCent,
+			ORDER_EXTRA_DUE_CENT: extraCent,
+			ORDER_AMOUNT: this._money(order.ORDER_AMOUNT),
+			ORDER_EXTRA: this._money(order.ORDER_EXTRA),
+		};
+	}
+
+	_financeBaseChanged(oldOrder, newOrder) {
+		let oldSnap = this._financeBaseSnapshot(oldOrder);
+		let newSnap = this._financeBaseSnapshot(newOrder);
+		return JSON.stringify(oldSnap) != JSON.stringify(newSnap);
+	}
+
+	_hasSettlementMarker(item = {}) {
+		return Number(item.isSettled || item.IS_SETTLED || 0) == 1
+			|| !!(item.settledPayrollId || item.SETTLED_PAYROLL_ID || item.payrollId || item.PAYROLL_ID)
+			|| Number(item.settledTime || item.SETTLED_TIME || 0) > 0
+			|| !!(item.settledMonth || item.SETTLED_MONTH || item.payrollMonth || item.PAYROLL_MONTH);
+	}
+
+	_payrollContainsOrder(payroll, order) {
+		let keys = [order && order._id, order && order.ORDER_ID].filter(item => item !== undefined && item !== null && String(item).trim() !== '').map(item => String(item));
+		if (!keys.length) return false;
+
+		let fields = ['orderId', 'ORDER_ID', 'ORDER_ORDER_ID', 'COMMISSION_ORDER_ID', 'PAYMENT_ORDER_ID'];
+		let arrays = [payroll.PAYROLL_ITEMS, payroll.PAYROLL_ADJUSTMENTS, payroll.PAYROLL_COMMISSION_REFS];
+		for (let arr of arrays) {
+			if (!Array.isArray(arr)) continue;
+			for (let item of arr) {
+				if (!item || typeof item != 'object') continue;
+				for (let field of fields) {
+					if (item[field] !== undefined && item[field] !== null && keys.includes(String(item[field]))) return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	async _hasPayrollOrderMarker(oldOrder) {
+		let page = 1;
+		let size = 1000;
+		let total = 0;
+		let fields = 'PAYROLL_ID,PAYROLL_ITEMS,PAYROLL_ADJUSTMENTS,PAYROLL_COMMISSION_REFS,PAYROLL_STATUS';
+		let orderBy = {
+			PAYROLL_ADD_TIME: 'desc',
+		};
+
+		while (true) {
+			let data = await WorkPayrollModel.getList({}, fields, orderBy, page, size, page == 1, total);
+			let list = (data && data.list) || [];
+			if (page == 1) total = Number(data.total || 0);
+			if (list.some(payroll => this._payrollContainsOrder(payroll, oldOrder))) return true;
+			if (!list.length || list.length < size) break;
+			if (data.count && page >= data.count) break;
+			page++;
+		}
+
+		return false;
+	}
+
+	async _hasLegacySettlementLock(oldOrder) {
+		if (!oldOrder) return false;
+		let settleStatus = Number(oldOrder.ORDER_SETTLE_STATUS || 0);
+		if (settleStatus == WorkOrderModel.SETTLE.WAIT_PAY || settleStatus == WorkOrderModel.SETTLE.PAID) return true;
+		if ((oldOrder.ORDER_PARTICIPANTS || []).some(item => this._hasSettlementMarker(item))) return true;
+		if ((oldOrder.ORDER_ADJUSTMENTS || []).some(item => this._hasSettlementMarker(item))) return true;
+		return await this._hasPayrollOrderMarker(oldOrder);
+	}
+
+	async _hasEffectiveOrderCommission(oldOrder) {
+		if (!oldOrder) return false;
+		let orderKeys = [oldOrder._id, oldOrder.ORDER_ID].filter(item => item !== undefined && item !== null && String(item).trim() !== '').map(item => String(item));
+		for (let orderKey of orderKeys) {
+			let count = await WorkCommissionModel.count({
+				COMMISSION_ORDER_ID: orderKey,
+				COMMISSION_STATUS: ['!=', financeConfig.COMMISSION_STATUS.VOID],
+				COMMISSION_KIND: ['!=', financeConfig.COMMISSION_KIND.VOID],
+			});
+			if (count > 0) return true;
+		}
+		return false;
+	}
+
+	async _hasOrderLedgerLock(oldOrder) {
+		if (!oldOrder) return false;
+		if (Number(oldOrder.ORDER_PAYMENT_SYNC_TIME || 0) > 0) return true;
+		if (Number(oldOrder.ORDER_FINANCE_STATUS || 0) != financeConfig.ORDER_FINANCE_STATUS.NONE) return true;
+		if (Number(oldOrder.ORDER_COMMISSION_STATUS || 0) != financeConfig.ORDER_COMMISSION_STATUS.NONE) return true;
+		if (await this._hasEffectiveOrderCommission(oldOrder)) return true;
+
+		let summary = oldOrder.ORDER_PAYMENT_SUMMARY || {};
+		if (Number(summary.totalRecordCount || summary.effectiveCount || summary.count || summary.voidCount || 0) > 0) return true;
+
+		let payments = await this._payment.getOrderPayments(oldOrder._id, { includeVoid: true });
+		return Array.isArray(payments) && payments.length > 0;
+	}
+
+	async _assertCanChangeFinanceSnapshot(oldOrder, newData, newParticipants) {
+		if (!oldOrder) return;
+		let participantsChanged = this._participantsChanged(oldOrder.ORDER_PARTICIPANTS, newParticipants);
+		let financeBaseChanged = this._financeBaseChanged(oldOrder, newData);
+		if (!participantsChanged && !financeBaseChanged) return;
+
+		if (await this._hasLegacySettlementLock(oldOrder)) this.AppError('该订单已有结算或工资记录，禁止直接修改参与人/应收基数，请走财务调整流程');
+		if (await this._hasOrderLedgerLock(oldOrder)) this.AppError('该订单已有财务账本记录，禁止直接修改参与人/应收基数，请走财务调整流程');
+		await this._commission.assertCanChangeParticipants(oldOrder._id);
+	}
+
+	_extractPayments(ret) {
+		if (!ret) return [];
+		if (Array.isArray(ret)) return ret;
+		if (Array.isArray(ret.payments)) return ret.payments;
+		if (Array.isArray(ret.list)) return ret.list;
+		if (ret.payment) return [ret.payment];
+		if (ret.data) return this._extractPayments(ret.data);
+		return [];
+	}
+
+	_assertCommissionVoidNotBlocked(ret, action = '收款提成同步') {
+		let blocked = ret && Array.isArray(ret.blocked) ? ret.blocked : [];
+		if (!blocked.length) return;
+
+		let first = blocked[0] || {};
+		let msg = action + '失败：存在无法安全作废/反向调整的提成记录';
+		if (first.commissionId) msg += '（' + first.commissionId + '）';
+		if (first.kind) msg += '[' + first.kind + ']';
+		if (first.reason) msg += '：' + first.reason;
+		if (blocked.length > 1) msg += '；另有' + (blocked.length - 1) + '条';
+		this.AppError(msg);
+	}
+
+	async _preflightPaymentCommissionVoid(payment, reason = '', operatorStaff = null, action = '收款提成同步') {
+		if (!payment || Number(payment.PAYMENT_STATUS || 0) == financeConfig.PAYMENT_STATUS.VOID) return;
+		let ret = await this._commission.voidCommissionsByPayment(payment, reason, operatorStaff, { dryRun: true });
+		this._assertCommissionVoidNotBlocked(ret, action);
+	}
+
+	async _preflightOrderPaymentCommissionVoids(orderId, paymentDtos, operatorStaff) {
+		paymentDtos = paymentDtos || [];
+		if (!paymentDtos.length) return;
+		let order = await WorkOrderModel.getOne(orderId);
+		if (!order) this.AppError('订单不存在');
+
+		for (let dto of paymentDtos) {
+			if (!dto) continue;
+			let existing = null;
+			if (this._payment && typeof this._payment._findPaymentForDto == 'function') {
+				existing = await this._payment._findPaymentForDto(order._id, dto);
+			}
+			if (!existing) continue;
+
+			if (this._isDeletePaymentDto(dto)) {
+				await this._preflightPaymentCommissionVoid(existing, dto.PAYMENT_VOID_REASON || dto.reason || '订单编辑作废收款', operatorStaff, '收款作废同步提成');
+				continue;
+			}
+
+			if (Number(existing.PAYMENT_STATUS || 0) == financeConfig.PAYMENT_STATUS.VOID) continue;
+			if (this._payment && typeof this._payment._buildPaymentData == 'function' && typeof this._payment._financialChanged == 'function') {
+				let nextData = await this._payment._buildPaymentData(order, dto, operatorStaff, { existing });
+				if (this._payment._financialChanged(existing, nextData)) {
+					await this._preflightPaymentCommissionVoid(existing, '收款财务字段变更，预检查旧版本提成', operatorStaff, '收款替换同步提成');
+				}
+			}
+		}
+	}
+
+	async _syncOrderFinanceAfterSave(orderId, paymentDtos, operatorStaff, options = {}) {
+		paymentDtos = (paymentDtos || []).filter(dto => this._hasOrderPaymentDto(dto));
+		if (!paymentDtos.length) return null;
+
+		let ret = await this._payment.saveOrderPayments(orderId, paymentDtos, operatorStaff, options);
+		let payments = this._extractPayments(ret);
+		if (!payments.length) payments = await this._payment.getOrderPayments(orderId, { includeVoid: true });
+
+		for (let payment of payments) {
+			if (!payment) continue;
+			if (payment.PAYMENT_REPLACE_FROM_ID) {
+				let voidRet = await this._commission.voidCommissionsByPayment(payment.PAYMENT_REPLACE_FROM_ID, '收款替换，同步作废旧提成', operatorStaff);
+				this._assertCommissionVoidNotBlocked(voidRet, '收款替换同步提成');
+			}
+			if (Number(payment.PAYMENT_STATUS || 0) == financeConfig.PAYMENT_STATUS.VOID) {
+				let voidRet = await this._commission.voidCommissionsByPayment(payment, '收款作废，同步作废提成', operatorStaff);
+				this._assertCommissionVoidNotBlocked(voidRet, '收款作废同步提成');
+			} else {
+				await this._commission.generateByPayment(payment, operatorStaff);
+			}
+		}
+		await this._commission.refreshOrderCommissionStatus(orderId, { operatorStaff });
+		return ret;
+	}
+
+	async saveAdminOrderPayment(orderId, paymentDto = {}, adminStaff = null) {
+		let payment = Object.assign({}, paymentDto || {});
+		if (!payment.PAYMENT_CLIENT_KEY && !payment.clientKey && !payment.key) payment.clientKey = 'admin:' + dataUtil.makeID();
+		let order = await WorkOrderModel.getOne(orderId);
+		if (!order) order = await WorkOrderModel.getOne({ ORDER_ID: orderId });
+		if (!order) this.AppError('订单不存在');
+		await this._validateOrderPaymentsBeforeSave([payment], order, adminStaff);
+		await this._preflightOrderPaymentCommissionVoids(order._id, [payment], adminStaff);
+		let ret = await this._syncOrderFinanceAfterSave(order._id, [payment], adminStaff, {
+			source: financeConfig.PAYMENT_SOURCE.ADMIN,
+			logSource: financeConfig.FINANCE_LOG_SOURCE.MINI_ADMIN,
+			allowGenerateClientKey: true,
+		});
+		let payments = this._extractPayments(ret);
+		return { orderId: ret.orderId, payment: payments[0] || null, payments, summary: ret.summary };
+	}
+
+	async voidAdminOrderPayment(paymentId, reason = '', adminStaff = null) {
+		let payment = await this._payment.getPaymentByAnyId(paymentId);
+		if (!payment) this.AppError('收款记录不存在');
+		await this._preflightPaymentCommissionVoid(payment, reason || '后台作废收款同步提成', adminStaff, '后台作废收款同步提成');
+		let ret = await this._syncOrderFinanceAfterSave(payment.PAYMENT_ORDER_ID, [{
+			_id: payment._id,
+			PAYMENT_ID: payment.PAYMENT_ID,
+			PAYMENT_CLIENT_KEY: payment.PAYMENT_CLIENT_KEY,
+			IS_DELETE: 1,
+			PAYMENT_STATUS: financeConfig.PAYMENT_STATUS.VOID,
+			PAYMENT_VOID_REASON: reason,
+			reason,
+		}], adminStaff, {
+			source: financeConfig.PAYMENT_SOURCE.ADMIN,
+			logSource: financeConfig.FINANCE_LOG_SOURCE.MINI_ADMIN,
+		});
+		let payments = this._extractPayments(ret);
+		return { orderId: ret.orderId, payment: payments[0] || null, payments, summary: ret.summary };
 	}
 
 	_cleanOrderForStaff(order, staff) {
@@ -337,6 +821,48 @@ class WorkService extends BaseProjectService {
 		};
 	}
 
+	_enrichOrderListItem(order) {
+		let node = Object.assign({}, order);
+		let summary = node.ORDER_PAYMENT_SUMMARY || {};
+		let hasLedgerSummary = summary && (summary.effectiveCount !== undefined || summary.totalCent !== undefined || summary.totalAmount !== undefined);
+		let paid = hasLedgerSummary ? summary.totalAmount : undefined;
+		if (paid === undefined || paid === null) paid = this._money((node.ORDER_DEPOSIT || 0) + (node.ORDER_FINAL || 0) + (node.ORDER_EXTRA || 0));
+		node.PAID_AMOUNT = this._money(paid);
+		node.PAID_INCOME_AMOUNT = hasLedgerSummary ? this._money(summary.incomeAmount || 0) : node.PAID_AMOUNT;
+		node.UNPAID_AMOUNT = Math.max(0, this._money((node.ORDER_AMOUNT || 0) - node.PAID_AMOUNT));
+		return node;
+	}
+
+	_isOrderInListScope(order, range, scope, month) {
+		if (scope != 'month' || !month || month == 'all') return true;
+		if (!order.ORDER_DATE) return true;
+		return order.ORDER_DATE >= range.start && order.ORDER_DATE <= range.end;
+	}
+
+	async getOrderList(openId, month = '', scope = 'month') {
+		let staff = await this.getStaffByOpenId(openId);
+		if (month == 'all') scope = 'all';
+		let range = (scope == 'month' && month && month != 'all') ? this._monthRange(month) : null;
+		let orders = await WorkOrderModel.getAll({
+			ORDER_STATUS: WorkOrderModel.STATUS.COMM,
+		}, '*', {
+			ORDER_DATE: 'desc',
+			ORDER_TIME: 'asc',
+			ORDER_ADD_TIME: 'desc',
+		}, 1000);
+
+		orders = orders.filter(order => this._isOrderInListScope(order, range, scope, month));
+		if (staff.STAFF_IS_ADMIN != 1) {
+			orders = orders.filter(order => this._isParticipant(order, staff._id) || order.ORDER_CREATOR_STAFF_ID == staff._id || order.ORDER_CREATOR_OPENID == staff.STAFF_OPENID);
+		}
+
+		if (scope != 'month' || month == 'all') orders = orders.slice(0, 500);
+
+		return {
+			list: orders.map(order => this._enrichOrderListItem(this._cleanOrderForStaff(order, staff))),
+		};
+	}
+
 	async getDayList(openId, day, scope = 'all') {
 		let staff = await this.getStaffByOpenId(openId);
 		let orders = await WorkOrderModel.getAll({
@@ -376,7 +902,9 @@ class WorkService extends BaseProjectService {
 		let staff = await this.getStaffByOpenId(openId);
 		let order = await WorkOrderModel.getOne(id);
 		if (!order) this.AppError('订单不存在');
-		return this._cleanOrderForStaff(order, staff);
+		let detail = this._cleanOrderForStaff(order, staff);
+		if (detail.canFull) detail.ORDER_PAYMENTS = await this._payment.getOrderPayments(id);
+		return detail;
 	}
 
 	_getParticipantRule(staff, roleName) {
@@ -464,6 +992,8 @@ class WorkService extends BaseProjectService {
 	async saveOrder(openId, orderInput) {
 		let staff = await this.getStaffByOpenId(openId);
 		orderInput = orderInput || {};
+		let paymentDtos = Array.isArray(orderInput.ORDER_PAYMENTS) ? orderInput.ORDER_PAYMENTS : (orderInput.ORDER_PAYMENTS ? [orderInput.ORDER_PAYMENTS] : []);
+		paymentDtos = paymentDtos.filter(dto => this._hasOrderPaymentDto(dto));
 		let id = orderInput._id || orderInput.id || '';
 		let old = id ? await WorkOrderModel.getOne(id) : null;
 		if (id && !old) this.AppError('订单不存在');
@@ -474,7 +1004,7 @@ class WorkService extends BaseProjectService {
 		if (orderInput.ORDER_TYPE_ID) type = await WorkTypeModel.getOne(orderInput.ORDER_TYPE_ID);
 
 		let order = {
-			ORDER_DATE: orderInput.ORDER_DATE || (old && old.ORDER_DATE) || timeUtil.time('Y-M-D'),
+			ORDER_DATE: String(orderInput.ORDER_DATE || '').trim(),
 			ORDER_TIME: orderInput.ORDER_TIME || '',
 			ORDER_END_TIME: orderInput.ORDER_END_TIME || '',
 			ORDER_TYPE_ID: type ? type._id : (orderInput.ORDER_TYPE_ID || ''),
@@ -495,11 +1025,17 @@ class WorkService extends BaseProjectService {
 		};
 
 		if (!order.ORDER_CUSTOMER_NAME) this.AppError('请填写客户名称');
-		if (!order.ORDER_DATE) this.AppError('请选择日期');
 
 		order.ORDER_CUSTOMER_SURNAME = this._getSurname(order.ORDER_CUSTOMER_NAME);
 		order.ORDER_ACTUAL_AMOUNT = this._money(order.ORDER_DEPOSIT + order.ORDER_FINAL + order.ORDER_EXTRA);
+		order.ORDER_SHOOT_DUE_CENT = this._centInput(orderInput.ORDER_SHOOT_DUE_CENT, this._moneyCent(order.ORDER_AMOUNT));
+		order.ORDER_EXTRA_DUE_CENT = this._centInput(orderInput.ORDER_EXTRA_DUE_CENT, this._moneyCent(order.ORDER_EXTRA));
+		order.ORDER_AMOUNT_CENT = this._centInput(orderInput.ORDER_AMOUNT_CENT, order.ORDER_SHOOT_DUE_CENT + order.ORDER_EXTRA_DUE_CENT);
 		order.ORDER_PARTICIPANTS = await this._buildParticipants(orderInput.ORDER_PARTICIPANTS || [], order, old ? old.ORDER_PARTICIPANTS : []);
+
+		if (old) await this._assertCanChangeFinanceSnapshot(old, order, order.ORDER_PARTICIPANTS);
+		await this._validateOrderPaymentsBeforeSave(paymentDtos, old || order, staff);
+		if (old) await this._preflightOrderPaymentCommissionVoids(id, paymentDtos, staff);
 
 		if (old) {
 			if (old.ORDER_SETTLE_STATUS == WorkOrderModel.SETTLE.WAIT_AUDIT && order.ORDER_PROGRESS == WorkOrderModel.PROGRESS.DONE) {
@@ -523,6 +1059,7 @@ class WorkService extends BaseProjectService {
 			order._id = id;
 		}
 
+		await this._syncOrderFinanceAfterSave(id, paymentDtos, staff);
 		await this._upsertCustomer(order);
 		return { id };
 	}
@@ -535,17 +1072,21 @@ class WorkService extends BaseProjectService {
 		if (order.ORDER_STATUS == WorkOrderModel.STATUS.CANCEL) this.AppError('订单已取消');
 
 		order.ORDER_ACTUAL_AMOUNT = this._money(order.ORDER_DEPOSIT + order.ORDER_FINAL + order.ORDER_EXTRA);
-		order.ORDER_PARTICIPANTS = await this._buildParticipants(order.ORDER_PARTICIPANTS, order, order.ORDER_PARTICIPANTS);
+		let nextParticipants = await this._buildParticipants(order.ORDER_PARTICIPANTS, order, order.ORDER_PARTICIPANTS);
+		let participantsChanged = this._participantsChanged(order.ORDER_PARTICIPANTS, nextParticipants);
+		if (participantsChanged) await this._assertCanChangeFinanceSnapshot(order, order, nextParticipants);
 
-		await WorkOrderModel.edit(id, {
+		let editData = {
 			ORDER_PROGRESS: WorkOrderModel.PROGRESS.DONE,
 			ORDER_SETTLE_STATUS: WorkOrderModel.SETTLE.WAIT_AUDIT,
 			ORDER_COMPLETE_TIME: timeUtil.time(),
 			ORDER_COMPLETE_MONTH: timeUtil.time('Y-M'),
 			ORDER_ACTUAL_AMOUNT: order.ORDER_ACTUAL_AMOUNT,
-			ORDER_PARTICIPANTS: order.ORDER_PARTICIPANTS,
 			ORDER_AUDIT_REASON: '',
-		});
+		};
+		if (participantsChanged) editData.ORDER_PARTICIPANTS = nextParticipants;
+
+		await WorkOrderModel.edit(id, editData);
 
 		return { id };
 	}
@@ -555,10 +1096,9 @@ class WorkService extends BaseProjectService {
 		let order = await WorkOrderModel.getOne(id);
 		if (!order) this.AppError('订单不存在');
 		if (!this._canEditOrder(order, staff)) this.AppError('你无权取消该订单');
-		await WorkOrderModel.edit(id, {
-			ORDER_STATUS: WorkOrderModel.STATUS.CANCEL,
-			ORDER_CANCEL_REASON: reason || '',
-		});
+		let ret = await this._payment.cancelOrderWithFinanceCheck(id, reason || '', staff);
+		if (ret && (ret.needFinance || ret.canceled === false)) this.AppError(ret.message || '该订单存在未处理财务记录，请先处理财务后再取消');
+		return ret;
 	}
 
 	async restoreOrder(openId, id) {
@@ -608,12 +1148,26 @@ class WorkService extends BaseProjectService {
 		} else if (type == 'team') {
 			where.NOTE_TYPE = 'team';
 		} else {
-			where.or = [
-				{ NOTE_TYPE: 'team' },
-				{ NOTE_TYPE: 'personal', NOTE_CREATOR_STAFF_ID: staff._id },
-			];
-			delete where.NOTE_STATUS;
-			where.and = { NOTE_STATUS: 1 };
+			let orderBy = {
+				NOTE_EDIT_TIME: 'desc',
+			};
+			let teamList = await WorkNoteModel.getAllBig({
+				NOTE_STATUS: 1,
+				NOTE_TYPE: 'team',
+			}, '*', orderBy, 1000);
+			let personalList = await WorkNoteModel.getAllBig({
+				NOTE_STATUS: 1,
+				NOTE_TYPE: 'personal',
+				NOTE_CREATOR_STAFF_ID: staff._id,
+			}, '*', orderBy, 1000);
+			let map = {};
+			let list = teamList.concat(personalList).filter(item => {
+				if (!item || map[item._id]) return false;
+				map[item._id] = true;
+				return true;
+			});
+			list.sort((a, b) => Number(b.NOTE_EDIT_TIME || 0) - Number(a.NOTE_EDIT_TIME || 0));
+			return list;
 		}
 		return await WorkNoteModel.getAllBig(where, '*', {
 			NOTE_EDIT_TIME: 'desc',
@@ -703,7 +1257,7 @@ class WorkService extends BaseProjectService {
 		return node;
 	}
 
-	async getPayrollForStaff(staffId, month = '') {
+	async _getLegacyPayrollForStaff(staffId, month = '') {
 		let staff = await WorkStaffModel.getOne(staffId);
 		if (!staff) this.AppError('员工不存在');
 		month = month || timeUtil.time('Y-M');
@@ -793,6 +1347,8 @@ class WorkService extends BaseProjectService {
 		return {
 			staff: this._cleanStaff(staff, true),
 			month,
+			legacy: true,
+			cutoverMonth: financeConfig.getCutoverMonth(),
 			payable,
 			payableTotal,
 			adjustments,
@@ -803,6 +1359,13 @@ class WorkService extends BaseProjectService {
 			settledTotal,
 			total: this._money(payableTotal + adjustmentTotal),
 		};
+	}
+
+	async getPayrollForStaff(staffId, month = '') {
+		month = month || timeUtil.time('Y-M');
+		return await this._payroll.getPayrollForStaff(staffId, month, {
+			legacyProvider: async (legacyStaffId, legacyMonth) => await this._getLegacyPayrollForStaff(legacyStaffId, legacyMonth),
+		});
 	}
 
 	async getMyPayroll(openId, month = '') {

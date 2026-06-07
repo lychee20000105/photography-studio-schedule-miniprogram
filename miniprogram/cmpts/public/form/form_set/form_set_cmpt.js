@@ -69,7 +69,11 @@ Component({
 
 		get: function () {
 			return this.data.fields;
-		}, 
+		},
+
+		isDefaultField: function (field) {
+			return !!(field && field.isDefault);
+		},
 
 		bindUpTap: function (e) {
 			let idx = pageHelper.dataset(e, 'idx');

@@ -218,10 +218,38 @@ picker {
 	background: #111827;
 }
 
+.cancel {
+	background: #9ca3af;
+}
+
 .complete {
 	background: #ff2d62;
 }
 
-.cancel {
-	background: #9ca3af;
+.payment {
+	border-top: 1rpx solid #f0f2f5;
+	padding: 22rpx 0;
+}
+
+.payment.deleted {
+	opacity: .45;
+	text-decoration: line-through;
+}
+
+.pay-tip,
+.lock-tip {
+	color: #8b9099;
+	font-size: 24rpx;
+	padding-bottom: 16rpx;
+}
+
+.lock-tip {
+	color: #dc2626;
+	padding-bottom: 0;
+}
+
+.part-input.note {
+	flex: 1;
+	width: 100%;
+	text-align: left;
 }

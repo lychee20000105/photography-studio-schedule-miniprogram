@@ -1,0 +1,38 @@
+<block wx:if="{{isAdmin}}">
+	<view class="page">
+		<view class="title">{{title}}</view>
+
+		<view class="form">
+			<view class="row">
+				<text>开始日期</text>
+				<picker mode="date" value="{{startDay}}" bindchange="bindStartDayChange">
+					<view class="picker">{{startDay}}</view>
+				</picker>
+			</view>
+			<view class="row">
+				<text>结束日期</text>
+				<picker mode="date" value="{{endDay}}" bindchange="bindEndDayChange">
+					<view class="picker">{{endDay}}</view>
+				</picker>
+			</view>
+			<view class="row">
+				<text>名单状态</text>
+				<picker range="{{statusList}}" range-key="label" value="{{statusIndex}}" bindchange="bindStatusChange">
+					<view class="picker">{{statusList[statusIndex].label}}</view>
+				</picker>
+			</view>
+		</view>
+
+		<button class="btn-primary" bindtap="bindExportTap">导出Excel文件</button>
+
+		<view class="file" wx:if="{{fileUrl}}">
+			<view class="file-title">当前导出文件</view>
+			<view class="file-time">生成时间：{{fileTime}}</view>
+			<button class="btn" bindtap="bindCopyTap">复制下载链接</button>
+			<button class="btn danger" bindtap="bindDeleteTap">删除导出文件</button>
+		</view>
+
+		<view class="empty" wx:else>暂无导出文件</view>
+		<button class="btn muted" bindtap="bindRefreshTap">刷新导出状态</button>
+	</view>
+</block>

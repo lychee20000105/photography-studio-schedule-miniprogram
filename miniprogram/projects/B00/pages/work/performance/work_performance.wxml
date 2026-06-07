@@ -1,0 +1,83 @@
+<view class="page">
+	<view wx:if="{{!isLoad}}" class="empty">加载中...</view>
+
+	<view wx:if="{{isLoad && !data}}" class="empty-card">
+		<view class="empty-title">暂无业绩数据</view>
+		<view class="empty-desc">请先在“我的”绑定员工，或稍后重试</view>
+	</view>
+
+	<view wx:if="{{isLoad && data}}">
+		<picker mode="date" fields="month" value="{{month}}" bindchange="bindMonthChange">
+			<view class="month-card">
+				<text>{{month}}</text>
+				<text class="month-tip">切换月份</text>
+			</view>
+		</picker>
+
+		<view class="hero">
+			<view class="hero-label">我的本月净业绩</view>
+			<view class="hero-money">¥{{data.my.performance || 0}}</view>
+			<view class="hero-sub">排名：{{data.my.rankNo ? '第' + data.my.rankNo + '名' : '暂无排名'}} · 收款 {{data.my.incomeCount || 0}} 笔 · 退款 {{data.my.refundCount || 0}} 笔</view>
+		</view>
+
+		<view class="grid">
+			<view class="metric">
+				<text>先发提成</text>
+				<view>¥{{data.my.currentCommission || 0}}</view>
+			</view>
+			<view class="metric">
+				<text>释放提成</text>
+				<view>¥{{data.my.releaseCommission || 0}}</view>
+			</view>
+			<view class="metric">
+				<text>退款扣回</text>
+				<view class="danger">¥{{data.my.deductCommission || 0}}</view>
+			</view>
+			<view class="metric">
+				<text>调整项</text>
+				<view>¥{{data.my.adjustCommission || 0}}</view>
+			</view>
+			<view class="metric">
+				<text>待释放</text>
+				<view>¥{{data.my.frozenRemain || 0}}</view>
+			</view>
+			<view class="metric">
+				<text>本月应发</text>
+				<view>¥{{data.my.payable || 0}}</view>
+			</view>
+		</view>
+
+		<view class="section-head">
+			<text>业绩排行</text>
+			<view class="seg">
+				<view class="seg-item {{rankScope=='staff'?'active':''}}" data-scope="staff" bindtap="bindRankScopeTap">员工</view>
+				<view class="seg-item {{rankScope=='team'?'active':''}}" data-scope="team" bindtap="bindRankScopeTap">团队</view>
+			</view>
+		</view>
+		<view wx:if="{{rankList.length==0}}" class="empty small">暂无排行</view>
+		<view wx:for="{{rankList}}" wx:key="id" class="rank-card">
+			<view class="rank-no">{{item.rankNo}}</view>
+			<view class="rank-main">
+				<view class="rank-name">{{item.name}}</view>
+				<view class="rank-meta">收款 {{item.incomeCount || 0}} 笔 · 退款 {{item.refundCount || 0}} 笔</view>
+			</view>
+			<view class="rank-money">¥{{item.netPerformance || item.performance || 0}}</view>
+		</view>
+
+		<view class="section-head"><text>最近收款</text></view>
+		<view wx:if="{{data.paymentList.length==0}}" class="empty small">暂无收款</view>
+		<view wx:for="{{data.paymentList}}" wx:key="_id" class="list-card">
+			<view class="list-title">{{item.PAYMENT_ORDER_TYPE_NAME || '订单'}}｜{{item.PAYMENT_CUSTOMER_SURNAME || item.PAYMENT_CUSTOMER_NAME || '客户'}}</view>
+			<view class="list-meta">{{item.PAYMENT_DATE}} · {{item.PAYMENT_TYPE}} · {{item.PAYMENT_DIRECTION}}</view>
+			<view class="list-money {{item.PAYMENT_AMOUNT_CENT<0?'danger':''}}">¥{{item.PAYMENT_AMOUNT}}</view>
+		</view>
+
+		<view class="section-head"><text>最近提成</text></view>
+		<view wx:if="{{data.commissionList.length==0}}" class="empty small">暂无提成</view>
+		<view wx:for="{{data.commissionList}}" wx:key="_id" class="list-card">
+			<view class="list-title">{{item.COMMISSION_ORDER_TYPE_NAME || '订单'}}｜{{item.COMMISSION_CUSTOMER_SURNAME || item.COMMISSION_CUSTOMER_NAME || '客户'}}</view>
+			<view class="list-meta">{{item.COMMISSION_MONTH}} · {{item.COMMISSION_KIND}} · {{item.COMMISSION_ROLE_NAME}}</view>
+			<view class="list-money {{item.COMMISSION_AMOUNT_CENT<0?'danger':''}}">¥{{item.COMMISSION_AMOUNT}}</view>
+		</view>
+	</view>
+</view>

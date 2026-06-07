@@ -1,13 +1,13 @@
 /**
  * Notes: 预约模块后台管理-控制器
  * Ver : CCMiniCloud Framework 2.0.1 ALL RIGHTS RESERVED BY cclinux0730 (wechat)
- * Date: 2025-12-08 10:20:00 
+ * Date: 2025-12-08 10:20:00
  */
 
 const BaseProjectAdminController = require('./base_project_admin_controller.js');
 const AdminMeetService = require('../../service/admin/admin_meet_service.js');
 const timeUtil = require('../../../../framework/utils/time_util.js');
-const dataUtil = require('../../../../framework/utils/data_util.js'); 
+const dataUtil = require('../../../../framework/utils/data_util.js');
 const MeetModel = require('../../model/meet_model.js');
 const contentCheck = require('../../../../framework/validate/content_check.js');
 
@@ -252,7 +252,7 @@ class AdminMeetController extends BaseProjectAdminController {
 			daysSet: 'must|array|name=预约时间设置',
 			isShowLimit: 'must|int|in:0,1|name=是否显示可预约人数',
 
-			formSet: 'must|array|name=用户资料设置',
+			formSet: 'array|name=用户资料设置',
 		};
 
 		// 取得数据
@@ -263,7 +263,7 @@ class AdminMeetController extends BaseProjectAdminController {
 
 		let service = new AdminMeetService();
 		let result = await service.insertMeet(this._adminId, input);
- 
+
 
 		this.logOther('创建了新预约《' + input.title + '》');
 
@@ -303,7 +303,7 @@ class AdminMeetController extends BaseProjectAdminController {
 
 			isShowLimit: 'must|int|in:0,1|name=是否显示可预约人数',
 
-			formSet: 'must|array|name=用户资料设置',
+			formSet: 'array|name=用户资料设置',
 		};
 
 		// 取得数据
@@ -314,7 +314,7 @@ class AdminMeetController extends BaseProjectAdminController {
 
 		let service = new AdminMeetService();
 		let result = service.editMeet(input);
- 
+
 
 		this.logOther('修改了预约《' + input.title + '》');
 
@@ -337,7 +337,7 @@ class AdminMeetController extends BaseProjectAdminController {
 
 		let service = new AdminMeetService();
 		await service.delMeet(input.meetId);
- 
+
 
 		if (title)
 			this.logOther('删除了预约《' + title + '》');
@@ -385,7 +385,7 @@ class AdminMeetController extends BaseProjectAdminController {
 
 		// 内容审核
 		await contentCheck.checkTextMultiAdmin(input);
- 
+
 
 		let service = new AdminMeetService();
 		return await service.updateMeetStyleSet(input);

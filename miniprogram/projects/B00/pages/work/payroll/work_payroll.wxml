@@ -1,44 +1,46 @@
-<view class="page" wx:if="{{data}}">
-	<picker mode="date" fields="month" value="{{month}}" bindchange="bindMonthChange">
-		<view class="month">{{month}}</view>
-	</picker>
+<view class="page">
+	<view wx:if="{{!data}}" class="empty">暂无工资数据，请下拉刷新或切换月份</view>
+	<view wx:if="{{data}}">
+		<picker mode="date" fields="month" value="{{month}}" bindchange="bindMonthChange">
+			<view class="month">{{month}}</view>
+		</picker>
 
-	<view class="summary">
-		<view>
-			<text>本月预计结算</text>
-			<view>{{data.payableTotal}}</view>
+		<view wx:if="{{data.legacy}}">
+			<view class="summary">
+				<view><text>本月预计结算</text><view>{{data.payableTotal}}</view></view>
+				<view><text>调整金额</text><view>{{data.adjustmentTotal}}</view></view>
+				<view><text>已结算</text><view>{{data.settledTotal}}</view></view>
+			</view>
+			<view class="legacy-tip">旧月份工资按原订单参与人口径展示</view>
+			<view class="section">本月预计结算</view>
+			<view wx:if="{{payable.length==0}}" class="empty">暂无</view>
+			<view wx:for="{{payable}}" wx:key="orderId" class="card"><view class="title">{{item.typeName}}｜{{item.customerName}}</view><view class="meta">{{item.date}} · {{item.roleName}}</view><view class="amount">{{item.amount}}</view></view>
+			<view class="section">调整金额</view>
+			<view wx:if="{{adjustments.length==0}}" class="empty">暂无</view>
+			<view wx:for="{{adjustments}}" wx:key="id" class="card"><view class="title">{{item.typeName}}｜{{item.customerName}}</view><view class="meta">{{item.reason}}</view><view class="amount">{{item.amount}}</view></view>
 		</view>
-		<view>
-			<text>调整金额</text>
-			<view>{{data.adjustmentTotal}}</view>
+
+		<view wx:else>
+			<view class="summary new">
+				<view><text>先发</text><view>¥{{currentText}}</view></view>
+				<view><text>释放</text><view>¥{{releaseText}}</view></view>
+				<view><text>本月应发</text><view>¥{{totalText}}</view></view>
+			</view>
+			<view class="summary new second">
+				<view><text>扣回</text><view class="danger">¥{{deductText}}</view></view>
+				<view><text>调整</text><view>¥{{adjustText}}</view></view>
+				<view><text>待释放</text><view>¥{{frozenRemainText}}</view></view>
+			</view>
+			<view class="legacy-tip">新工资从提成账本汇总；冻结项只展示，不进入本月应发。</view>
+			<view class="section">应发明细</view>
+			<view wx:if="{{items.length==0}}" class="empty">暂无待发提成</view>
+			<view wx:for="{{items}}" wx:key="commissionId" class="card"><view class="title">{{item.customerSurname}}{{item.customerName}}｜{{item.kind}}</view><view class="meta">{{item.month}} · {{item.roleName}} · {{item.orderNo}}</view><view class="amount">¥{{item.amount}}</view></view>
+			<view class="section">待释放冻结</view>
+			<view wx:if="{{frozenItems.length==0}}" class="empty">暂无冻结</view>
+			<view wx:for="{{frozenItems}}" wx:key="commissionId" class="card"><view class="title">{{item.customerSurname}}{{item.customerName}}｜冻结</view><view class="meta">{{item.month}} · {{item.roleName}}</view><view class="amount muted">¥{{item.amount}}</view></view>
+			<view class="section">已发工资单</view>
+			<view wx:if="{{payrollList.length==0}}" class="empty">暂无已发工资单</view>
+			<view wx:for="{{payrollList}}" wx:key="_id" class="card"><view class="title">{{item.PAYROLL_STAFF_NAME}}｜{{item.PAYROLL_MONTH}}</view><view class="meta">{{item.payrollNoteText}}</view><view class="amount">¥{{item.PAYROLL_ACTUAL_AMOUNT}}</view></view>
 		</view>
-		<view>
-			<text>已结算</text>
-			<view>{{data.settledTotal}}</view>
-		</view>
-	</view>
-
-	<view class="section">本月预计结算</view>
-	<view wx:if="{{data.payable.length==0}}" class="empty">暂无</view>
-	<view wx:for="{{data.payable}}" wx:key="orderId" class="card">
-		<view class="title">{{item.typeName}}｜{{item.customerName}}</view>
-		<view class="meta">{{item.date}} · {{item.roleName}}</view>
-		<view class="amount">{{item.amount}}</view>
-	</view>
-
-	<view class="section">调整金额</view>
-	<view wx:if="{{data.adjustments.length==0}}" class="empty">暂无</view>
-	<view wx:for="{{data.adjustments}}" wx:key="id" class="card">
-		<view class="title">{{item.typeName}}｜{{item.customerName}}</view>
-		<view class="meta">{{item.reason}}</view>
-		<view class="amount">{{item.amount}}</view>
-	</view>
-
-	<view class="section">剩余预计入账</view>
-	<view wx:if="{{data.estimated.length==0}}" class="empty">暂无</view>
-	<view wx:for="{{data.estimated}}" wx:key="orderId" class="card">
-		<view class="title">{{item.typeName}}｜{{item.customerName}}</view>
-		<view class="meta">{{item.date}} · {{item.progressDesc}} · {{item.roleName}}</view>
-		<view class="amount muted">{{item.amount}}</view>
 	</view>
 </view>
