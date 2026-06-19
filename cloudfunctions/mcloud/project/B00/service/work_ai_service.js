@@ -398,7 +398,7 @@ class WorkAiService extends WorkPermissionService {
 		if (action.action == 'create_note') action.action = 'add_note';
 		if (action.action == 'query_schedule') ret = await this._agentQuerySchedule(openId, staff, action.data || {});
 		else if (action.action == 'create_orders' && batchOrders.length) ret = await this._agentCreateOrders(openId, staff, batchPayload, attachments, pageContext);
-		else if (action.action == 'create_orders') ret = await this._agentCreateOrder(openId, staff, action.data || {}, attachments, pageContext);
+		else if (action.action == 'create_orders') ret = { reply: 'AI返回了批量新增动作但没有包含订单列表，请重新描述或上传截图。' };
 		else if (action.action == 'create_order' && batchOrders.length) ret = await this._agentCreateOrders(openId, staff, batchPayload, attachments, pageContext);
 		else if (action.action == 'create_order') ret = await this._agentCreateOrder(openId, staff, action.data || {}, attachments, pageContext);
 		else if (action.action == 'join_order') ret = await this._agentJoinOrder(openId, staff, action.data || {}, pageContext);

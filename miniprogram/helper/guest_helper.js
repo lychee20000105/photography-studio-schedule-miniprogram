@@ -334,7 +334,7 @@ function handleGuestAgent(text, attachments = []) {
 	let deposit = _parseAmount(text, ['定金', '订金']);
 	let final = _parseAmount(text, ['尾款']);
 	let amount = _parseAmount(text, ['订单金额', '金额', '总价', '总额', '报价', '价格']);
-	if (!final && amount) final = Math.max(0, amount - Math.max(deposit, paid));
+	if (!final && amount) final = Math.max(0, amount - paid);
 	let order = saveGuestOrder({
 		date,
 		time: _parseTime(text),
