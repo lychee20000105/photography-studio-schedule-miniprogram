@@ -20,3 +20,5 @@
 - 2026-06-19T17:33:05 Publish worker for Round 027 started.
 - 2026-06-19T17:33:19 Round 031 completed; output: rounds/round031-output.md
 - 2026-06-19T17:34:19 Round 032 started.
+- 2026-06-19T17:36:49 Publish watcher error: 设置“lastProcessedAt”时发生异常:“在此对象上找不到属性“lastProcessedAt”。请确认该属性存在并且可设置。”
+- 2026-06-19T17:39:49 Publish worker for Round 027 started.
