@@ -37,8 +37,8 @@
 **Commit type:** append-only (no files deleted or renamed).
 
 **Commit hash and push result:**
-- Commit: (pending — will be filled after commit)
-- Push: (pending — will be filled after push)
+- Commit: `9a8352b7b320d14eaffe9471bf11da59aa4c57ea`
+- Push: `d4cc3d9..9a8352b main -> main` (success, remote hash verified)
 
 **GitHub:** https://github.com/lychee20000105/photography-studio-schedule-miniprogram
 
