@@ -528,6 +528,14 @@ Component({
 		bindQuickAsk(e) {
 			let text = e.currentTarget.dataset.text || '';
 			if (text.includes('截图') && !(this.data.chatAttachments || []).length) {
+				if (guestHelper.isGuest()) {
+					let guestMsg = { role: 'assistant', content: '访客模式不支持截图 AI 识别。你可以直接用文字告诉我订单信息，例如：\n"6月20日10:00 罗雅 外景写真 金额299 定金150"\n\n绑定员工后可使用完整截图录单功能。' };
+					let messages = trimMessages((this.data.chatMessages || []).concat([guestMsg]));
+					this.setData({ chatMessages: messages });
+					this._saveChat(messages);
+					this._scrollChatToBottom();
+					return;
+				}
 				this.setData({ chatInput: text });
 				this._chooseImageAttachment();
 				return;

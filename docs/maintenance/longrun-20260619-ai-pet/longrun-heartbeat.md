@@ -194,3 +194,8 @@
 - 2026-06-19T23:13:00 Publish worker for Round 060 scheduled.
 - 2026-06-19T23:13:00 Publish worker for Round 060 started with stdin prompt and timeout 1800s.
 - 2026-06-19T23:13:21 Round 061 started.
+- 2026-06-19T23:20:35 Publish worker for Round 060 exited with code 0.
+- 2026-06-19T23:20:59 Round 061 completed; output: rounds/round061-output.md
+- 2026-06-19T23:21:59 Round 062 started.
+- 2026-06-19T23:23:01 Publish worker for Round 061 scheduled.
+- 2026-06-19T23:23:01 Publish worker for Round 061 started with stdin prompt and timeout 1800s.

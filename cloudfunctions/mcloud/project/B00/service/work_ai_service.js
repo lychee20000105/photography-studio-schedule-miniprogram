@@ -480,7 +480,9 @@ class WorkAiService extends WorkPermissionService {
 		if (idx < 0) return false;
 		let around = text.slice(Math.max(0, idx - 12), idx + keyword.length + 24);
 		if (/(上午|中午|下午|晚上|早上|凌晨|点|半|全天|拍摄|拍|视频|写真|跟拍|记录|新增|登记|安排|档期|事项|订单|休息|请假|跟进|客户|提醒)/.test(around)) return true;
-		return /(记录|新增|登记|安排|档期|事项|订单|休息|请假|跟进|拍摄)/.test(text);
+		// Fallback: only match clear scheduling ACTION verbs, not nouns that appear in casual queries
+		// (e.g. "昨天的订单怎么样了" contains "订单" but is a query, not a scheduling action)
+		return /(记录|新增|登记|安排|录入|创建|添加|请假|休息)/.test(text);
 	}
 
 	_extractRelativeTextDate(text) {
