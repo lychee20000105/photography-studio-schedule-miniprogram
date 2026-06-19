@@ -464,6 +464,8 @@ Component({
 					}
 				}
 				this.setData({ chatAttachments: current.concat(add) });
+				let total = current.length + add.length;
+				wx.showToast({ title: '已添加' + total + '张图片', icon: 'success', duration: 1200 });
 			} catch (err) {
 				console.error(err);
 				wx.showToast({ title: '上传失败', icon: 'none' });
@@ -527,7 +529,7 @@ Component({
 			let text = e.currentTarget.dataset.text || '';
 			if (text.includes('截图') && !(this.data.chatAttachments || []).length) {
 				this.setData({ chatInput: text });
-				wx.showToast({ title: '请先点左侧 + 上传截图', icon: 'none', duration: 2000 });
+				this._chooseImageAttachment();
 				return;
 			}
 			this.setData({ chatInput: text }, () => this.bindChatSend());
