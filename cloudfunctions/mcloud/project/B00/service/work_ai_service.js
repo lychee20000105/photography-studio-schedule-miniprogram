@@ -338,7 +338,8 @@ class WorkAiService extends WorkPermissionService {
 				let imgCount = raw.filter(p => p && p.type == 'image_url').length;
 				raw = imgCount > 0 ? textParts + ` [附带${imgCount}张图片]` : textParts;
 			}
-			let content = asText(raw, 800);
+			let limit = item.role == 'assistant' ? 4000 : 800;
+			let content = asText(raw, limit);
 			if (!content) continue;
 			list.push({ role: item.role, content });
 		}

@@ -16,3 +16,7 @@
 - 2026-06-19T17:27:00 Round 030 completed; output: rounds/round030-output.md. Fixes: _cleanDate datetime-without-separator fallback, attachment preview wx:key for guest images.
 - 2026-06-19T17:27:07 Round 030 completed; output: rounds/round030-output.md
 - 2026-06-19T17:28:07 Round 031 started.
+- 2026-06-19T17:30:05 Publish watcher error: 设置“lastProcessedAt”时发生异常:“在此对象上找不到属性“lastProcessedAt”。请确认该属性存在并且可设置。”
+- 2026-06-19T17:33:05 Publish worker for Round 027 started.
+- 2026-06-19T17:33:19 Round 031 completed; output: rounds/round031-output.md
+- 2026-06-19T17:34:19 Round 032 started.
