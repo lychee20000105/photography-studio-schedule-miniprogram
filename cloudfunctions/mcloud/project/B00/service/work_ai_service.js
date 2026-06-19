@@ -438,6 +438,9 @@ class WorkAiService extends WorkPermissionService {
 	_extractSingleTextDate(text) {
 		text = asText(text, 800);
 		if (!text) return '';
+		// Strip all whitespace so regexes match dates the AI outputs with
+		// spaces (e.g. "2026年 6月 20日" or "6 月 20 日").
+		text = text.replace(/[\s　]+/g, '');
 		let found = {};
 		let pushDate = raw => {
 			try {
@@ -575,11 +578,14 @@ class WorkAiService extends WorkPermissionService {
 	}
 
 	_cleanActionDate(date, required = true, options = {}) {
-		if (options.allowUserDateHint !== false) {
+		date = asText(date, 30);
+		// Only use user-message hint when AI didn't provide a usable explicit date.
+		// This prevents user keywords like "明天" from overriding a screenshot date
+		// that the AI correctly extracted (e.g. "2026-06-25").
+		if (options.allowUserDateHint !== false && (!date || this._isDatePlaceholder(date))) {
 			let hint = this._extractRelativeTextDate(this._agentUserMessage || '');
 			if (hint) return hint;
 		}
-		date = asText(date, 30);
 		if (date) {
 			let relRules = [
 				{ key: '大后天', days: 3 },
