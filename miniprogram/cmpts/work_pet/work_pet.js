@@ -308,8 +308,9 @@ Component({
 			pet.exp = clamp(pet.exp + 5, 0, 99999);
 			pet.hunger = clamp(pet.hunger + 10, 0, 100);
 			if (pet.health < 80) pet.health = clamp(pet.health + 3, 0, 100);
-			pet.mood = pet.health < 35 ? 'sick' : 'happy';
-			pet.moodText = pet.mood == 'sick' ? '好一点了' : '在呢';
+			if (pet.health < 35) { pet.mood = 'sick'; pet.moodText = '好一点了'; }
+			else if (pet.hunger < 25) { pet.mood = 'hungry'; pet.moodText = '在呢'; }
+			else { pet.mood = 'happy'; pet.moodText = '在呢'; }
 			this.savePet(pet);
 			let leveled = pet.level > oldLevel;
 			this.openChat();
