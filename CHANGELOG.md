@@ -609,6 +609,12 @@ AI 小助手配置页调试修复版本。微信开发者工具曾显示 `./proj
 - `node --check` 通过。
 - `git diff --check` 通过。
 
+
+## v0.1.0 - 2026-06-19
+
+- Initialized GitHub Releases / docs/releases/ as the public version archive.
+- Added append-only documentation policy: future project copy should stack by version instead of replacing original upload content.
+- Documentation-only update; source code was not intentionally changed.
 ## v1.2.0 - 2026-06-08
 
 业绩、收款、提成、工资结算和小程序内管理中心正式版本。
