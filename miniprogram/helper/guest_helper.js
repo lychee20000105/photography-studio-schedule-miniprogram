@@ -185,7 +185,7 @@ function _parseCustomer(text) {
 	text = String(text || '');
 	let m = text.match(/客户[：:\s]*([\u4e00-\u9fa5A-Za-z0-9]{1,12})/);
 	if (m) return m[1];
-	m = text.match(/(?:给|帮|为)?([一-龥]{1,3}?)(?<![我你他她它谁请让])(?:姐|哥|总|老师|客户)?(?:新增|记录|安排|登记|定|(?<!跟)拍)/);
+	m = text.match(/(?:给|帮|为)?([一-龥]{1,3}?)(?<![我你他她它谁请让])(?:姐|哥|总|老师|客户)?(?:新增|记录|安排|登记|定|(?<![跟商])拍)/);
 	if (m) return m[1];
 	// Name before type keyword: customer name before type (2-3 char CJK)
 	m = text.match(/(?:^|\s)([\u4e00-\u9be5]{2,3})(?=\s+(?:\u5916\u666f\u5199\u771f|\u5a5a\u793c\u8ddf\u62cd|\u5546\u62cd|\u5546\u4e1a\u62cd\u6444|\u6d3b\u52a8\u8ddf\u62cd|\u5199\u771f|\u767e\u65e5\u5bb4))/);
@@ -198,7 +198,7 @@ function _parseCustomer(text) {
 function _parseAmount(text, names) {
 	text = String(text || '');
 	for (let name of names) {
-		let reg = new RegExp(name + '\\s*([\\d,]+(?:\\.\\d+)?)');
+		let reg = new RegExp(name + '[\\s：:]*([\\d,]+(?:\\.\\d+)?)');
 		let m = text.match(reg);
 		if (m) return _money(m[1]);
 	}
@@ -246,9 +246,11 @@ function getOptions() {
 function _normalizeType(typeName) {
 	typeName = String(typeName || '').trim();
 	let types = getOptions().types;
+	let aliasMap = { '商业拍摄': '商拍' };
+	let aliased = aliasMap[typeName] || '';
 	let hit = types.find(item => item.TYPE_NAME == typeName)
+		|| (aliased ? types.find(item => item.TYPE_NAME == aliased) : null)
 		|| types.find(item => typeName && (typeName.indexOf(item.TYPE_NAME) >= 0 || item.TYPE_NAME.indexOf(typeName) >= 0))
-		|| types.find(item => String(item.TYPE_NAME || '').indexOf('写真') >= 0)
 		|| types[0];
 	return hit || { _id: 'guest_type', TYPE_NAME: typeName || '临时档期', TYPE_COLOR: '#537d96' };
 }
@@ -308,7 +310,7 @@ function handleGuestAgent(text, attachments = []) {
 			reply: '访客模式不会把截图上传给 AI 或写入真实系统。你可以用文字说”6月12日11:00 罗雅 外景写真 金额299 已收100”，我会只在本机生成一条临时访客档期。',
 		};
 	}
-	if (!/(新增|记录|安排|登记|录入|订单|档期|拍摄|定了|拍了|外景|写真|婚礼|商拍|百日宴)/.test(text)) {
+	if (!/(新增|记录|安排|登记|录入|订单|档期|拍摄|定了|拍了|外景|写真|婚礼|商拍|百日宴|活动跟拍|跟拍)/.test(text)) {
 		return {
 			created: false,
 			reply: '当前是访客体验模式：我不会读取真实档期、订单、客户、工资或团队数据。绑定员工后可以使用完整 AI 对话；访客文字新增只会生成本机临时演示档期。',
@@ -322,8 +324,12 @@ function handleGuestAgent(text, attachments = []) {
 			reply: '访客模式可以创建本机临时档期，但需要至少说清日期和客户。示例：6月12日11:00 罗雅 外景写真 金额299 已收100。',
 		};
 	}
-	let types = getOptions().types;
-	let type = types.find(item => text.indexOf(item.TYPE_NAME) >= 0) || {};
+	let typeKeyword = '';
+	let typeHints = ['外景写真', '婚礼跟拍', '商拍', '商业拍摄', '活动跟拍', '跟拍', '写真', '百日宴'];
+	for (let kw of typeHints) {
+		if (text.indexOf(kw) >= 0) { typeKeyword = kw; break; }
+	}
+	let type = _normalizeType(typeKeyword);
 	let paid = _parseAmount(text, ['已收', '实收', '收了', '收款']);
 	let deposit = _parseAmount(text, ['定金']);
 	let final = _parseAmount(text, ['尾款']);

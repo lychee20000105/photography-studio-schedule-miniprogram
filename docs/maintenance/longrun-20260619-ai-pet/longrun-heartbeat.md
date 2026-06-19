@@ -132,3 +132,21 @@
 - 2026-06-19T21:15:00 Round 027 publish: committed 3c81b93 locally. Push blocked by SSL/TLS schannel handshake failure and invalid gh auth keyring token.
 - 2026-06-19T21:17:27 Publish watcher error: 设置“lastProcessedAt”时发生异常:“在此对象上找不到属性“lastProcessedAt”。请确认该属性存在并且可设置。”
 - 2026-06-19T21:20:27 Publish worker for Round 027 started.
+- 2026-06-19T21:24:45 Publish watcher error: 设置“lastProcessedAt”时发生异常:“在此对象上找不到属性“lastProcessedAt”。请确认该属性存在并且可设置。”
+- 2026-06-19T13:30:19 Round 053 completed; output: rounds/round053-output.md. Bug fixes: (1) _parseCustomer name-before-type pattern — '6月20日 罗雅 外景写真' now correctly extracts '罗雅' instead of '金额299'; (2) _parseCustomer verb false match — '商拍' no longer captures '商' as customer name; (3) _normalizeType removed opinionated '写真' fallback; (4) keyword check now includes '活动跟拍'/'跟拍'. 10/10 tests passed.
+- 2026-06-19T21:30:38 Round 053 completed; output: rounds/round053-output.md
+- 2026-06-19T21:30:49 Restored adaptive low-output scripts and reset publish watcher state to Round 051 to process Round 052 once.
+- 2026-06-19T21:31:38 Round 054 started.
+- 2026-06-19T21:31:54 Publish watcher started with adaptive low-output policy. PollSeconds=600.
+- 2026-06-19T21:31:55 Publish worker for Round 052 started.
+- 2026-06-19T21:32:29 Status JSON repaired with quiet/adaptive output policy.
+- 2026-06-19T21:36:13 Publish watcher concurrency guard enabled and watcher restarted.
+- 2026-06-19T21:36:13 Publish watcher started with adaptive low-output policy. PollSeconds=600.
+- 2026-06-19T21:36:56 Publish watcher script rewritten with concurrency guard and restarted.
+- 2026-06-19T21:36:56 Publish watcher started with adaptive low-output policy. PollSeconds=600.
+- 2026-06-19T21:36:57 Publish watcher delayed Round 053: previous publish worker is still running.
+- 2026-06-19T21:39:31 Relaunched Round 052 publish worker with auto permission mode and timeout guard.
+- 2026-06-19T21:39:32 Publish worker for Round 052 started with timeout 900s.
+- 2026-06-19T21:39:32 Publish worker for Round 052 exited with code .
+- 2026-06-19T21:40:44 Relaunched Round 052 publish worker using stdin prompt mode.
+- 2026-06-19T21:40:45 Publish worker for Round 052 started with stdin prompt and timeout 900s.
