@@ -29,9 +29,9 @@
 | 项目 | 状态 |
 |------|------|
 | GitHub 仓库 | https://github.com/lychee20000105/photography-studio-schedule-miniprogram |
-| Commit | *(待 push 后填写)* |
-| Push | *(待 push 后填写)* |
-| 远程验证 | *(待 push 后填写)* |
+| Commit | `31b1d8f` — Update longrun Round 035 code fix and docs, fix publish-round027 mojibake |
+| Push | `7820e02..31b1d8f main -> main` 成功 |
+| 远程验证 | hash 匹配（`31b1d8ff6ccf2fea8882f1164c694d1ec1d54fef`） |
 | 文件变更 | 6 files changed |
 | 删除/重命名 | 无 |
 
