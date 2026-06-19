@@ -299,6 +299,7 @@ Component({
 			pet = normalizePet(pet);
 			wx.setStorageSync(STORAGE_KEY, pet);
 			this.setData({ pet, toolIcon: TYPE_MAP[pet.type].icon });
+			return pet;
 		},
 		bindPetTap() {
 			if (this.data.dragging || Date.now() < (this._tapBlockedUntil || 0)) return;
@@ -311,7 +312,7 @@ Component({
 			if (pet.health < 35) { pet.mood = 'sick'; pet.moodText = '好一点了'; }
 			else if (pet.hunger < 25) { pet.mood = 'hungry'; pet.moodText = '吃饱啦'; }
 			else { pet.mood = 'happy'; pet.moodText = '在呢'; }
-			this.savePet(pet);
+			pet = this.savePet(pet);
 			let leveled = pet.level > oldLevel;
 			let bubble = leveled
 				? '升级啦！Lv.' + pet.level

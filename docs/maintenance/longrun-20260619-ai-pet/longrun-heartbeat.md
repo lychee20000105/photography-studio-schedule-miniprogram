@@ -96,3 +96,8 @@
 - 2026-06-19T19:56:51 Publish worker for Round 027 started.
 - 2026-06-19T20:01:53 Round 046 completed; output: rounds/round046-output.md
 - 2026-06-19T20:02:53 Round 047 started.
+- 2026-06-19T20:04:13 Publish watcher error: 设置”lastProcessedAt”时发生异常:”在此对象上找不到属性”lastProcessedAt”。请确认该属性存在并且可设置。”
+- 2026-06-19T20:15:00 Round 047 completed; output: rounds/round047-output.md. Bug fix: pet level-up bubble never showed — savePet() normalized pet internally but bindPetTap's local variable kept old reference, so leveled check was always false. Fixed by returning normalized pet from savePet().
+- 2026-06-19T20:06:48 Round 047 completed; output: rounds/round047-output.md
+- 2026-06-19T20:07:13 Publish worker for Round 027 started.
+- 2026-06-19T20:07:48 Round 048 started.
