@@ -656,6 +656,30 @@
 	color: #8b9099;
 }
 
+.typing-text {
+	color: inherit;
+}
+
+.typing-dots {
+	display: inline;
+}
+
+.typing-dots .dot {
+	display: inline;
+	animation: typing-bounce 1.2s ease-in-out infinite;
+	color: inherit;
+	opacity: .5;
+}
+
+.typing-dots .dot1 { animation-delay: 0s; }
+.typing-dots .dot2 { animation-delay: .2s; }
+.typing-dots .dot3 { animation-delay: .4s; }
+
+@keyframes typing-bounce {
+	0%, 60%, 100% { opacity: .3; }
+	30% { opacity: 1; }
+}
+
 .chat-image-grid {
 	display: flex;
 	flex-wrap: wrap;
@@ -930,6 +954,10 @@
 
 .chat-bubble.loading {
 	color: #6b6158;
+}
+
+.typing-dots .dot {
+	opacity: .4;
 }
 
 .pet-chat-actions {

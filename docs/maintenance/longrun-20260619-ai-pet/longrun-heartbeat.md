@@ -37,3 +37,8 @@
 - 2026-06-19T18:05:00 Round 034 completed; output: rounds/round034-output.md. UX: "清空" button for batch attachment clearing. No new bugs found; codebase solid after 33 rounds.
 - 2026-06-19T18:02:11 Round 034 completed; output: rounds/round034-output.md
 - 2026-06-19T18:03:11 Round 035 started.
+- 2026-06-19T18:07:36 Publish watcher error: 设置“lastProcessedAt”时发生异常:“在此对象上找不到属性“lastProcessedAt”。请确认该属性存在并且可设置。”
+- 2026-06-19T18:10:36 Publish worker for Round 027 started.
+- 2026-06-19T18:15:00 Round 035 completed; output: rounds/round035-output.md. UX: animated typing dots on AI loading indicator. No new bugs found; codebase solid after 34 rounds.
+- 2026-06-19T18:12:04 Round 035 completed; output: rounds/round035-output.md
+- 2026-06-19T18:13:04 Round 036 started.

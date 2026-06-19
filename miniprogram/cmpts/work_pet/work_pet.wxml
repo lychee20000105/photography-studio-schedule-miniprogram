@@ -115,7 +115,10 @@
 							</view>
 						</view>
 					<view wx:if="{{chatLoading}}" class="chat-msg assistant">
-						<view class="chat-bubble loading">小猫正在思考...</view>
+						<view class="chat-bubble loading">
+							<text class="typing-text">小猫正在思考</text>
+							<text class="typing-dots"><text class="dot dot1">.</text><text class="dot dot2">.</text><text class="dot dot3">.</text></text>
+						</view>
 					</view>
 					<view id="chat-bottom"></view>
 				</scroll-view>
