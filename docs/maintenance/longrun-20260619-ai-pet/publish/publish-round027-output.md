@@ -87,9 +87,9 @@
 
 | Commit | 说明 |
 |--------|------|
-| *(待填写)* | Round 042 代码修复和文档更新 |
+| `cfc67d1` | Update longrun Round 042 date parsing fix and publish docs |
 
-**推送结果:** *(待填写)*
+**推送结果:** `c068702..cfc67d1 main -> main` 成功，远程 hash 匹配。
 **剩余风险:**
 - Round 043 任务文件已存在但尚未完成，将在后续轮次发布
 - `publish-round027-output.md` 编码问题需持续关注，确保工作副本始终为 UTF-8
