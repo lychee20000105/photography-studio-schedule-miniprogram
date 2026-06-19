@@ -35,7 +35,13 @@ Read and followed `C:\Users\Administrator\.codex\skills\publish-github-open-sour
 
 ## Commit and Push Result
 
-_(To be filled after commit/push)_
+- **Commit**: `9a5217e48c6f8719972bd36bed05a57d6739a730`
+- **Message**: `Update longrun Round 029/030 docs, fix publish-round027 report, code fixes`
+- **Branch**: `main` → `origin/main`
+- **Target**: `https://github.com/lychee20000105/photography-studio-schedule-miniprogram.git`
+- **Push**: Success — `14e9319..9a5217e main -> main`
+- **Remote verification**: `9a5217e` matches local HEAD
+- **GitHub**: https://github.com/lychee20000105/photography-studio-schedule-miniprogram
 
 ## Remaining Risks
 
