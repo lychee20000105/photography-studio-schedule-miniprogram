@@ -119,7 +119,12 @@ Publish watcher restarted for Round 027 again. Found `publish-round027-output.md
 
 ### Commit and Push Result
 
-(Pending — will be filled after commit/push)
+- **Commit**: `98d3ec6d0fc7aee5de53e88164aa24e471c67f14`
+- **Message**: `Update longrun Round 028: work_ai create_orders fallback, work_pet date/message fixes`
+- **Branch**: `main` → `origin/main`
+- **Target**: `https://github.com/lychee20000105/photography-studio-schedule-miniprogram.git`
+- **Push**: Success — `5b3ec21..98d3ec6 main -> main`
+- **Remote verification**: `git ls-remote origin refs/heads/main` → `98d3ec6` matches local HEAD
 
 ### Documentation Change Type
 
