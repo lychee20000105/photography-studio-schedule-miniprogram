@@ -195,7 +195,7 @@ function _parseCustomer(text) {
 function _parseAmount(text, names) {
 	text = String(text || '');
 	for (let name of names) {
-		let reg = new RegExp(name + '\\s*(\\d+(?:\\.\\d+)?)');
+		let reg = new RegExp(name + '\\s*([\\d,]+(?:\\.\\d+)?)');
 		let m = text.match(reg);
 		if (m) return _money(m[1]);
 	}
@@ -325,7 +325,7 @@ function handleGuestAgent(text, attachments = []) {
 	let deposit = _parseAmount(text, ['定金']);
 	let final = _parseAmount(text, ['尾款']);
 	let amount = _parseAmount(text, ['订单金额', '金额', '总价', '总额', '报价']);
-	if (!final && amount) final = Math.max(0, amount - deposit - paid);
+	if (!final && amount) final = Math.max(0, amount - Math.max(deposit, paid));
 	let order = saveGuestOrder({
 		date,
 		time: _parseTime(text),
