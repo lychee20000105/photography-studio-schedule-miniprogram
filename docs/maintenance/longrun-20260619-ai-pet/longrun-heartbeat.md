@@ -67,3 +67,5 @@
 - 2026-06-19T19:05:00 Round 040 completed; output: rounds/round040-output.md. Bug fixes: (1) bindPetTap mood ignored 'hungry' state — pet showed 'happy' while still hungry after tap; (2) guest_helper.js _parseDate regex false-matched “6月20日11:00” by allowing fallback branch to pass when 日号 was followed by digit.
 - 2026-06-19T18:59:55 Round 040 completed; output: rounds/round040-output.md
 - 2026-06-19T19:00:55 Round 041 started.
+- 2026-06-19T19:04:57 Publish watcher error: 设置“lastProcessedAt”时发生异常:“在此对象上找不到属性“lastProcessedAt”。请确认该属性存在并且可设置。”
+- 2026-06-19T19:07:57 Publish worker for Round 027 started.

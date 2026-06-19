@@ -462,7 +462,12 @@ class WorkAiService extends WorkPermissionService {
 			if (month < 1 || month > 12 || dayNum < 1 || dayNum > 31) continue;
 			let candidate = new Date(year, month - 1, dayNum);
 			if (candidate.getFullYear() != year || candidate.getMonth() + 1 != month || candidate.getDate() != dayNum) continue;
-			let useYear = (candidate.getTime() < nowTs - 30 * 86400000) ? year + 1 : year;
+			let useYear = year;
+		if (candidate.getTime() < nowTs - 30 * 86400000) useYear = year + 1;
+		else if (candidate.getTime() > nowTs + 183 * 86400000) {
+			let prev = new Date(year - 1, month - 1, dayNum);
+			if (prev.getTime() >= nowTs - 60 * 86400000) useYear = year - 1;
+		}
 			pushDate(`${useYear}-${m[2]}-${m[3]}`);
 		}
 
