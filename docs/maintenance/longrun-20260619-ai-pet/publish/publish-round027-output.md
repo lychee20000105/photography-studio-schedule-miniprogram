@@ -58,7 +58,7 @@
 
 | Commit | 说明 |
 |--------|------|
-| (本轮) | Update longrun Round 039 UX fix and docs — 宠物心情文案上下文化 |
+| `b4034f3` | Update longrun Round 039 UX fix and docs — 宠物心情文案上下文化 |
 
 ### 变更文件
 
@@ -72,7 +72,8 @@
 | `docs/.../publish/publish-round027-output.md` | 追加 | 本次发布记录 |
 
 ### 推送结果
-- 待推送
+- Push: `6567274..b4034f3 main -> main` 成功
+- 远程验证: hash 匹配 `b4034f39d20c17b9fb94e057f071abb42f316067`
 
 ### 文档变更类型
 追加（heartbeat、publish-round027-output.md）；新增（round039/040 docs）
