@@ -27,6 +27,19 @@ const TYPE_MAP = {
 	star: { label: '星光小猫', icon: '星' },
 };
 
+// Phase 3: Typewriter effect helpers
+function typewriterSpeed(text) {
+	let len = String(text || '').length;
+	if (len < 20) return 40;
+	if (len < 80) return 30;
+	if (len < 200) return 20;
+	return 10;
+}
+
+function isPunctuation(ch) {
+	return /[，。！？、；：…—,\.!\?;:\n]/.test(ch);
+}
+
 function clamp(num, min, max) {
 	num = Number(num || 0);
 	return Math.max(min, Math.min(max, num));
@@ -272,6 +285,7 @@ Component({
 			if (this._scrollTimer1) { clearTimeout(this._scrollTimer1); this._scrollTimer1 = null; }
 			if (this._scrollTimer2) { clearTimeout(this._scrollTimer2); this._scrollTimer2 = null; }
 			if (this._burstTimer) { clearTimeout(this._burstTimer); this._burstTimer = null; }
+			if (this._typewriterTimer) { clearTimeout(this._typewriterTimer); this._typewriterTimer = null; }
 		},
 	},
 	pageLifetimes: {
@@ -593,7 +607,9 @@ Component({
 						this._applyContextMeta(data);
 						this._refreshPageAfterAgentAction(data);
 					}
-					messages = trimMessages(messages.concat([{ role: 'assistant', content: reply }]));
+					// Phase 3: Use typewriter effect for AI replies
+					this._typewriterDisplay(reply, messages, _sendThreadId);
+					return; // typewriter handles setData and _saveChat
 				} catch (err) {
 					let msg = (err && err.msg) || (err && err.message) || 'AI 小助手暂时不可用，请稍后再试。';
 					messages = trimMessages(messages.concat([{ role: 'assistant', content: msg }]));
@@ -774,6 +790,56 @@ Component({
 				}, 80);
 				this._scrollTimer1 = null;
 			}, 60);
+		},
+		// Phase 3: Typewriter effect - display reply character by character
+		_typewriterDisplay(fullText, messages, threadId) {
+			if (this._typewriterTimer) { clearTimeout(this._typewriterTimer); this._typewriterTimer = null; }
+			let text = String(fullText || '');
+			if (text.length < 30) {
+				let updated = trimMessages(messages.concat([{ role: 'assistant', content: text }]));
+				let stillSame = !this.data.activeChatId || this.data.activeChatId === threadId;
+				if (stillSame) {
+					this.setData({ chatMessages: updated, chatLoading: false });
+					this._scrollChatToBottom();
+				} else {
+					this.setData({ chatLoading: false });
+				}
+				this._saveChat(updated, threadId);
+				return;
+			}
+			let placeholder = trimMessages(messages.concat([{ role: 'assistant', content: '▌' }]));
+			let stillSame = !this.data.activeChatId || this.data.activeChatId === threadId;
+			if (stillSame) this.setData({ chatMessages: placeholder });
+			let idx = 0;
+			let speed = typewriterSpeed(text);
+			let self = this;
+			function tick() {
+				if (idx >= text.length) {
+					let final = trimMessages(messages.concat([{ role: 'assistant', content: text }]));
+					let same = !self.data.activeChatId || self.data.activeChatId === threadId;
+					if (same) {
+						self.setData({ chatMessages: final, chatLoading: false });
+						self._scrollChatToBottom();
+					} else {
+						self.setData({ chatLoading: false });
+					}
+					self._saveChat(final, threadId);
+					self._typewriterTimer = null;
+					return;
+				}
+				idx++;
+				let ch = text[idx - 1];
+				let nextDelay = isPunctuation(ch) ? speed * 2 : speed;
+				let partial = text.slice(0, idx) + '▌';
+				let same = !self.data.activeChatId || self.data.activeChatId === threadId;
+				if (same) {
+					let msgs = trimMessages(messages.concat([{ role: 'assistant', content: partial }]));
+					self.setData({ chatMessages: msgs });
+					if (idx % 5 === 0) self._scrollChatToBottom();
+				}
+				self._typewriterTimer = setTimeout(tick, nextDelay);
+			}
+			this._typewriterTimer = setTimeout(tick, speed);
 		},
 		_refreshPageAfterAgentAction(data = {}) {
 			let action = data.action || '';

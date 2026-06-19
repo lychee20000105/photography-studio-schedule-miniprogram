@@ -1,0 +1,34 @@
+﻿{
+    "updatedAt":  "2026-06-20T03:54:55.2378290+08:00",
+    "currentRound":  1,
+    "state":  "running",
+    "decisionNeeded":  "none",
+    "latestDigest":  "Claude PID 39584 alive; CPU +0.266/20s. New knowledge files appeared; bug hunt 0/1000; final summary/commit missing.",
+    "changedFiles":  [
+                         "M CHANGELOG.md",
+                         "M cloudfunctions/mcloud/project/B00/service/work_ai_service.js",
+                         "M miniprogram/cmpts/work_pet/work_pet.js",
+                         "M miniprogram/version.js",
+                         "?? cloudfunctions/mcloud/project/B00/service/work_ai_knowledge.js",
+                         "?? docs/maintenance/agent-upgrade-claude-worker-20260620-033624/",
+                         "?? docs/maintenance/agent-upgrade-longrun-20260620-033123/",
+                         "?? docs/maintenance/agent-upgrade-longrun-20260620-033220/",
+                         "?? docs/maintenance/agent-upgrade-longrun-20260620-033431/",
+                         "?? miniprogram/helper/knowledge_helper.js"
+                     ],
+    "validation":  {
+                       "commands":  [
+
+                                    ],
+                       "passed":  0,
+                       "failed":  0
+                   },
+    "publish":  {
+                    "pushed":  false,
+                    "releaseUrl":  "",
+                    "blockedReason":  ""
+                },
+    "currentArtifact":  "W:\\微信小程序\\yunyu-sheying-schedule-miniprogram-github-20260605193240\\repo\\docs\\maintenance\\agent-upgrade-claude-worker-20260620-033624\\rounds\\round001-agent-upgrade-and-1000-bughunt-output.md",
+    "nextCheckAfterSeconds":  1200,
+    "supervisorReadPolicy":  "Read this summary first; avoid raw logs unless blocked or user asks."
+}

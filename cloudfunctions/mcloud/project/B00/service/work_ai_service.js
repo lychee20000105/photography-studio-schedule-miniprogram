@@ -13,6 +13,7 @@ const WorkStaffModel = require('../model/work_staff_model.js');
 const WorkTypeModel = require('../model/work_type_model.js');
 const WorkOrderModel = require('../model/work_order_model.js');
 const WorkItemModel = require('../model/work_item_model.js');
+const knowledgeService = require('./work_ai_knowledge.js');
 
 const SETUP_KEY = 'WORK_AI_CHAT_CONFIG';
 const LEGACY_OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
@@ -56,6 +57,95 @@ const LOCAL_APP_KNOWLEDGE = [
 	'AI安全边界：允许查询档期/小记、直接新增订单档期、事项、休息申请和小记；禁止直接删除、作废、收款、退款、发工资、改提成、审核通过或批量修改。',
 	'AI写入规则：凡是AI执行写入动作，都要在团队小记自动追加一条全体可见的操作审查流水。',
 ];
+
+// === Phase 1: Dynamic Prompt Layering ===
+
+// === Phase 2: Smart Model Routing ===
+
+function getModelForTask(queryType, configModel) {
+	// If admin has configured a specific model, respect it for complex tasks
+	if (queryType === 'complex') return configModel || 'gpt-4o-mini';
+	if (queryType === 'write') return configModel || 'gpt-4o-mini';
+	// For simple tasks, prefer cheaper models if available
+	if (queryType === 'chat' || queryType === 'explain') return 'gpt-4o-mini';
+	return configModel || 'gpt-4o-mini';
+}
+
+function getMaxTokensForTask(queryType, configMaxTokens) {
+	switch (queryType) {
+		case 'chat': return Math.min(configMaxTokens || 600, 300);
+		case 'explain': return Math.min(configMaxTokens || 600, 400);
+		case 'query': return Math.min(configMaxTokens || 600, 500);
+		case 'write': return configMaxTokens || 600;
+		case 'complex': return Math.max(configMaxTokens || 600, 800);
+		default: return configMaxTokens || 600;
+	}
+}
+
+function classifyQueryType(message, pageContext = {}) {
+	let text = asText(message, 400);
+	if (!text) return 'chat';
+	// Screenshot recognition
+	if (/截图|图片|识别|录单|拍摄/.test(text)) return 'complex';
+	// Write actions: create/record/arrange orders, items, rests, notes
+	if (/新增|记录|安排|登记|录入|创建|添加|请假|休息/.test(text)) return 'write';
+	// Query actions: schedule, orders, notes
+	if (/查询|档期|小记|什么时候|安排|有什么|干什么|明天|今天|昨天|下周|这周/.test(text)) return 'query';
+	// Function inquiry
+	if (/功能|怎么用|能做什么|小程序|帮助/.test(text)) return 'explain';
+	return 'chat';
+}
+
+function compressStaffList(staffOptions = []) {
+	if (!staffOptions.length) return '';
+	return staffOptions.slice(0, 40).map(item => {
+		let roles = Array.isArray(item.STAFF_ROLES) ? item.STAFF_ROLES.filter(r => r).slice(0, 2).join('/') : '';
+		return item.STAFF_NAME + (roles ? '(' + roles + ')' : '');
+	}).join('、');
+}
+
+function compressTypeList(typeOptions = []) {
+	if (!typeOptions.length) return '';
+	return typeOptions.slice(0, 20).map(item => item.TYPE_NAME).join('、');
+}
+
+function buildCorePrompt(staff, pageContext = {}) {
+	return [
+		'你是云屿摄影小程序里的小猫 AI 助手，语气简洁、友好、务实。',
+		'当前日期：' + timeUtil.time('Y-M-D') + '。',
+		'当前员工：' + (staff.STAFF_NAME || '员工') + '，管理员：' + (staff.STAFF_IS_ADMIN == 1 ? '是' : '否') + '。',
+		'回答请控制在 200 字以内。',
+	].join('\n');
+}
+
+function buildToolPrompt() {
+	return [
+		'你也是云屿摄影小程序内的受控执行型业务智能体。',
+		'用户说“今天/明天/后天”时必须严格按当前日期换算。',
+		'只允许这些动作：query_schedule、create_order、create_orders、join_order、create_item、create_rest、add_note、none。',
+		'禁止输出删除、作废、收款、退款、工资、提成、审核通过等动作。',
+		'动作JSON格式：{"action":"...","reply":"...","data":{...}}。',
+	].join('\n');
+}
+
+function buildWriteActionPrompt() {
+	return [
+		'query_schedule.data: startDate(YYYY-MM-DD)、endDate、scope(all/mine/joined/created)。',
+		'create_order.data: date(必填)、customerName(必填)、time、endTime、typeName、typeId、customerMobile、source、place、content、amount、deposit、final、extra、participants[]。',
+		'金额识别：amount/订单总应收，deposit/final/extra是应收结构，paidAmount/paidDeposit/paidFinal/payments才是实际已收。',
+		'create_orders.data: orders[]（2条及以上必须用create_orders）。',
+		'create_item.data: date(必填)、title(必填)、time、content。',
+		'create_rest.data: date(必填)、type(休息/请假/调休/外出)、reason。',
+		'add_note.data: noteType(team/personal)、title(必填)、content、date。',
+		'join_order.data: orderId、roleName。',
+		'缺少日期或客户名称时用none追问。',
+		'写入动作系统自动追加审查小记。',
+	].join('\n');
+}
+
+function buildImagePrompt() {
+	return '图片识别规则：逐张识别日期、时间、客户、电话、地点、拍摄类型、备注；一张图可能有多个订单，逐条提取；1条用create_order，2条及以上用create_orders。';
+}
 
 function asText(val, max = 1000) {
 	if (val === undefined || val === null) return '';
@@ -145,11 +235,17 @@ class WorkAiService extends WorkPermissionService {
 
 		let imageAttachments = await this._normalizeImageAttachments(attachments);
 		let messages = await this._buildAgentMessages(config, staff, message, history, imageAttachments, pageContext);
+
+		// Phase 2: Smart model routing
+		let queryType = classifyQueryType(message, pageContext);
+		let selectedModel = getModelForTask(queryType, config.model);
+		let selectedMaxTokens = getMaxTokensForTask(queryType, config.maxTokens);
+
 		let body = {
-			model: config.model,
+			model: selectedModel,
 			messages,
 			temperature: config.temperature,
-			max_tokens: config.maxTokens,
+			max_tokens: selectedMaxTokens,
 			stream: false,
 		};
 
@@ -162,6 +258,17 @@ class WorkAiService extends WorkPermissionService {
 			return await this._handleAgentReply(openId, staff, reply, config, result, imageAttachments, pageContext);
 		} catch (err) {
 			if (err && err.name == 'AppError') throw err;
+			// Phase 2: Fallback retry on 429/5xx
+			if (err && (err.statusCode === 429 || err.statusCode >= 500) && selectedModel !== 'gpt-4o-mini') {
+				try {
+					body.model = 'gpt-4o-mini';
+					let fallbackResult = await this._postJson(chatApiUrl, body, {
+						Authorization: 'Bearer ' + config.apiKey,
+					});
+					let fallbackReply = this._pickReply(fallbackResult);
+					if (fallbackReply) return await this._handleAgentReply(openId, staff, fallbackReply, config, fallbackResult, imageAttachments, pageContext);
+				} catch (fallbackErr) {}
+			}
 			console.error('AI chat failed:', err && err.message ? err.message : err);
 			this.AppError(err && err.safeMessage ? err.safeMessage : 'AI 接口调用失败，请检查后台配置');
 		}
@@ -271,54 +378,72 @@ class WorkAiService extends WorkPermissionService {
 
 	async _buildAgentMessages(config, staff, message, history, attachments = [], pageContext = {}) {
 		let messages = this._buildMessages(config, staff, message, history);
-		let staffOptions = await WorkStaffModel.getAll({
-			STAFF_STATUS: WorkStaffModel.STATUS.COMM,
-		}, '_id,STAFF_NAME,STAFF_ROLES,STAFF_IS_ADMIN', {
-			STAFF_NAME: 'asc',
-		}, 200);
-		let typeOptions = await WorkTypeModel.getAll({
-			TYPE_STATUS: 1,
-		}, '_id,TYPE_NAME,TYPE_COLOR,TYPE_ORDER', {
-			TYPE_ORDER: 'asc',
-			TYPE_ADD_TIME: 'asc',
-		}, 200);
-		let toolSystem = [
-			'你现在也是云屿摄影小程序内的受控执行型业务智能体。',
-			'当前日期：' + timeUtil.time('Y-M-D') + '，当前月份：' + timeUtil.time('Y-M') + '。',
-			'用户说“今天/明天/后天/大后天/昨天/前天”时，必须严格按当前日期换算，不要把今天猜成当月1号或截图里的其他日期。',
-			'当前登录员工：' + (staff.STAFF_NAME || '员工') + '，员工ID：' + staff._id + '，是否管理员：' + (staff.STAFF_IS_ADMIN == 1 ? '是' : '否') + '。',
-			'当前页面上下文：' + JSON.stringify({ route: pageContext.route || '', orderId: pageContext.orderId || '', day: pageContext.day || '' }),
-			'Date fallback rule: if pageContext.day exists and neither the user text nor screenshot gives a clearer date, use pageContext.day as the default write date; never override an explicit screenshot date.',
-			'可用员工：' + JSON.stringify((staffOptions || []).map(item => ({ name: item.STAFF_NAME, id: item._id, roles: item.STAFF_ROLES || [] })).slice(0, 80)),
-			'可用拍摄类型：' + JSON.stringify((typeOptions || []).map(item => ({ name: item.TYPE_NAME, id: item._id, color: item.TYPE_COLOR })).slice(0, 80)),
-			'本地知识库与小程序功能摘要：' + LOCAL_APP_KNOWLEDGE.join('；'),
-			'你要像一个有记忆、有性格、会主动补漏的工作台 agent：先判断用户是在查询、记录、整理、解释功能还是要做高风险管理动作，再选择回答或工具动作。',
-			'回答业务问题时要贴合摄影工作室场景，例如婚礼跟拍、写真、活动拍摄、客户跟进、拍摄地点、订单金额、定金尾款、参与人和提成。',
-			'如果用户问小程序能做什么，要按实际功能回答：档期、订单、事项、休息、小记、消息、反馈、业绩、工资、管理中心、收款、提成、审核、AI配置。',
-			'如果用户问你能否识别图片，要回答可以，并提示点击聊天输入框左侧 + 上传截图。',
-			'如果用户上传了截图或图片，请逐张识别图片里的日期、时间、客户、电话、地点、拍摄类型、备注等信息；一张图片里可能有多个订单/档期卡片，必须逐条提取，不能只处理第一条。',
-			'如果用户明确要求查询档期/订单、或新增/记录/安排档期、订单、拍摄、客户跟进事项、休息/请假或小记，你可以输出一个动作JSON；否则正常回答。',
-			'只允许这些动作：query_schedule（查询档期）、create_order（新增单个订单档期）、create_orders（批量新增多个订单档期）、join_order（把当前员工加入订单参与人）、create_item（新增事项档期/待办）、create_rest（新增休息/请假申请）、add_note（新增小记）、none（只聊天）。',
-			'禁止输出删除、作废、收款、退款、工资、提成、审核通过、批量修改等动作。',
-			'动作JSON必须是纯JSON对象，不要包Markdown。格式：{"action":"query_schedule|create_order|create_orders|create_item|create_rest|add_note|none","reply":"给用户看的简短回复","data":{...}}。',
-			'query_schedule.data字段：startDate(YYYY-MM-DD，必填)、endDate(YYYY-MM-DD，可选)、scope(all/mine/joined/created，默认all)。用户问明天、今天、未来一周、某天档期、要干什么、有什么安排时必须用query_schedule，不要说自己不能查看。query_schedule会同时整理档期、事项、休息和相关小记。',
-			'create_order.data字段：date(YYYY-MM-DD，必填)、time、endTime、typeName、typeId、customerName(必填)、customerMobile、source、place、content、amount、deposit、final、extra、paidAmount、paidDeposit、paidFinal、paidExtra、payments数组[{type,amount,date,baseType,note}]、participants数组[{staffName,staffId,roleName}]。',
-			'金额识别必须区分：amount/ORDER_AMOUNT是订单总应收，deposit/final/extra是应收结构或约定金额；paidAmount/paidDeposit/paidFinal/paidExtra/payments才是实际已收。看到“已收/实收/收了/收款100”只记录100为实收；看到“尾款199/未收199/待收199”不能当作已收。',
-			'Payment enum rule: payments[].type must use deposit/final/extra/product/supplement/refund/adjust; do not output translated or free-text enum values. payments[].baseType must use shoot/extra/all.',
-			'create_orders.data字段：orders数组，数组内每项字段同create_order.data；可加attachmentIndexes数组标明来自第几张图，从1开始。识别到2条及以上订单/档期时必须使用create_orders。',
-			'如果你误把多个订单放进create_order.data.orders，系统也会按批量处理，但你应优先直接使用create_orders。',
-			'当用户说“只记录未登记/没有登记的订单”时，仍要先把截图里能识别的所有订单逐条输出为create_orders；系统会自动跳过已存在订单，你不要凭感觉只挑其中一条。',
-			'join_order.data字段：orderId(可选，当前页面上下文有orderId时可省略)、roleName(可选)。用户说“把我加入这个订单/我参与这个订单/给我加摄影师身份”且当前页面有订单ID时，用join_order。',
-			'create_item.data字段：date(YYYY-MM-DD，必填)、time、endTime、title(必填)、content。',
-			'create_rest.data字段：date(YYYY-MM-DD，必填)、type(休息/请假/调休/外出，默认休息)、reason。',
-			'add_note.data字段：noteType(team或personal，默认team)、title(必填)、content、date(YYYY-MM-DD)。',
-			'如果新增订单缺少日期或客户名称，新增事项缺少日期/标题，或休息申请缺少日期，请用none并在reply里追问缺失信息。',
-			'凡是执行写入动作，系统会自动追加一条全体可见团队小记作为AI操作审查流水。',
-		].join('\n');
-		messages.unshift({ role: 'system', content: toolSystem });
-		if (attachments.length) {
+
+		// Phase 1: Dynamic prompt layering based on query type
+		let queryType = classifyQueryType(message, pageContext);
+		let hasImages = attachments && attachments.length > 0;
+
+		// Layer 0: Core prompt (always included, ~150 tokens)
+		let corePrompt = buildCorePrompt(staff, pageContext);
+
+		// Layer 1: Business context based on query type
+		let parts = [corePrompt];
+
+		// Add page context for non-chat queries
+		if (queryType !== 'chat') {
+			parts.push('当前页面：' + JSON.stringify({ route: pageContext.route || '', orderId: pageContext.orderId || '', day: pageContext.day || '' }));
+			if (pageContext.day) parts.push('Date fallback: pageContext.day可作为默认写入日期。');
+		}
+
+		// Add tool instructions for action-capable queries
+		if (queryType === 'write' || queryType === 'query' || hasImages) {
+			parts.push(buildToolPrompt());
+			parts.push(buildWriteActionPrompt());
+		} else if (queryType === 'explain') {
+			parts.push('如果用户问小程序能做什么，按实际功能回答：档期、订单、事项、休息、小记、消息、反馈、业绩、工资、管理中心、收款、提成、审核、AI配置。');
+		} else if (queryType === 'chat') {
+			parts.push('你是有性格、会主动补漏的工作台agent。回答业务问题要贴合摄影工作室场景。');
+		}
+
+		// Layer 2: Staff/type data (only for write/query/image queries)
+		if (queryType === 'write' || queryType === 'query' || hasImages) {
+			let staffOptions = await WorkStaffModel.getAll({
+				STAFF_STATUS: WorkStaffModel.STATUS.COMM,
+			}, '_id,STAFF_NAME,STAFF_ROLES,STAFF_IS_ADMIN', {
+				STAFF_NAME: 'asc',
+			}, 200);
+			let typeOptions = await WorkTypeModel.getAll({
+				TYPE_STATUS: 1,
+			}, '_id,TYPE_NAME,TYPE_COLOR,TYPE_ORDER', {
+				TYPE_ORDER: 'asc',
+				TYPE_ADD_TIME: 'asc',
+			}, 200);
+			parts.push('可用员工：' + compressStaffList(staffOptions));
+			parts.push('可用拍摄类型：' + compressTypeList(typeOptions));
+		}
+
+		// Add image-specific instructions
+		if (hasImages) {
+			parts.push(buildImagePrompt());
+		}
+
+		// Add knowledge base for non-trivial queries
+		if (queryType !== 'chat') {
+			parts.push('功能摘要：' + LOCAL_APP_KNOWLEDGE.join('；'));
+		}
+
+		// Phase 4: Keyword-based knowledge retrieval
+		if (queryType !== 'chat') {
+			let knowledgeEntries = knowledgeService.retrieveKnowledge(message, 3);
+			let knowledgeText = knowledgeService.formatKnowledgeForSystem(knowledgeEntries);
+			if (knowledgeText) parts.push(knowledgeText);
+		}
+
+		messages.unshift({ role: 'system', content: parts.join('\n') });
+
+		if (hasImages) {
 			let last = messages[messages.length - 1];
-			let content = [{ type: 'text', text: last.content + '\n\n请结合我上传的截图识别档期/订单信息；请逐张检查所有图片，同一张图片里有多个订单/档期也要逐条提取。只有1条时生成 create_order；2条及以上必须生成 create_orders，不要只生成第一条。' }];
+			let content = [{ type: 'text', text: last.content + '\n\n请结合截图识别档期/订单信息；逐张检查所有图片，多个订单逐条提取。1条用create_order；2条及以上用create_orders。' }];
 			for (let item of attachments) {
 				content.push({ type: 'image_url', image_url: { url: item.url } });
 			}

@@ -1,0 +1,21 @@
+{
+  "targetTotal": 1000,
+  "completedChecks": 0,
+  "fixedCount": 0,
+  "remainingRisks": [],
+  "dimensions": {
+    "static_scan": { "target": 150, "completed": 0, "fixed": 0 },
+    "config_check": { "target": 80, "completed": 0, "fixed": 0 },
+    "boundary_cases": { "target": 120, "completed": 0, "fixed": 0 },
+    "ai_reply_parsing": { "target": 100, "completed": 0, "fixed": 0 },
+    "stream_reply": { "target": 50, "completed": 0, "fixed": 0 },
+    "memory_knowledge": { "target": 80, "completed": 0, "fixed": 0 },
+    "session_management": { "target": 80, "completed": 0, "fixed": 0 },
+    "wx_compat": { "target": 100, "completed": 0, "fixed": 0 },
+    "cloud_function": { "target": 80, "completed": 0, "fixed": 0 },
+    "security": { "target": 80, "completed": 0, "fixed": 0 },
+    "performance": { "target": 50, "completed": 0, "fixed": 0 },
+    "free_api_degradation": { "target": 30, "completed": 0, "fixed": 0 }
+  },
+  "lastUpdate": "2026-06-20T03:36:24+08:00"
+}

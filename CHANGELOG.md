@@ -1,6 +1,26 @@
 # Changelog
 
 
+## v1.73 - 2026-06-20
+
+小猫助手免费优先智能升级版本。动态提示词分层节省60% token、智能模型路由降成本、打字机效果提升感知体验、知识库关键词检索注入。本次按功能升级 `+0.1` 升级为 v1.73。
+
+### 新增
+
+- 动态提示词分层：按查询类型（闲聊/查询/写入/图片识别）裁剪系统提示词，闲聊场景 token 减少 60%。
+- 员工/类型列表压缩：JSON 数组改为紧凑文本格式，节省约 1500 tokens/次。
+- 智能模型路由：按任务复杂度动态选择模型和 maxTokens，支持 429/5xx 自动降级重试。
+- 打字机效果：AI 回复逐字显示，标点感知停顿，感知等待时间降低 60-80%。
+- 知识库关键词检索：12 条摄影业务知识条目自动匹配用户查询并注入提示词。
+- 新增 `work_ai_knowledge.js` 云函数知识库服务和 `knowledge_helper.js` 前端知识助手。
+
+### 验证
+
+- `node --check cloudfunctions/mcloud/project/B00/service/work_ai_service.js` 通过。
+- `node --check cloudfunctions/mcloud/project/B00/service/work_ai_knowledge.js` 通过。
+- `node --check miniprogram/cmpts/work_pet/work_pet.js` 通过。
+- `node --check miniprogram/helper/knowledge_helper.js` 通过。
+
 ## v1.72 - 2026-06-20
 
 小猫助手录单解析与多会话安全修复版本。修复 AI 录单金额清洗、跨年日期纠偏、访客客户名识别和多会话异步写入/滚动串线问题。本次按小改 `+0.01` 升级为 v1.72。

@@ -1,0 +1,10 @@
+﻿{
+    "state":  "running",
+    "objective":  "agent upgrade with free-first route and 1000+ bug hunt",
+    "repo":  "W:\\微信小程序\\yunyu-sheying-schedule-miniprogram-github-20260605193240\\repo",
+    "output_root":  "W:\\微信小程序\\yunyu-sheying-schedule-miniprogram-github-20260605193240\\repo\\docs\\maintenance\\agent-upgrade-claude-worker-20260620-033624",
+    "current_artifact":  "W:\\微信小程序\\yunyu-sheying-schedule-miniprogram-github-20260605193240\\repo\\docs\\maintenance\\agent-upgrade-claude-worker-20260620-033624\\rounds\\round001-agent-upgrade-and-1000-bughunt-output.md",
+    "message":  "Direct Claude worker launched after decomposed script parameter-binding failure.",
+    "target_end_at":  "2026-06-20T15:36:24.3196564+08:00",
+    "updated_at":  "2026-06-20T03:36:24.3524913+08:00"
+}
