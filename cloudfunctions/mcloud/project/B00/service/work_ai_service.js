@@ -500,12 +500,13 @@ class WorkAiService extends WorkPermissionService {
 		return '';
 	}
 
-	_extractWeekdayTextDate(text) {
-		text = asText(text, 800);
+	_computeWeekdayOffset(text, maxLen, requireContext) {
+		text = asText(text, maxLen);
 		if (!text) return '';
 		let weekMap = { '一': 1, '二': 2, '三': 3, '四': 4, '五': 5, '六': 6, '日': 0, '天': 0 };
 		let m = text.match(/(上上周|上上星期|上上礼拜|上周|上星期|上礼拜|下下周|下下星期|下下礼拜|下周|下星期|下礼拜|本周|这周|本星期|这星期|本礼拜|这礼拜|周|星期|礼拜)([一二三四五六日天])/);
-		if (!m || !this._hasRelativeDateContext(text, m[0])) return '';
+		if (!m) return '';
+		if (requireContext && !this._hasRelativeDateContext(text, m[0])) return '';
 		let target = weekMap[m[2]];
 		if (target === undefined) return '';
 		let today = new Date(timeUtil.time('Y-M-D') + 'T00:00:00+08:00');
@@ -526,29 +527,12 @@ class WorkAiService extends WorkPermissionService {
 		return this._addDays(timeUtil.time('Y-M-D'), offset);
 	}
 
+	_extractWeekdayTextDate(text) {
+		return this._computeWeekdayOffset(text, 800, true);
+	}
+
 	_resolveWeekdayFromText(text) {
-		text = asText(text, 30);
-		if (!text) return '';
-		let weekMap = { '一': 1, '二': 2, '三': 3, '四': 4, '五': 5, '六': 6, '日': 0, '天': 0 };
-		let m = text.match(/(上上周|上上星期|上上礼拜|上周|上星期|上礼拜|下下周|下下星期|下下礼拜|下周|下星期|下礼拜|本周|这周|本星期|这星期|本礼拜|这礼拜|周|星期|礼拜)([一二三四五六日天])/);
-		if (!m) return '';
-		let target = weekMap[m[2]];
-		if (target === undefined) return '';
-		let today = new Date(timeUtil.time('Y-M-D') + 'T00:00:00+08:00');
-		if (Number.isNaN(today.getTime())) return '';
-		let current = today.getDay();
-		let currentIso = current === 0 ? 7 : current;
-		let targetIso = target === 0 ? 7 : target;
-		let prefix = m[1];
-		let offset = targetIso - currentIso;
-		if (prefix == '下下周' || prefix == '下下星期' || prefix == '下下礼拜') offset += 14;
-		else if (prefix == '下周' || prefix == '下星期' || prefix == '下礼拜') offset += 7;
-		else if (prefix == '上上周' || prefix == '上上星期' || prefix == '上上礼拜') offset -= 14;
-		else if (prefix == '上周' || prefix == '上星期' || prefix == '上礼拜') offset -= 7;
-		else if (prefix == '本周' || prefix == '这周' || prefix == '本星期' || prefix == '这星期' || prefix == '本礼拜' || prefix == '这礼拜') {
-			// 本周: stay in current week
-		} else if (offset < 0) offset += 7;
-		return this._addDays(timeUtil.time('Y-M-D'), offset);
+		return this._computeWeekdayOffset(text, 30, false);
 	}
 
 	_extractSpecificTextDate(text) {
@@ -557,14 +541,16 @@ class WorkAiService extends WorkPermissionService {
 		let m = text.match(/(\d{4})\s*年\s*(\d{1,2})\s*月\s*(\d{1,2})\s*[日号]/);
 		if (m) {
 			let year = Number(m[1]), month = Number(m[2]), day = Number(m[3]);
+			if (year < 1990 || year > 2099) return '';
 			let d = new Date(year, month - 1, day);
 			if (d.getFullYear() == year && d.getMonth() + 1 == month && d.getDate() == day) {
 				return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 			}
 		}
-		m = text.match(/(\d{1,2})\s*月\s*(\d{1,2})\s*[日号]/);
+		m = text.match(/(\d{1,2})\s*月\s*(\d{1,2})\s*[日号](?![张条位个名组批次套件])/);
 		if (m) {
 			let year = Number(timeUtil.time('Y')), month = Number(m[1]), day = Number(m[2]);
+			if (month < 1 || month > 12 || day < 1 || day > 31) return '';
 			let d = new Date(year, month - 1, day);
 			if (d.getFullYear() == year && d.getMonth() + 1 == month && d.getDate() == day) {
 				if (d.getTime() < Date.now() - 30 * 86400000) year += 1;
