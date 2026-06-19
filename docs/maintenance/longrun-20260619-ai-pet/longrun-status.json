@@ -1,11 +1,11 @@
 ﻿{
+    "objective":  "修复小猫 AI 截图录单日期 bug，让 AI 更智能；自动执行 12h 寻找其他 bug 并修复；没有 bug 时优化前端交互体验",
+    "project":  "W:\\微信小程序\\yunyu-sheying-schedule-miniprogram-github-20260605193240\\repo",
     "status":  "running",
-    "phase":  "adaptive-low-output-supervision",
-    "currentRound":  54,
+    "startedAt":  "2026-06-19T21:30:54",
     "deadlineAt":  "2026-06-20T01:01:40",
-    "updatedAt":  "2026-06-19T21:32:29",
-    "nextSuggestedSupervisorCheckAt":  "2026-06-19T22:02:29",
-    "supervisorCheckPolicy":  "adaptive: 20-30min normally; 5-10min only after fresh bug, failed worker, empty round, or final audit",
-    "chatOutputPolicy":  "quiet: do not stream every patrol; report only new user-facing bug, publish failure/success that needs attention, or final audit",
-    "githubPublishPolicy":  "watch completed version rounds; if git has publishable changes, spawn one fresh Claude publish worker using publish-github-open-source; GitHub only, no npm"
+    "currentRound":  55,
+    "lastUpdate":  "2026-06-19T21:45:15",
+    "supervisor":  "Codex 小云1号",
+    "worker":  "Claude CLI"
 }
