@@ -758,7 +758,16 @@ class WorkAiService extends WorkPermissionService {
 
 	_amount(value) {
 		if (value === undefined || value === null || String(value).trim() === '') return 0;
-		let num = Number(String(value).replace(/,/g, '').replace(/[¥￥元\s]/g, ''));
+		if (typeof value === 'number') {
+			if (!Number.isFinite(value) || value < 0) return 0;
+			return Math.round(value * 100) / 100;
+		}
+		let s = String(value).replace(/,/g, '').replace(/[¥￥元\s]/g, '');
+		let num = Number(s);
+		if (!Number.isFinite(num)) {
+			let m = s.match(/(\d+(?:\.\d+)?)/);
+			num = m ? Number(m[1]) : NaN;
+		}
 		if (!Number.isFinite(num) || num < 0) return 0;
 		return Math.round(num * 100) / 100;
 	}

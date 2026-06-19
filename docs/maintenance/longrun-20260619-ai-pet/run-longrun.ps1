@@ -13,6 +13,7 @@ $logsDir = Join-Path $base "logs"
 $testsDir = Join-Path $base "test-results"
 $heartbeat = Join-Path $base "longrun-heartbeat.md"
 $statusPath = Join-Path $base "longrun-status.json"
+$TokenSummaryFile = Join-Path $base "token-budget-summary.json"
 
 New-Item -ItemType Directory -Force -Path $roundsDir, $logsDir, $testsDir | Out-Null
 
@@ -31,6 +32,23 @@ function Get-LatestRoundNumber([string]$Pattern) {
   return ($numbers | Measure-Object -Maximum).Maximum
 }
 
+
+function Write-TokenSummary([int]$Round, [string]$Phase, [string]$Digest, [int]$NextDelaySeconds) {
+  $summary = [ordered]@{
+    updatedAt = (Get-Date -Format s)
+    currentRound = $Round
+    state = $Phase
+    decisionNeeded = 'none'
+    latestDigest = if ($Digest.Length -gt 1200) { $Digest.Substring(0, 1200) } else { $Digest }
+    changedFiles = @()
+    validation = [ordered]@{ commands = @(); passed = 0; failed = 0 }
+    publish = [ordered]@{ pushed = $false; releaseUrl = ''; blockedReason = '' }
+    nextCheckAfterSeconds = $NextDelaySeconds
+    supervisorReadPolicy = 'Codex must read this summary first; do not inspect raw logs/full diffs unless this summary flags a blocker.'
+  }
+  $summary | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $TokenSummaryFile -Encoding UTF8
+}
+
 function Write-Status([int]$Round, [string]$Phase, [int]$NextDelaySeconds) {
   $status = [ordered]@{
     status = "running"
@@ -44,6 +62,7 @@ function Write-Status([int]$Round, [string]$Phase, [int]$NextDelaySeconds) {
     githubPublishPolicy = "watch completed version rounds; if git has publishable changes, spawn one fresh Claude publish worker using publish-github-open-source; GitHub only, no npm"
   }
   $status | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $statusPath -Encoding UTF8
+  Write-TokenSummary -Round $Round -Phase $Phase -Digest $Phase -NextDelaySeconds $NextDelaySeconds
 }
 
 $deadline = [DateTime]::Parse($DeadlineAt)
@@ -74,7 +93,7 @@ Mission:
 2. Prefer fixing real bugs. If no clear bug exists, make one small UX improvement.
 3. Keep changes minimal and safe. Do not delete user files.
 4. Run targeted syntax/tests when practical.
-5. Write a concise report to: $outputPath
+5. Start your report with `## Supervisor Digest` (<=12 lines), update `token-budget-summary.json`, then write the full report to: $outputPath
 6. Write validation details to: $checksPath
 
 Current policy:

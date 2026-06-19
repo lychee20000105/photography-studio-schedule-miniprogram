@@ -1,0 +1,31 @@
+﻿{
+    "updatedAt":  "2026-06-20T03:03:24",
+    "currentRound":  72,
+    "state":  "syncing-release-v1.72",
+    "decisionNeeded":  "none",
+    "latestDigest":  "Token optimization implemented: Codex must read token-budget-summary.json first; project longrun script now asks Claude workers for Supervisor Digest and summary updates. Project version is v1.72 and GitHub Release v1.72 exists.",
+    "changedFiles":  [
+                         "C:\\Users\\Administrator\\.codex\\skills\\claude-longrun-supervisor\\SKILL.md",
+                         "docs/maintenance/longrun-20260619-ai-pet/run-longrun.ps1",
+                         "miniprogram/version.js",
+                         "cloudfunctions/mcloud/project/B00/service/work_ai_service.js",
+                         "miniprogram/helper/guest_helper.js"
+                     ],
+    "validation":  {
+                       "commands":  [
+                                        "node --check work_ai_service.js",
+                                        "node --check guest_helper.js",
+                                        "node --check version.js",
+                                        "node --check setting.js"
+                                    ],
+                       "passed":  4,
+                       "failed":  0
+                   },
+    "publish":  {
+                    "pushed":  false,
+                    "releaseUrl":  "https://github.com/lychee20000105/photography-studio-schedule-miniprogram/releases/tag/v1.72",
+                    "blockedReason":  ""
+                },
+    "nextCheckAfterSeconds":  1800,
+    "supervisorReadPolicy":  "Read this summary first; do not inspect raw logs/full diffs unless this summary flags a blocker."
+}

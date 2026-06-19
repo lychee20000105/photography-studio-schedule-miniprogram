@@ -3,10 +3,10 @@ module.exports = {
 	CLOUD_ID: 'yunyukeji-d4g7waei5d5d6cdeb', //云服务id ,本地测试环境
 
 	// #### 版本信息
-	VER: 'v1.71',
-	APP_VERSION: '1.71',
-	APP_VERSION_DATE: '2026-06-19',
-	APP_VERSION_NAME: '小猫助手本周日期解析修复',
+	VER: 'v1.72',
+	APP_VERSION: '1.72',
+	APP_VERSION_DATE: '2026-06-20',
+	APP_VERSION_NAME: '小猫助手录单解析与多会话安全修复',
 	COMPANY: '云屿摄影｜技术由云屿科技支持',
 
 	// #### 系统参数
