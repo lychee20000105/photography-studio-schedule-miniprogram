@@ -582,7 +582,7 @@ Component({
 					messages = trimMessages(messages.concat([{ role: 'assistant', content: reply }]));
 				} catch (err) {
 					let msg = (err && err.msg) || (err && err.message) || 'AI 小助手暂时不可用，请稍后再试。';
-					messages = trimMessages(messages.concat([{ role: 'assistant', content: msg }]));
+					messages = trimMessages(messages.slice(0, -1).concat([{ role: 'assistant', content: msg }]));
 					this.setData({ chatInput: originalInput, chatAttachments: originalAttachments });
 				}
 
