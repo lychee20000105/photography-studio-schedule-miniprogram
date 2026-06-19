@@ -31,12 +31,11 @@ Task:
 3. Preserve existing README/docs/history; only append or minimally repair.
 4. GitHub sync only. Do not npm publish.
 5. Commit only relevant current changes. Do not permanently delete files.
-6. Push to origin/main when safe.
-7. Write a concise report with commit hash, push result, and any blocked reason to: $outputPath
+6. Push to origin/main when safe.\n7. Create or update a GitHub Release for the pushed commit with a new semver patch tag; mark it as latest.\n8. Write a concise report with commit hash, push result, release URL, and any blocked reason to: $outputPath
 
 Context:
 - This is a fresh Claude publish worker for one completed version round.
-- If push is blocked, record the blocker in the report and exit; do not loop.
+- If push or release creation is blocked, record the blocker in the report and exit; do not loop.
 "@ | Set-Content -LiteralPath $taskPath -Encoding UTF8
 
 Write-Heartbeat "Publish worker for Round $roundId started with stdin prompt and timeout ${TimeoutSeconds}s."
@@ -77,3 +76,4 @@ See stderr: $errPath
 }
 if ($exitCode -is [int]) { exit $exitCode }
 exit 0
+

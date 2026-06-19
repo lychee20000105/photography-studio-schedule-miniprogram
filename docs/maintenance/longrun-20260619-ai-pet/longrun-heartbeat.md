@@ -158,3 +158,8 @@
 - 2026-06-19T21:47:29 Supervisor fixed Round 054 remaining customer false-capture; regression 5/5 passed.
 - 2026-06-19T21:48:09 Supervisor scheduled Round 054 publish worker after customer false-capture fix.
 - 2026-06-19T21:48:09 Publish worker for Round 054 started with stdin prompt and timeout 900s.
+- 2026-06-19T21:53:41 Round 055 completed; output: rounds/round055-output.md
+- 2026-06-19T21:54:02 Publish worker for Round 054 exited with code 0.
+- 2026-06-19T21:54:41 Round 056 started.
+- 2026-06-19T21:56:18 Release policy corrected: future publish workers must create GitHub Releases, not only push commits.
+- 2026-06-19T21:56:58 Publish worker for Round 054 started.
