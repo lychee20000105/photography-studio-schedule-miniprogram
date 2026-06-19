@@ -61,7 +61,10 @@ Publish Round 027 complete.
 
 **Documentation change type**: encoding repair (mojibake replaced with correct content); historical reports preserved
 
-**Commit**: pending
-**Push**: pending
+**Commit**: `f2f33d4` (main)
+**Message**: `Fix publish-round027 report mojibake and append heartbeat entries`
+**Push**: `535dec0..f2f33d4 main -> main` -- success
+**Remote verification**: `f2f33d4` matches local HEAD
+**GitHub**: https://github.com/lychee20000105/photography-studio-schedule-miniprogram
 
 **Remaining risks**: none
