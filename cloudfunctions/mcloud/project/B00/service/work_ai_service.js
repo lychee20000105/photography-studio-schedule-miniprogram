@@ -646,6 +646,7 @@ class WorkAiService extends WorkPermissionService {
 		date = asText(date, 30)
 			.replace(/T\d.*/, '')
 			.replace(/\s+\d{1,2}[:：]\d{2}.*/, '')
+			.replace(/(\d{4}[-/.年]\d{1,2}[-/.月]\d{1,2})\d.*/, '$1')
 			.replace(/[./]/g, '-')
 			.replace(/年|月/g, '-')
 			.replace(/日|号/g, '')

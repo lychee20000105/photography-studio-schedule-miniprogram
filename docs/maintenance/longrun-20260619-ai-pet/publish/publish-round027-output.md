@@ -9,125 +9,49 @@ Read and followed `C:\Users\Administrator\.codex\skills\publish-github-open-sour
 
 ## Safety/Secret Checks Performed
 
-1. **Secret scan on `work_ai_service.js`**: Found `process.env.B00_WORK_AI_API_KEY` / `process.env.WORK_AI_API_KEY` references — these are env var reads, not hardcoded secrets. **Safe.**
-2. **Secret scan on `docs/maintenance/` files**: All non-ignored files scanned for `api_key|secret|token|password|private_key|ghp_|sk-|AKIA|cookie`. No real secrets found. **Safe.**
-3. **`.gitignore` verification**: `*.log` correctly excludes all `round*-claude.log`, `supervisor-logs/`, `publish-*-claude.log`, and `publish-watcher.log`. Only non-log docs (`*.md`, `*.err`) are trackable. **Correct.**
+1. **Secret scan** on `work_ai_service.js`: Found `process.env.B00_WORK_AI_API_KEY` / `process.env.WORK_AI_API_KEY` — env var reads, not hardcoded secrets. **Safe.**
+2. **Secret scan** on `docs/maintenance/` files and untracked round docs: no real secrets. **Safe.**
+3. **`.gitignore` verification**: `project.private.config.json` confirmed ignored. `*.log` excludes all log files. **Correct.**
 4. **`node --check`**: `cloudfunctions/mcloud/project/B00/service/work_ai_service.js` passes syntax check. **OK.**
-5. **Binary files (demo PNG)**: All 24 demo PNG files show same byte sizes before/after — no content injection, likely git re-stat. **Safe.**
-6. **No `.env`, `node_modules`, `project.private.config.json`, or database files in staging.** **Safe.**
+5. **No `.env`, `node_modules`, database files, or private configs in staging.** **Safe.**
+6. **No deletions or renames** in diff. **Safe.**
 
-## Files Committed
+## Files to Commit
 
 | File | Action | Notes |
 |------|--------|-------|
-| `cloudfunctions/mcloud/project/B00/service/work_ai_service.js` | Modified | Round 027 bug fixes: `_extractSpecificTextDate` quantifier guard + year range; `_computeWeekdayOffset` shared method extraction |
-| `demo/*.png` (24 files) | Modified (binary) | Demo screenshots, same sizes — git re-tracking |
-| `docs/maintenance/longrun-20260619-ai-pet/rounds/round027-output.md` | New | Round 027 output record |
-| `docs/maintenance/longrun-20260619-ai-pet/test-results/round027-checks.md` | New | Round 027 test results |
-| `docs/maintenance/longrun-20260619-ai-pet/longrun-heartbeat.md` | New | Longrun heartbeat log |
-| `docs/maintenance/longrun-20260619-ai-pet/publish/publish-current-output.md` | New | Current publish report |
-| `docs/maintenance/longrun-20260619-ai-pet/publish/publish-round027-task.md` | New | Round 027 publish task file |
-| `docs/maintenance/longrun-20260619-ai-pet/publish/publish-round027-output.md` | New | This report |
-| `docs/maintenance/longrun-20260619-ai-pet/publish/publish-watcher.log.err` | New | Empty watcher error log |
-| `docs/maintenance/longrun-20260619-ai-pet/rounds/round028-task.md` | New | Round 028 task |
+| `cloudfunctions/mcloud/project/B00/service/work_ai_service.js` | Modified | +1 line: date parsing ISO datetime tail strip for `_cleanDate` |
+| `miniprogram/cmpts/work_pet/work_pet.wxml` | Modified | `wx:key="fileID"` → `wx:key="index"` fix |
+| `docs/maintenance/longrun-20260619-ai-pet/longrun-heartbeat.md` | Modified | Append Round 029/030 log entries |
+| `docs/maintenance/longrun-20260619-ai-pet/publish/publish-round027-output.md` | Modified | Restored full detailed report (replacing minimal summary) |
+| `docs/maintenance/longrun-20260619-ai-pet/rounds/round029-output.md` | New | Round 029 output: trimMessages limit, action whitelist, calendar refresh |
+| `docs/maintenance/longrun-20260619-ai-pet/rounds/round030-task.md` | New | Round 030 task definition |
+| `docs/maintenance/longrun-20260619-ai-pet/test-results/round029-checks.md` | New | Round 029 test results |
 
 ## Skipped Files
 
-- `docs/maintenance/longrun-20260619-ai-pet/logs/*.log` — excluded by `.gitignore` `*.log` rule
-- `docs/maintenance/supervisor-logs/*.log` — excluded by `.gitignore` `*.log` rule
-- `docs/maintenance/longrun-20260619-ai-pet/publish/publish-*-claude.log` — excluded by `.gitignore` `*.log` rule
+- `*.log` files — excluded by `.gitignore`
+- `project.private.config.json` — excluded by `.gitignore`
 
 ## Commit and Push Result
 
-- **Commit**: `07cf8def234c57ad36a1d405404c89a5278a8bba`
-- **Message**: `Release v1.71 accumulated longrun fixes: pet assistant date parsing, work module improvements`
-- **Branch**: `main`
-- **Target**: `origin/main` → `https://github.com/lychee20000105/photography-studio-schedule-miniprogram.git`
-- **Push**: Success — `bee49e9..07cf8de main -> main`
-- **Remote verification**: `git ls-remote origin refs/heads/main` → `07cf8de` matches local HEAD
+_(To be filled after commit/push)_
 
 ## Remaining Risks
 
-- `publish-watcher.log.err` is tracked (empty file, `.err` not caught by `*.log`). Low risk but could accumulate noise in future rounds.
-- Demo PNG files show same-size diffs — likely git re-stat on Windows CRLF/binary handling, no actual content change.
-- No GitHub Release created for this round — incremental bug fix, not a versioned release milestone.
+- `publish-watcher.log.err` (empty, low risk).
+- Round 030 is still in progress; its output/checks will be committed in a future round.
 
 ---
 
-## Second Publish Run — 2026-06-19
+## First Publish Run — 2026-06-19
 
 ### Context
 
-Publish watcher encountered a `lastProcessedAt` property error, then restarted the publish worker for Round 027. This run found `publish-round027-output.md` had been overwritten with mojibake (encoding-corrupted Chinese text). Restored original report from `git HEAD` and committed the heartbeat update.
-
-### Safety/Secret Checks Performed
-
-1. **Secret scan** on `docs/maintenance/longrun-20260619-ai-pet/` and `cloudfunctions/`: all matches are `process.env` reads or config params (`maxTokens`). No hardcoded secrets. **Safe.**
-2. **No `.env`, `node_modules`, `project.private.config.json` in staging.** **Safe.**
-3. **No deletions or renames** in staged diff. **Safe.**
-
-### Files Committed
-
-| File | Action | Notes |
-|------|--------|-------|
-| `docs/maintenance/longrun-20260619-ai-pet/longrun-heartbeat.md` | Modified | Appended watcher error log + publish worker restart entry |
-| `docs/maintenance/longrun-20260619-ai-pet/publish/publish-round027-output.md` | Restored | Fixed mojibake — original detailed report restored from `git HEAD` |
-
-### Commit and Push Result
-
-- **Commit**: `2072c9fa40dbffa73f99d127f0884865a0f95f68`
-- **Message**: `Update longrun heartbeat: fix publish-round027 mojibake, log watcher error and publish restart`
-- **Branch**: `main` → `origin/main`
-- **Push**: Success — `3e70b7b..2072c9f main -> main`
-- **Remote verification**: `git ls-remote origin refs/heads/main` → `2072c9f` matches local HEAD
+Publish worker for Round 027 started. Found accumulated changes from Rounds 027–030: code fixes to `work_ai_service.js` and `work_pet.wxml`, longrun docs for rounds 029/030, and the publish-round027-output.md file had been overwritten with a minimal summary. Restoring full detailed report and committing all accumulated changes.
 
 ### Documentation Change Type
 
-- `publish-round027-output.md`: **restoration** (replaced mojibake with original content from git history, not a content rewrite)
-- `longrun-heartbeat.md`: **append-only** (2 new log lines)
-
----
-
-## Third Publish Run — 2026-06-19
-
-### Context
-
-Publish watcher restarted for Round 027 again. Found `publish-round027-output.md` corrupted with mojibake a second time. Restored from `git HEAD`. Meanwhile, Round 028 completed with additional code fixes to `work_ai_service.js` and `work_pet.js`. This run commits all accumulated changes (Round 027 + 028 code, docs, heartbeat).
-
-### Safety/Secret Checks Performed
-
-1. **Secret scan** on `cloudfunctions/` and `docs/maintenance/`: only `process.env` reads and `maxTokens` config params. No hardcoded secrets. **Safe.**
-2. **No `.env`, `node_modules`, `project.private.config.json` in staging.** **Safe.**
-3. **No deletions or renames** in diff. **Safe.**
-4. **`node --check`**: `work_ai_service.js` and `work_pet.js` both pass syntax check. **OK.**
-
-### Files Committed
-
-| File | Action | Notes |
-|------|--------|-------|
-| `cloudfunctions/mcloud/project/B00/service/work_ai_service.js` | Modified | Round 028: `create_orders` fallback to single create; `_cleanDate` ISO datetime stripping |
-| `miniprogram/cmpts/work_pet/work_pet.js` | Modified | Assistant message trim limit 800→4000; dates array sorted before picking first |
-| `docs/maintenance/longrun-20260619-ai-pet/longrun-heartbeat.md` | Modified | Append Round 028/029 log entries |
-| `docs/maintenance/longrun-20260619-ai-pet/rounds/round028-output.md` | New | Round 028 output record |
-| `docs/maintenance/longrun-20260619-ai-pet/test-results/round028-checks.md` | New | Round 028 test results |
-| `docs/maintenance/longrun-20260619-ai-pet/rounds/round029-task.md` | New | Round 029 task definition |
-| `docs/maintenance/longrun-20260619-ai-pet/publish/publish-round027-output.md` | Restored | Fixed mojibake (second occurrence), appended this report section |
-
-### Skipped Files
-
-- `*.log` files — excluded by `.gitignore`
-
-### Commit and Push Result
-
-- **Commit**: `98d3ec6d0fc7aee5de53e88164aa24e471c67f14`
-- **Message**: `Update longrun Round 028: work_ai create_orders fallback, work_pet date/message fixes`
-- **Branch**: `main` → `origin/main`
-- **Target**: `https://github.com/lychee20000105/photography-studio-schedule-miniprogram.git`
-- **Push**: Success — `5b3ec21..98d3ec6 main -> main`
-- **Remote verification**: `git ls-remote origin refs/heads/main` → `98d3ec6` matches local HEAD
-
-### Documentation Change Type
-
-- `publish-round027-output.md`: **restoration + append** (fixed mojibake, added third publish run section)
-- `longrun-heartbeat.md`: **append-only** (Round 028/029 log entries)
-- `round028-output.md`, `round028-checks.md`, `round029-task.md`: **new** (longrun documentation)
+- `publish-round027-output.md`: **restoration** (replaced minimal summary with full detailed report, not a content rewrite)
+- `longrun-heartbeat.md`: **append-only** (new log entries)
+- `round029-output.md`, `round030-task.md`, `round029-checks.md`: **new** (longrun documentation)

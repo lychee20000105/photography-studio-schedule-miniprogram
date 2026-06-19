@@ -8,3 +8,11 @@
 - 2026-06-19T17:13:05 Round 028 completed; output: rounds/round028-output.md
 - 2026-06-19T17:14:05 Round 029 started.
 - 2026-06-19T17:15:36 Publish worker for Round 027 started.
+- 2026-06-19T17:16:22 Round 029 completed; output: rounds/round029-output.md. Fixes: trimMessages 800→4000 char limit for assistant replies, action whitelist in _handleAgentReply, batch order earliest-date calendar refresh.
+- 2026-06-19T17:21:12 Round 029 completed; output: rounds/round029-output.md
+- 2026-06-19T17:22:12 Round 030 started.
+- 2026-06-19T17:22:14 Publish watcher error: 设置“lastProcessedAt”时发生异常:“在此对象上找不到属性“lastProcessedAt”。请确认该属性存在并且可设置。”
+- 2026-06-19T17:25:14 Publish worker for Round 027 started.
+- 2026-06-19T17:27:00 Round 030 completed; output: rounds/round030-output.md. Fixes: _cleanDate datetime-without-separator fallback, attachment preview wx:key for guest images.
+- 2026-06-19T17:27:07 Round 030 completed; output: rounds/round030-output.md
+- 2026-06-19T17:28:07 Round 031 started.

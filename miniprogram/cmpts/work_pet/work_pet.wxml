@@ -128,7 +128,7 @@
 				</view>
 
 				<view wx:if="{{chatAttachments.length}}" class="attach-preview">
-					<view wx:for="{{chatAttachments}}" wx:key="fileID" class="attach-chip">
+					<view wx:for="{{chatAttachments}}" wx:key="index" class="attach-chip">
 						<image wx:if="{{item.src || item.localPath}}" class="attach-thumb" src="{{item.src || item.localPath}}" mode="aspectFill" data-src="{{item.src || item.localPath}}" bindtap="bindPreviewAttachment"></image>
 						<text>{{item.name || '图片'}}</text>
 						<text class="attach-del" data-idx="{{index}}" bindtap="bindRemoveAttachment">×</text>
