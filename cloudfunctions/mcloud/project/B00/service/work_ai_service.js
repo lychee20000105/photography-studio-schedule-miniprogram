@@ -454,7 +454,7 @@ class WorkAiService extends WorkPermissionService {
 			pushDate(`${m[1]}-${m[2]}-${m[3]}`);
 		}
 
-		let monthDay = /(^|[^\d.])(\d{1,2})[月./-](\d{1,2})(?:日|号)?(?!\d)(?![张条位个名组批次套件])/g;
+		let monthDay = /(^|[^\d.])(\d{1,2})[月./-](\d{1,2})(?:日|号)?(?!\d{4}(?![:：]))(?![张条位个名组批次套件])/g;
 		let year = Number(timeUtil.time('Y'));
 		let nowTs = Date.now();
 		while ((m = monthDay.exec(text))) {

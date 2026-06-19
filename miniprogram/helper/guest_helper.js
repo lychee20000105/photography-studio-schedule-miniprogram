@@ -143,7 +143,7 @@ function _parseDate(text) {
 			return `${yr}-${String(mo).padStart(2, '0')}-${String(dy).padStart(2, '0')}`;
 		}
 	}
-	m = text.match(/(^|[^\d.])(\d{1,2})月(\d{1,2})(?:[日号](?!\d)|(?![\d张条位个名组批次套件日号]))/);
+	m = text.match(/(^|[^\d.])(\d{1,2})月(\d{1,2})(?:[日号](?!\d{4}(?![:：]))|(?![\d张条位个名组批次套件日号]))/);
 	if (m) {
 		let year = now.getFullYear();
 		let month = Number(m[2]);
