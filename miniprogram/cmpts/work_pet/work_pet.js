@@ -350,6 +350,14 @@ Component({
 			if (notice.version) wx.setStorageSync(VERSION_NOTICE_KEY, notice.version);
 			this.setData({ versionNoticeVisible: false });
 		},
+		bindCopyMessage(e) {
+			let content = e.currentTarget.dataset.content || '';
+			if (!content) return;
+			wx.setClipboardData({
+				data: content,
+				success: () => wx.showToast({ title: '已复制', icon: 'success', duration: 1200 }),
+			});
+		},
 		noop() {},
 		bindChatInput(e) {
 			this.setData({ chatInput: e.detail.value });

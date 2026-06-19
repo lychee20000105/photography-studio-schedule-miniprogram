@@ -99,7 +99,7 @@
 			<view class="chat-main">
 					<scroll-view class="pet-chat-list" scroll-y="{{true}}" enable-flex="{{true}}" scroll-into-view="{{chatAnchor}}">
 						<view wx:for="{{chatMessages}}" wx:key="index" class="chat-msg {{item.role}}">
-							<view class="chat-bubble">
+							<view class="chat-bubble" data-content="{{item.content}}" bindlongpress="bindCopyMessage">
 								<view>{{item.content}}</view>
 								<view wx:if="{{item.images && item.images.length}}" class="chat-image-grid">
 									<image
