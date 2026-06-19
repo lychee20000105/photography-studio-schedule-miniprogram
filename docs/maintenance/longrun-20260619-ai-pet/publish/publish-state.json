@@ -1,8 +1,8 @@
 ﻿{
-    "lastProcessedRound":  59,
-    "lastProcessedAt":  "2026-06-19T23:02:59",
-    "lastAttemptedRound":  59,
-    "lastAttemptedAt":  "2026-06-19T23:02:59",
+    "lastProcessedRound":  60,
+    "lastProcessedAt":  "2026-06-19T23:13:00",
+    "lastAttemptedRound":  60,
+    "lastAttemptedAt":  "2026-06-19T23:13:00",
     "pollSeconds":  600,
     "policy":  "process each completed version round once; dispatch Claude only when git has publishable changes; no repeated retries without a newer round"
 }
