@@ -369,8 +369,13 @@ class WorkAiService extends WorkPermissionService {
 		} catch (err) {}
 
 		let start = text.indexOf('{');
-		let end = text.lastIndexOf('}');
-		if (start < 0 || end <= start) return null;
+		if (start < 0) return null;
+		let depth = 0, end = -1;
+		for (let i = start; i < text.length; i++) {
+			if (text[i] === '{') depth++;
+			else if (text[i] === '}') { depth--; if (depth === 0) { end = i; break; } }
+		}
+		if (end < 0) return null;
 		try {
 			let obj = JSON.parse(text.substring(start, end + 1));
 			if (obj && typeof obj == 'object' && !Array.isArray(obj)) return obj;
@@ -460,6 +465,7 @@ class WorkAiService extends WorkPermissionService {
 		let monthDay = /(^|[^\d.])(\d{1,2})[月./-](\d{1,2})(?:日|号)?(?!\d{4}(?![:：]))(?![张条位个名组批次套件])/g;
 		let year = Number(timeUtil.time('Y'));
 		let nowTs = Date.now();
+		let nowMonth = new Date().getMonth() + 1;
 		while ((m = monthDay.exec(text))) {
 			let month = Number(m[2]), dayNum = Number(m[3]);
 			if (month < 1 || month > 12 || dayNum < 1 || dayNum > 31) continue;
@@ -470,6 +476,12 @@ class WorkAiService extends WorkPermissionService {
 		else if (candidate.getTime() > nowTs + 183 * 86400000) {
 			let prev = new Date(year - 1, month - 1, dayNum);
 			if (prev.getTime() >= nowTs - 45 * 86400000) useYear = year - 1;
+		}
+		// Cross-year boundary: Dec→Jan or Jan→Dec within ~60 days
+		if (Math.abs(nowMonth - month) >= 11) {
+			let diff = candidate.getTime() - nowTs;
+			if (diff > 0 && diff <= 60 * 86400000 && month < nowMonth) useYear = year + 1;
+			else if (diff < 0 && -diff <= 60 * 86400000 && month > nowMonth) useYear = year - 1;
 		}
 			pushDate(`${useYear}-${m[2]}-${m[3]}`);
 		}
@@ -679,10 +691,17 @@ class WorkAiService extends WorkPermissionService {
 			if (m) {
 				let month = Number(m[1]), dayNum = Number(m[2]);
 				let candidate = new Date(year, month - 1, dayNum);
+				let nowMonth = new Date().getMonth() + 1;
 				if (candidate.getTime() < Date.now() - 30 * 86400000) year += 1;
 				else if (candidate.getTime() > Date.now() + 183 * 86400000) {
 					let prev = new Date(year - 1, month - 1, dayNum);
 					if (prev.getTime() >= Date.now() - 45 * 86400000) year -= 1;
+				}
+				// Cross-year boundary: Dec→Jan or Jan→Dec within ~60 days
+				if (Math.abs(nowMonth - month) >= 11) {
+					let diff = candidate.getTime() - Date.now();
+					if (diff > 0 && diff <= 60 * 86400000 && month < nowMonth) year += 1;
+					else if (diff < 0 && -diff <= 60 * 86400000 && month > nowMonth) year -= 1;
 				}
 				date = `${year}-${String(month).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
 			}

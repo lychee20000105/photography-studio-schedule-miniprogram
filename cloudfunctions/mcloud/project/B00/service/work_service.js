@@ -1125,7 +1125,7 @@ class WorkService extends BaseProjectService {
 		b = this._normalizeOrderCustomerName(b);
 		if (!a || !b) return false;
 		if (a == b) return true;
-		if (Math.min(a.length, b.length) < 2) return false;
+		if (a.length < 2 || b.length < 2) return false;
 		return a.indexOf(b) >= 0 || b.indexOf(a) >= 0;
 	}
 

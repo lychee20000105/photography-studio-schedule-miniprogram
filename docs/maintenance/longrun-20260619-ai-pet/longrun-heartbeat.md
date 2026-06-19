@@ -215,3 +215,9 @@
 - 2026-06-20T00:00:21 Publish worker for Round 063 exited with code 0.
 - 2026-06-20T00:03:03 Publish worker for Round 064 scheduled.
 - 2026-06-20T00:03:03 Publish worker for Round 064 started with stdin prompt and timeout 1800s.
+- 2026-06-20T00:08:29 Publish worker for Round 064 exited with code 0.
+- 2026-06-20T00:10:00 Round 065 completed; output: rounds/round065-output.md. Bug fixes: (1) _pickJsonObject balanced-brace parser replacing lastIndexOf fallback; (2) _isSameOrderCustomerName stricter min-length check preventing single-char false matches; (3) year-rollover cross-year boundary fix for Dec→Jan dates in _extractSingleTextDate and _cleanDate. All 4 JS files pass syntax checks.
+- 2026-06-20T00:12:36 Round 065 completed; output: rounds/round065-output.md
+- 2026-06-20T00:13:03 Publish worker for Round 065 scheduled.
+- 2026-06-20T00:13:03 Publish worker for Round 065 started with stdin prompt and timeout 1800s.
+- 2026-06-20T00:13:37 Round 066 started.
