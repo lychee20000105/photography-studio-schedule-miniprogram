@@ -320,6 +320,8 @@ Component({
 			setTimeout(() => this.setData({ burst: false, bubble: '' }), 1000);
 		},
 		bindChatClose() {
+			if (this._scrollTimer1) { clearTimeout(this._scrollTimer1); this._scrollTimer1 = null; }
+			if (this._scrollTimer2) { clearTimeout(this._scrollTimer2); this._scrollTimer2 = null; }
 			this.setData({ chatVisible: false, chatInput: '', chatFullscreen: false, sidebarVisible: true });
 		},
 		bindToggleFullscreen() {
