@@ -482,6 +482,9 @@ Component({
 			list.splice(idx, 1);
 			this.setData({ chatAttachments: list });
 		},
+		bindClearAttachments() {
+			this.setData({ chatAttachments: [] });
+		},
 		bindPreviewMessageImage(e) {
 			let src = e.currentTarget.dataset.src || '';
 			if (!src) return;

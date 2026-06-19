@@ -133,6 +133,9 @@
 						<text>{{item.name || '图片'}}</text>
 						<text class="attach-del" data-idx="{{index}}" bindtap="bindRemoveAttachment">×</text>
 					</view>
+					<view wx:if="{{chatAttachments.length > 1}}" class="attach-chip attach-clear-all" bindtap="bindClearAttachments">
+						<text>清空</text>
+					</view>
 				</view>
 
 				<view class="pet-chat-input">

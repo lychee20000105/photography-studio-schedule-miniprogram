@@ -758,6 +758,11 @@
 	font-weight: 900;
 }
 
+.attach-clear-all {
+	background: rgba(220, 38, 38, .08);
+	color: #dc2626;
+}
+
 .chat-text-input {
 	flex: 1;
 	height: 72rpx;
