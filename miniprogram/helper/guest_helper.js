@@ -87,6 +87,34 @@ function _parseDate(text) {
 	text = String(text || '');
 	let now = new Date();
 	let day = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+	// Check explicit dates FIRST — an explicit "6月20日" should take priority
+	// over a relative "明天" that may appear in the same sentence
+	// (e.g. "6月20日 明天拍摄" should yield June 20, not tomorrow).
+	let m = text.match(/(20\d{2})[-/年.](\d{1,2})[-/月.](\d{1,2})/);
+	if (m) {
+		let yr = Number(m[1]), mo = Number(m[2]), dy = Number(m[3]);
+		let d = new Date(yr, mo - 1, dy);
+		if (d.getFullYear() == yr && d.getMonth() + 1 == mo && d.getDate() == dy) {
+			return `${yr}-${String(mo).padStart(2, '0')}-${String(dy).padStart(2, '0')}`;
+		}
+	}
+	m = text.match(/(^|[^\d.])(\d{1,2})[月./-](\d{1,2})(?:[日号](?!\d{4}(?![:：]))|(?![\d张条位个名组批次套件]))/);
+	if (m) {
+		let year = now.getFullYear();
+		let month = Number(m[2]);
+		let dayNum = Number(m[3]);
+		let candidate = new Date(year, month - 1, dayNum);
+		if (candidate.getMonth() + 1 !== month || candidate.getDate() !== dayNum) return '';
+		if (candidate.getTime() < now.getTime() - 30 * 86400000) year += 1;
+		else if (candidate.getTime() > now.getTime() + 183 * 86400000) {
+			let prev = new Date(year - 1, month - 1, dayNum);
+			if (prev.getTime() >= now.getTime() - 45 * 86400000) year -= 1;
+		}
+		return `${year}-${String(month).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+	}
+
+	// Relative dates — only match when no explicit date was found above.
 	if (text.indexOf('大后天') >= 0) {
 		day.setDate(day.getDate() + 3);
 		return _fmtDate(day);
@@ -135,28 +163,6 @@ function _parseDate(text) {
 		}
 	}
 
-	let m = text.match(/(20\d{2})[-/年.](\d{1,2})[-/月.](\d{1,2})/);
-	if (m) {
-		let yr = Number(m[1]), mo = Number(m[2]), dy = Number(m[3]);
-		let d = new Date(yr, mo - 1, dy);
-		if (d.getFullYear() == yr && d.getMonth() + 1 == mo && d.getDate() == dy) {
-			return `${yr}-${String(mo).padStart(2, '0')}-${String(dy).padStart(2, '0')}`;
-		}
-	}
-	m = text.match(/(^|[^\d.])(\d{1,2})[月./-](\d{1,2})(?:[日号](?!\d{4}(?![:：]))|(?![\d张条位个名组批次套件]))/);
-	if (m) {
-		let year = now.getFullYear();
-		let month = Number(m[2]);
-		let dayNum = Number(m[3]);
-		let candidate = new Date(year, month - 1, dayNum);
-		if (candidate.getMonth() + 1 !== month || candidate.getDate() !== dayNum) return '';
-		if (candidate.getTime() < now.getTime() - 30 * 86400000) year += 1;
-		else if (candidate.getTime() > now.getTime() + 183 * 86400000) {
-			let prev = new Date(year - 1, month - 1, dayNum);
-			if (prev.getTime() >= now.getTime() - 45 * 86400000) year -= 1;
-		}
-		return `${year}-${String(month).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
-	}
 	return '';
 }
 
@@ -171,12 +177,18 @@ function _parseTime(text) {
 	m = text.match(/(凌晨|上午|早上|中午|下午|晚上)?\s*(\d{1,2})点(半|\d{1,2}分?)?/);
 	if (!m) return '';
 	let hour = Number(m[2]);
-	if ((m[1] == '中午' || m[1] == '下午' || m[1] == '晚上') && hour < 12) hour += 12;
+	if (hour > 23) return '';
+	if (hour === 12 && (m[1] == '凌晨' || m[1] == '晚上')) hour = 0;
+	else if ((m[1] == '中午' || m[1] == '下午' || m[1] == '晚上') && hour < 12) hour += 12;
 	if (hour > 23) return '';
 	let minute = '00';
 	if (m[3]) {
 		if (m[3] === '半') { minute = '30'; }
-		else { minute = String(Number(m[3].replace('分', ''))).padStart(2, '0'); }
+		else {
+			let minNum = Number(m[3].replace('分', ''));
+			if (minNum > 59) return '';
+			minute = String(minNum).padStart(2, '0');
+		}
 	}
 	return `${String(hour).padStart(2, '0')}:${minute}`;
 }
@@ -185,11 +197,11 @@ function _parseCustomer(text) {
 	text = String(text || '');
 	let m = text.match(/客户[：:\s]*([\u4e00-\u9fa5A-Za-z0-9]{1,12})/);
 	if (m) return m[1];
-	m = text.match(/(?:给|帮|为)?([一-龥]{1,3}?)(?<![我你他她它谁请让])(?:姐|哥|总|老师|客户)?(?:新增|记录|安排|登记|定|(?<![跟商])拍)/);
+	m = text.match(/(?:给|帮|为)?(?![我你他她它谁请让])([一-龥]{1,3}?)(?:姐|哥|总|老师|客户)?(?:新增|记录|安排|登记|定|(?<![跟商])拍)/);
 	if (m) return m[1];
 	// Name before type keyword: customer name before type (2-3 char CJK)
 	m = text.match(/(?:^|\s)([\u4e00-\u9be5]{2,3})(?=\s+(?:\u5916\u666f\u5199\u771f|\u5a5a\u793c\u8ddf\u62cd|\u5546\u62cd|\u5546\u4e1a\u62cd\u6444|\u6d3b\u52a8\u8ddf\u62cd|\u8ddf\u62cd|\u5199\u771f|\u767e\u65e5\u5bb4))/);
-	if (m && !/^(\u62cd\u6444|\u5916\u666f|\u5199\u771f|\u5a5a\u793c|\u5546\u62cd|\u6d3b\u52a8|\u8ddf\u62cd|\u91d1\u989d|\u5df2\u6536|\u5b9e\u6536|\u5b9a\u91d1|\u5c3e\u6b3e|\u603b\u4ef7|\u5ba2\u6237|\u8bb0\u5f55|\u5b89\u6392|\u767b\u8bb0)$/.test(m[1])) return m[1];
+	if (m && !/^(\u62cd\u6444|\u5916\u666f|\u5199\u771f|\u5a5a\u793c|\u5546\u62cd|\u6d3b\u52a8|\u8ddf\u62cd|\u91d1\u989d|\u5df2\u6536|\u5b9e\u6536|\u5b9a\u91d1|\u5c3e\u6b3e|\u603b\u4ef7|\u5ba2\u6237|\u8bb0\u5f55|\u5b89\u6392|\u767b\u8bb0|\u5c0f\u7ea2\u4e66|\u6296\u97f3|\u8f6c\u4ecb\u7ecd|\u4ecb\u7ecd|\u8001\u5ba2\u6237|\u76f4\u5ba2|\u670b\u53cb\u5708)$/.test(m[1])) return m[1];
 	m = text.match(/(?<![一-\d])(?:外景写真|婚礼跟拍|商拍|商业拍摄|活动跟拍|写真|百日宴)[，,、\s]*([\u4e00-\u9fa5A-Za-z0-9]{1,12})/);
 	if (m && !/^(\u91d1\u989d|\u5df2\u6536|\u5b9e\u6536|\u5b9a\u91d1|\u8ba2\u91d1|\u5c3e\u6b3e|\u603b\u4ef7|\u6536\u6b3e|\u8d39\u7528|\u4ef7\u683c|\uffe5|\u00a5)/.test(m[1])) return m[1];
 	return '';

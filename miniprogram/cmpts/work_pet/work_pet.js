@@ -452,7 +452,8 @@ Component({
 				} else {
 					let paths = files.map(item => item.path);
 					let fileIDs = await cloudHelper.transTempPics(paths, 'work/ai/', '');
-					for (let idx = 0; idx < fileIDs.length; idx++) {
+					if (!Array.isArray(fileIDs)) fileIDs = [];
+					for (let idx = 0; idx < fileIDs.length && idx < files.length; idx++) {
 						let localPath = await this._saveLocalImage(files[idx].path, idx);
 						add.push({
 							fileID: fileIDs[idx],
@@ -592,8 +593,7 @@ Component({
 					messages = trimMessages(messages.concat([{ role: 'assistant', content: reply }]));
 				} catch (err) {
 					let msg = (err && err.msg) || (err && err.message) || 'AI 小助手暂时不可用，请稍后再试。';
-					messages = trimMessages(messages.slice(0, -1).concat([{ role: 'assistant', content: msg }]));
-					this.setData({ chatInput: originalInput, chatAttachments: originalAttachments });
+					messages = trimMessages(messages.concat([{ role: 'assistant', content: msg }]));
 				}
 
 				this.setData({ chatMessages: messages, chatLoading: false });
@@ -777,6 +777,9 @@ Component({
 			if (!page) return;
 			setTimeout(async () => {
 				try {
+					let curPages = getCurrentPages();
+					let curPage = curPages && curPages.length ? curPages[curPages.length - 1] : null;
+					if (!curPage || curPage !== page) return;
 					if (typeof page._loadDay == 'function') await page._loadDay();
 					if (typeof page._loadCalendar == 'function') await page._loadCalendar();
 					if (typeof page._loadList == 'function') await page._loadList();
