@@ -153,7 +153,7 @@ function _parseDate(text) {
 		if (candidate.getTime() < now.getTime() - 30 * 86400000) year += 1;
 		else if (candidate.getTime() > now.getTime() + 183 * 86400000) {
 			let prev = new Date(year - 1, month - 1, dayNum);
-			if (prev.getTime() >= now.getTime() - 60 * 86400000) year -= 1;
+			if (prev.getTime() >= now.getTime() - 45 * 86400000) year -= 1;
 		}
 		return `${year}-${String(month).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
 	}

@@ -69,3 +69,8 @@
 - 2026-06-19T19:00:55 Round 041 started.
 - 2026-06-19T19:04:57 Publish watcher error: 设置“lastProcessedAt”时发生异常:“在此对象上找不到属性“lastProcessedAt”。请确认该属性存在并且可设置。”
 - 2026-06-19T19:07:57 Publish worker for Round 027 started.
+- 2026-06-19T19:12:55 Publish watcher error: 设置”lastProcessedAt”时发生异常:”在此对象上找不到属性”lastProcessedAt”。请确认该属性存在并且可设置。”
+- 2026-06-19T19:15:00 Round 041 completed; output: rounds/round041-output.md. Bug fix: date parsing year-rollover — “12月31日” in Jan/Feb incorrectly pointed to upcoming Dec instead of recent past Dec. Added 183-day far-future check with 45-day backward look in both guest_helper.js and work_ai_service.js. 14/14 date rollover tests passed.
+- 2026-06-19T19:14:41 Round 041 completed; output: rounds/round041-output.md
+- 2026-06-19T19:15:41 Round 042 started.
+- 2026-06-19T19:15:55 Publish worker for Round 027 started.
