@@ -122,3 +122,10 @@
 - 2026-06-19T20:46:59 Publish worker for Round 027 started.
 - 2026-06-19T20:52:24 Publish watcher error: 设置“lastProcessedAt”时发生异常:“在此对象上找不到属性“lastProcessedAt”。请确认该属性存在并且可设置。”
 - 2026-06-19T20:55:24 Publish worker for Round 027 started.
+- 2026-06-19T21:00:06 Publish watcher error: 设置“lastProcessedAt”时发生异常:“在此对象上找不到属性“lastProcessedAt”。请确认该属性存在并且可设置。”
+- 2026-06-19T21:03:06 Publish worker for Round 027 started.
+- 2026-06-19T13:07:29 Round 052 completed; output: rounds/round052-output.md. Bug fix: _parseCustomer regex — non-greedy {1,3}? capture prevents title suffixes (姐/哥/老师) and verb '拍' from being captured as part of customer name. Removed type-keyword overlaps from verb list. Added lookbehind to type-keyword branch.
+- 2026-06-19T21:07:37 Publish watcher error: 设置“lastProcessedAt”时发生异常:“在此对象上找不到属性“lastProcessedAt”。请确认该属性存在并且可设置。”
+- 2026-06-19T21:07:48 Round 052 completed; output: rounds/round052-output.md
+- 2026-06-19T21:08:48 Round 053 started.
+- 2026-06-19T21:10:37 Publish worker for Round 027 started.
