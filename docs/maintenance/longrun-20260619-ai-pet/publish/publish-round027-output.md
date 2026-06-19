@@ -19,7 +19,7 @@
 
 | Commit | 说明 |
 |--------|------|
-| *(待填)* | Update longrun Round 027+ code fixes and docs |
+| `d062166` | Update longrun Round 027+ code fixes and docs |
 
 ### 变更文件
 
@@ -34,7 +34,8 @@
 | `docs/.../publish/publish-round027-output.md` | 重写 | 修复全文中文乱码（原文件 UTF-8 编码损坏），追加本次发布记录 |
 
 ### 推送结果
-*(待填 — commit 和 push 后更新)*
+- Push: `9e90da1..d062166 main -> main` 成功
+- 远程验证: hash 匹配 `d062166f367af9c6c0a579fe12408a759782b95a`
 
 ### 文档变更类型
 追加（heartbeat）；重写（publish-round027-output.md，修复乱码，属 SKILL.md 允许的乱码修复场景）；新增（round040/041 docs）
