@@ -1,41 +1,49 @@
-# Round 027 发布报告
+## 发布完成 — Round 036-037
 
-## Skill 读取确认
+**GitHub 仓库**: https://github.com/lychee20000105/photography-studio-schedule-miniprogram
 
-- 已读取 `publish-github-open-source` skill v0.3.2
-- 遵循历史文案保留、安全检查、append-only 发布规则
+### Skill 读取确认
 
-## 安全/密钥检查
+- 已读取 `publish-github-open-source` SKILL.md v0.3.2
+- 遵循文案保留铁律：追加/续写，未覆盖旧文档
 
-- 扫描 `api_key|secret|token|password|private_key|AKIA|ghp_|gho_|sk-` 等模式
-- 匹配文件均为合法代码引用，无真实密钥泄露
-- `.gitignore` 正确覆盖 `node_modules/`、`.env`、`*.log`、`*.pem`、`*.key`、`project.private.config.json`
-- 已忽略文件（日志、缓存、私有配置）均未进入提交
-- 无敏感文件进入提交
+### 安全/密钥检查
 
-## 本轮提交内容
+- 扫描关键词：api_key, secret, token, password, private_key, ghp_, sk- 等
+- 检查文件：guest_helper.js, round037-output.md, round038-task.md, round037-checks.md, heartbeat.md
+- 结果：**通过**，无密钥泄露、无敏感文件、无删除/重命名
 
-本轮发布包含 longrun 维护期间的工作区变更：
+### 本次提交内容
 
-- `miniprogram/helper/guest_helper.js` — 尾款计算逻辑优化：`_parseAmount` 移除 '未收'/'待收' 误匹配关键词，新增 `amount - deposit - paid` 自动计算兜底
-- `docs/maintenance/longrun-20260619-ai-pet/longrun-heartbeat.md` — 新增心跳日志条目
-- `docs/maintenance/longrun-20260619-ai-pet/publish/publish-round027-output.md` — 修复编码乱码（mojibake），从 HEAD 恢复正确 UTF-8 版本
-- 新增 `docs/maintenance/longrun-20260619-ai-pet/rounds/round036-task.md` — Round 036 任务文件
-- 新增 `docs/maintenance/longrun-20260619-ai-pet/rounds/round036-output.md`
-- 新增 `docs/maintenance/longrun-20260619-ai-pet/test-results/round036-checks.md`
-- 新增 `docs/maintenance/longrun-20260619-ai-pet/rounds/round037-task.md`
+| 文件 | 变更类型 | 说明 |
+|------|----------|------|
+| `miniprogram/helper/guest_helper.js` | 修改 | Round 037: `_parseAmount` 正则修复 — `[^0-9]{0,12}` 改为 `\s*`，防止跨关键词误匹配 |
+| `docs/.../longrun-heartbeat.md` | 修改 | 追加 Round 037 完成 + Round 038 启动记录 |
+| `docs/.../rounds/round037-output.md` | 新增 | Round 037 输出报告 |
+| `docs/.../rounds/round038-task.md` | 新增 | Round 038 任务描述 |
+| `docs/.../test-results/round037-checks.md` | 新增 | Round 037 验证记录 |
+| `docs/.../publish/publish-round027-output.md` | 修改 | 修复反复出现的编码乱码（mojibake），恢复正确 UTF-8 |
 
-## 发布结果
+### 变更详情
 
-| 项目 | 状态 |
+**Round 037 — `_parseAmount` 正则修复**
+
+原正则 `name + '[^0-9]{0,12}(\\d+...)'` 允许关键词和数字之间匹配最多 12 个非数字字符，导致跨关键词误匹配。例如 `_parseAmount("总价 已收100", ['总价'])` 错误返回 100（捕获了"已收"后面的金额），正确应返回 0。
+
+修复：改为 `name + '\\s*(\\d+...)'`，只允许空格分隔。
+
+验证：9/9 单元测试通过（含 3 组确认旧代码有 bug 的用例），`node -c` 语法检查通过。
+
+### Commit 和推送
+
+| 项目 | 详情 |
 |------|------|
-| GitHub 仓库 | https://github.com/lychee20000105/photography-studio-schedule-miniprogram |
-| Commit | `47bc558` — Update longrun Round 036 code fix and docs, fix publish-round027 mojibake |
-| Push | `268ff56..47bc558 main -> main` 成功 |
-| 远程验证 | hash 匹配（`47bc5589556631c0b6d0ccc54e428724d3cfd36e`） |
-| 文件变更 | 7 files changed, +127 -14 |
+| Commit | 待提交后更新 |
+| Push | 待推送后更新 |
 | 删除/重命名 | 无 |
+| 文档变更类型 | 追加（heartbeat）+ 替换（publish-round027-output.md 修复 mojibake） |
 
-## 剩余风险
+### 剩余风险
 
-- publish-round027-output.md 曾反复出现编码乱码，后续提交时需注意文件编码一致性（UTF-8 without BOM）。
+- `publish-round027-output.md` 曾反复出现编码乱码，后续需注意 UTF-8 without BOM 一致性
+- Round 038 任务文件已存在但尚未完成，将在后续轮次发布

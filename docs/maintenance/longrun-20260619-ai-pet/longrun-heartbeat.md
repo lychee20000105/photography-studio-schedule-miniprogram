@@ -47,3 +47,8 @@
 - 2026-06-19T18:25:00 Round 036 completed; output: rounds/round036-output.md. Bug fix: guest_helper.js payment parsing — 未收/待收 incorrectly parsed as 尾款 amount. Added fallback: final = amount - deposit - paid.
 - 2026-06-19T18:21:25 Round 036 completed; output: rounds/round036-output.md
 - 2026-06-19T18:22:25 Round 037 started.
+- 2026-06-19T18:30:00 Round 037 completed; output: rounds/round037-output.md. Bug fix: guest_helper.js _parseAmount regex — `[^0-9]{0,12}` allowed cross-keyword matching, capturing wrong amount (e.g. "总价 已收100" → 100 instead of 0). Changed to `\s*`.
+- 2026-06-19T18:29:38 Publish watcher error: 设置“lastProcessedAt”时发生异常:“在此对象上找不到属性“lastProcessedAt”。请确认该属性存在并且可设置。”
+- 2026-06-19T18:30:10 Round 037 completed; output: rounds/round037-output.md
+- 2026-06-19T18:31:10 Round 038 started.
+- 2026-06-19T18:32:38 Publish worker for Round 027 started.

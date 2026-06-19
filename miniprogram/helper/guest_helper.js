@@ -191,7 +191,7 @@ function _parseCustomer(text) {
 function _parseAmount(text, names) {
 	text = String(text || '');
 	for (let name of names) {
-		let reg = new RegExp(name + '[^0-9]{0,12}(\\d+(?:\\.\\d+)?)');
+		let reg = new RegExp(name + '\\s*(\\d+(?:\\.\\d+)?)');
 		let m = text.match(reg);
 		if (m) return _money(m[1]);
 	}
