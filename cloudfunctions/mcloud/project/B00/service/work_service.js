@@ -1083,6 +1083,7 @@ class WorkService extends BaseProjectService {
 
 		let isPm = /下午|晚上|晚间|傍晚/.test(text);
 		let isNoon = /中午/.test(text);
+		let isDawn = /凌晨/.test(text);
 		text = text
 			.replace(/上午|早上|早晨|凌晨|下午|晚上|晚间|傍晚|中午/g, '')
 			.replace(/[：.]/g, ':');
@@ -1113,7 +1114,8 @@ class WorkService extends BaseProjectService {
 		}
 
 		if (!Number.isInteger(hour) || !Number.isInteger(minute)) return text;
-		if ((isPm || (isNoon && hour < 11)) && hour < 12) hour += 12;
+		if (hour === 12 && (isDawn || isPm)) hour = 0;
+		else if ((isPm || (isNoon && hour < 11)) && hour < 12) hour += 12;
 		if (hour < 0 || hour > 23 || minute < 0 || minute > 59) return text;
 		return String(hour).padStart(2, '0') + ':' + String(minute).padStart(2, '0');
 	}

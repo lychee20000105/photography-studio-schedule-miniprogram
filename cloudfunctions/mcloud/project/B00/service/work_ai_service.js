@@ -711,12 +711,18 @@ class WorkAiService extends WorkPermissionService {
 		if (m) {
 			let hour = Number(m[2]);
 			let period = m[1] || '';
-			if ((period == '下午' || period == '晚上' || period == '中午') && hour < 12) hour += 12;
+			if (hour > 23) return '';
+			if (hour === 12 && (period == '凌晨' || period == '晚上')) hour = 0;
+			else if ((period == '下午' || period == '晚上' || period == '中午') && hour < 12) hour += 12;
 			if (hour > 23) return '';
 			let minute = '00';
 			if (m[3]) {
 				if (m[3] === '半') { minute = '30'; }
-				else { minute = String(Number(m[3].replace('分', ''))).padStart(2, '0'); }
+				else {
+					let minNum = Number(m[3].replace('分', ''));
+					if (minNum > 59) return '';
+					minute = String(minNum).padStart(2, '0');
+				}
 			}
 			return String(hour).padStart(2, '0') + ':' + minute;
 		}
