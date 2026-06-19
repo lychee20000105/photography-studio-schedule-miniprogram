@@ -51,3 +51,37 @@ Read and followed `C:\Users\Administrator\.codex\skills\publish-github-open-sour
 - `publish-watcher.log.err` is tracked (empty file, `.err` not caught by `*.log`). Low risk but could accumulate noise in future rounds.
 - Demo PNG files show same-size diffs — likely git re-stat on Windows CRLF/binary handling, no actual content change.
 - No GitHub Release created for this round — incremental bug fix, not a versioned release milestone.
+
+---
+
+## Second Publish Run — 2026-06-19
+
+### Context
+
+Publish watcher encountered a `lastProcessedAt` property error, then restarted the publish worker for Round 027. This run found `publish-round027-output.md` had been overwritten with mojibake (encoding-corrupted Chinese text). Restored original report from `git HEAD` and committed the heartbeat update.
+
+### Safety/Secret Checks Performed
+
+1. **Secret scan** on `docs/maintenance/longrun-20260619-ai-pet/` and `cloudfunctions/`: all matches are `process.env` reads or config params (`maxTokens`). No hardcoded secrets. **Safe.**
+2. **No `.env`, `node_modules`, `project.private.config.json` in staging.** **Safe.**
+3. **No deletions or renames** in staged diff. **Safe.**
+
+### Files Committed
+
+| File | Action | Notes |
+|------|--------|-------|
+| `docs/maintenance/longrun-20260619-ai-pet/longrun-heartbeat.md` | Modified | Appended watcher error log + publish worker restart entry |
+| `docs/maintenance/longrun-20260619-ai-pet/publish/publish-round027-output.md` | Restored | Fixed mojibake — original detailed report restored from `git HEAD` |
+
+### Commit and Push Result
+
+- **Commit**: `2072c9fa40dbffa73f99d127f0884865a0f95f68`
+- **Message**: `Update longrun heartbeat: fix publish-round027 mojibake, log watcher error and publish restart`
+- **Branch**: `main` → `origin/main`
+- **Push**: Success — `3e70b7b..2072c9f main -> main`
+- **Remote verification**: `git ls-remote origin refs/heads/main` → `2072c9f` matches local HEAD
+
+### Documentation Change Type
+
+- `publish-round027-output.md`: **restoration** (replaced mojibake with original content from git history, not a content rewrite)
+- `longrun-heartbeat.md`: **append-only** (2 new log lines)
