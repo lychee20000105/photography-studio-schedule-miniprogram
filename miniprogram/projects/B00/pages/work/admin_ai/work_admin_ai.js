@@ -171,6 +171,7 @@ Page({
 				else pageHelper.showModal('没有识别到可选模型，可先手动填写模型 ID 后保存');
 			} catch (err) {
 				console.error(err);
+				pageHelper.showModal('获取模型失败，请检查接口地址和 API Key');
 			} finally {
 				this.setData({ modelLoading: false });
 			}
@@ -254,6 +255,7 @@ Page({
 				pageHelper.showSuccToast('保存成功');
 		} catch (err) {
 			console.error(err);
+			pageHelper.showModal('保存失败，请检查网络后重试');
 		}
 	},
 
@@ -269,6 +271,7 @@ Page({
 			pageHelper.showModal((res && res.reply) ? res.reply : 'AI 已响应，但没有返回文本');
 		} catch (err) {
 			console.error(err);
+			pageHelper.showModal('测试失败，请检查 AI 配置和网络');
 		}
 	},
 });

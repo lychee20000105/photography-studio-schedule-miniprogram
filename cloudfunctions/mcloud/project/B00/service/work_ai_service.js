@@ -73,11 +73,11 @@ function getModelForTask(queryType, configModel) {
 
 function getMaxTokensForTask(queryType, configMaxTokens) {
 	switch (queryType) {
-		case 'chat': return Math.min(configMaxTokens || 600, 300);
-		case 'explain': return Math.min(configMaxTokens || 600, 400);
-		case 'query': return Math.min(configMaxTokens || 600, 500);
-		case 'write': return configMaxTokens || 600;
-		case 'complex': return Math.max(configMaxTokens || 600, 800);
+		case 'chat': return Math.max(400, Math.min(configMaxTokens || 600, 500));
+		case 'explain': return Math.max(400, Math.min(configMaxTokens || 600, 500));
+		case 'query': return Math.max(500, Math.min(configMaxTokens || 600, 800));
+		case 'write': return Math.max(800, configMaxTokens || 600);
+		case 'complex': return Math.max(1000, configMaxTokens || 800);
 		default: return configMaxTokens || 600;
 	}
 }
@@ -244,7 +244,7 @@ class WorkAiService extends WorkPermissionService {
 		let body = {
 			model: selectedModel,
 			messages,
-			temperature: config.temperature,
+			temperature: (queryType === 'write' || queryType === 'complex') ? Math.min(config.temperature, 0.3) : config.temperature,
 			max_tokens: selectedMaxTokens,
 			stream: false,
 		};
@@ -267,7 +267,9 @@ class WorkAiService extends WorkPermissionService {
 					});
 					let fallbackReply = this._pickReply(fallbackResult);
 					if (fallbackReply) return await this._handleAgentReply(openId, staff, fallbackReply, config, fallbackResult, imageAttachments, pageContext);
-				} catch (fallbackErr) {}
+				} catch (fallbackErr) {
+					console.error('AI fallback failed:', fallbackErr && fallbackErr.message ? fallbackErr.message : fallbackErr);
+				}
 			}
 			console.error('AI chat failed:', err && err.message ? err.message : err);
 			this.AppError(err && err.safeMessage ? err.safeMessage : 'AI 接口调用失败，请检查后台配置');
@@ -407,19 +409,23 @@ class WorkAiService extends WorkPermissionService {
 
 		// Layer 2: Staff/type data (only for write/query/image queries)
 		if (queryType === 'write' || queryType === 'query' || hasImages) {
-			let staffOptions = await WorkStaffModel.getAll({
-				STAFF_STATUS: WorkStaffModel.STATUS.COMM,
-			}, '_id,STAFF_NAME,STAFF_ROLES,STAFF_IS_ADMIN', {
-				STAFF_NAME: 'asc',
-			}, 200);
-			let typeOptions = await WorkTypeModel.getAll({
-				TYPE_STATUS: 1,
-			}, '_id,TYPE_NAME,TYPE_COLOR,TYPE_ORDER', {
-				TYPE_ORDER: 'asc',
-				TYPE_ADD_TIME: 'asc',
-			}, 200);
-			parts.push('可用员工：' + compressStaffList(staffOptions));
-			parts.push('可用拍摄类型：' + compressTypeList(typeOptions));
+			try {
+				let staffOptions = await WorkStaffModel.getAll({
+					STAFF_STATUS: WorkStaffModel.STATUS.COMM,
+				}, '_id,STAFF_NAME,STAFF_ROLES,STAFF_IS_ADMIN', {
+					STAFF_NAME: 'asc',
+				}, 200);
+				let typeOptions = await WorkTypeModel.getAll({
+					TYPE_STATUS: 1,
+				}, '_id,TYPE_NAME,TYPE_COLOR,TYPE_ORDER', {
+					TYPE_ORDER: 'asc',
+					TYPE_ADD_TIME: 'asc',
+				}, 200);
+				parts.push('可用员工：' + compressStaffList(staffOptions));
+				parts.push('可用拍摄类型：' + compressTypeList(typeOptions));
+			} catch (dbErr) {
+				console.error('AI build messages DB query failed:', dbErr && dbErr.message ? dbErr.message : dbErr);
+			}
 		}
 
 		// Add image-specific instructions
@@ -434,9 +440,13 @@ class WorkAiService extends WorkPermissionService {
 
 		// Phase 4: Keyword-based knowledge retrieval
 		if (queryType !== 'chat') {
-			let knowledgeEntries = knowledgeService.retrieveKnowledge(message, 3);
-			let knowledgeText = knowledgeService.formatKnowledgeForSystem(knowledgeEntries);
-			if (knowledgeText) parts.push(knowledgeText);
+			try {
+				let knowledgeEntries = knowledgeService.retrieveKnowledge(message, 3);
+				let knowledgeText = knowledgeService.formatKnowledgeForSystem(knowledgeEntries);
+				if (knowledgeText) parts.push(knowledgeText);
+			} catch (knowledgeErr) {
+				console.error('AI knowledge retrieval failed:', knowledgeErr && knowledgeErr.message ? knowledgeErr.message : knowledgeErr);
+			}
 		}
 
 		messages.unshift({ role: 'system', content: parts.join('\n') });
@@ -790,7 +800,13 @@ class WorkAiService extends WorkPermissionService {
 			let lower = (name || fileID).toLowerCase();
 			let isImage = type == 'image' || /\.(png|jpe?g|webp|gif|bmp)$/i.test(lower);
 			if (!isImage) continue;
-			let url = fileID.startsWith('http://') || fileID.startsWith('https://') ? fileID : await cloudUtil.getTempFileURLOne(fileID);
+			let url;
+			try {
+				url = fileID.startsWith('http://') || fileID.startsWith('https://') ? fileID : await cloudUtil.getTempFileURLOne(fileID);
+			} catch (fileErr) {
+				console.error('AI image attachment resolve failed:', fileID, fileErr && fileErr.message ? fileErr.message : fileErr);
+				continue;
+			}
 			if (!url) continue;
 			list.push({ fileID, url, name, type: 'image' });
 		}
@@ -808,8 +824,8 @@ class WorkAiService extends WorkPermissionService {
 		date = asText(date, 30)
 			.replace(/T\d.*/, '')
 			.replace(/\s+\d{1,2}[:：]\d{2}.*/, '')
-			.replace(/(\d{4}[-/.年]\d{1,2}[-/.月]\d{1,2})\d+[:：].*$/, '$1')
 			.replace(/([日号])\s*[\d一-龥][\s\S]*$/, '$1')
+			.replace(/(\d{4}[-/.年]\d{1,2}[-/.月]\d{1,2})\s*[上下]午.*$/, '$1')
 			.replace(/[./]/g, '-')
 			.replace(/年|月/g, '-')
 			.replace(/日|号/g, '')
@@ -1068,14 +1084,19 @@ class WorkAiService extends WorkPermissionService {
 	}
 
 	async _addAuditNote(openId, title, content) {
-		let work = new WorkService();
-		let ret = await work.saveNote(openId, {
-			NOTE_TYPE: 'team',
-			NOTE_TITLE: title,
-			NOTE_CONTENT: content,
-			NOTE_DATE: timeUtil.time('Y-M-D'),
-		});
-		return ret && ret.id ? ret.id : '';
+		try {
+			let work = new WorkService();
+			let ret = await work.saveNote(openId, {
+				NOTE_TYPE: 'team',
+				NOTE_TITLE: title,
+				NOTE_CONTENT: content,
+				NOTE_DATE: timeUtil.time('Y-M-D'),
+			});
+			return ret && ret.id ? ret.id : '';
+		} catch (err) {
+			console.error('AI audit note failed:', err && err.message ? err.message : err);
+			return '';
+		}
 	}
 
 	async _agentQuerySchedule(openId, staff, data = {}) {
@@ -1216,9 +1237,13 @@ class WorkAiService extends WorkPermissionService {
 		let { date, customerName, type, participants, order } = built;
 		let work = new WorkService();
 		let ret = await work.saveOrder(openId, order);
-		let saved = await WorkOrderModel.getOne(ret.id);
-		if (!saved || saved.ORDER_DATE != order.ORDER_DATE || saved.ORDER_CUSTOMER_NAME != order.ORDER_CUSTOMER_NAME) {
-			this.AppError('订单保存后校验失败，请重试');
+		try {
+			let saved = await WorkOrderModel.getOne(ret.id);
+			if (!saved || saved.ORDER_DATE != order.ORDER_DATE || saved.ORDER_CUSTOMER_NAME != order.ORDER_CUSTOMER_NAME) {
+				console.error('AI order post-save verification mismatch:', ret.id);
+			}
+		} catch (verifyErr) {
+			console.error('AI order post-save verify failed:', verifyErr && verifyErr.message ? verifyErr.message : verifyErr);
 		}
 		let participantText = participants.map(p => `${p.staffName || p.staffId}(${p.roleName})`).join('、');
 		let summary = `${staff.STAFF_NAME || '员工'}通过AI新增订单档期：${date} ${order.ORDER_TIME || ''}，${type.name}，客户${customerName}${order.ORDER_PLACE ? '，地点' + order.ORDER_PLACE : ''}${participantText ? '，参与人：' + participantText : ''}。记录ID：${ret.id}`;

@@ -13,7 +13,9 @@ function _safeStorageGet(key) {
 function _safeStorageSet(key, val) {
 	try {
 		wx.setStorageSync(key, val);
-	} catch (e) {}
+	} catch (e) {
+		console.warn('storage set failed:', key, e);
+	}
 }
 
 function _safeStorageRemove(key) {
@@ -23,12 +25,12 @@ function _safeStorageRemove(key) {
 }
 
 function isGuest() {
-	return _safeStorageGet(GUEST_KEY) == 1;
+	return _safeStorageGet(GUEST_KEY) === 1;
 }
 
 function enterGuest() {
-	_safeStorageSet(GUEST_KEY, 1);
 	cleanupGuestData();
+	_safeStorageSet(GUEST_KEY, 1);
 }
 
 function exitGuest() {
@@ -52,7 +54,7 @@ function _safeOrders() {
 	let list = _safeStorageGet(GUEST_ORDERS_KEY);
 	if (!Array.isArray(list)) return [];
 	let now = Date.now();
-	return list.filter(item => item && item.ORDER_GUEST_EXPIRE_TIME && item.ORDER_GUEST_EXPIRE_TIME > now);
+	return list.filter(item => item && item.ORDER_GUEST_EXPIRE_TIME && item.ORDER_GUEST_EXPIRE_TIME > now).slice(0, 30);
 }
 
 function _saveOrders(list) {

@@ -279,13 +279,16 @@ Component({
 		},
 	lifetimes: {
 		attached() {
+			this._destroyed = false;
 			this.refresh();
 		},
 		detached() {
+			this._destroyed = true;
 			if (this._scrollTimer1) { clearTimeout(this._scrollTimer1); this._scrollTimer1 = null; }
 			if (this._scrollTimer2) { clearTimeout(this._scrollTimer2); this._scrollTimer2 = null; }
 			if (this._burstTimer) { clearTimeout(this._burstTimer); this._burstTimer = null; }
 			if (this._typewriterTimer) { clearTimeout(this._typewriterTimer); this._typewriterTimer = null; }
+			if (this._refreshTimer) { clearTimeout(this._refreshTimer); this._refreshTimer = null; }
 		},
 	},
 	pageLifetimes: {
@@ -295,19 +298,23 @@ Component({
 	},
 	methods: {
 		refresh() {
-			let pet = normalizePet(wx.getStorageSync(STORAGE_KEY) || {});
-			wx.setStorageSync(STORAGE_KEY, pet);
-			let pages = getCurrentPages();
-			let route = pages.length ? pages[pages.length - 1].route : '';
-			let pageMeta = getMode(route);
-			let pos = normalizePos(wx.getStorageSync(POS_KEY) || {});
-			this.setData({
-				pet,
-				mode: pageMeta.mode,
-				bubble: this.data.burst ? pageMeta.bubble : '',
-				toolIcon: TYPE_MAP[pet.type].icon,
-				pos,
-			});
+			try {
+				let pet = normalizePet(wx.getStorageSync(STORAGE_KEY) || {});
+				wx.setStorageSync(STORAGE_KEY, pet);
+				let pages = getCurrentPages();
+				let route = pages.length ? pages[pages.length - 1].route : '';
+				let pageMeta = getMode(route);
+				let pos = normalizePos(wx.getStorageSync(POS_KEY) || {});
+				this.setData({
+					pet,
+					mode: pageMeta.mode,
+					bubble: this.data.burst ? pageMeta.bubble : '',
+					toolIcon: TYPE_MAP[pet.type].icon,
+					pos,
+				});
+			} catch (e) {
+				console.warn('work_pet refresh storage error:', e);
+			}
 		},
 		savePet(pet) {
 			pet = normalizePet(pet);
@@ -560,6 +567,13 @@ Component({
 		async bindChatSend() {
 			if (this._isSending || this.data.chatLoading) return;
 			this._isSending = true;
+			// Safety timeout: reset _isSending after 90s to prevent permanent lock
+			let _sendingTimeout = setTimeout(() => {
+				if (this._isSending) {
+					this._isSending = false;
+					if (!this._destroyed) this.setData({ chatLoading: false });
+				}
+			}, 90000);
 			// Capture the target thread ID before any async work, so that switching
 			// threads during the AI request does not corrupt another thread's history.
 			let _sendThreadId = this.data.activeChatId || '';
@@ -626,6 +640,7 @@ Component({
 				}
 				this._saveChat(messages, _sendThreadId);
 			} finally {
+				clearTimeout(_sendingTimeout);
 				this._isSending = false;
 			}
 		},
@@ -688,6 +703,7 @@ Component({
 			return { threads, activeId, activeThread };
 		},
 		bindNewChat() {
+			if (this._typewriterTimer) { clearTimeout(this._typewriterTimer); this._typewriterTimer = null; }
 			let threads = this._loadThreads().threads;
 			let thread = decorateThread(makeThread());
 			threads = sortThreads([thread].concat(threads)).slice(0, 20);
@@ -704,6 +720,7 @@ Component({
 			this._scrollChatToBottom();
 		},
 		bindSwitchChat(e) {
+			if (this._typewriterTimer) { clearTimeout(this._typewriterTimer); this._typewriterTimer = null; }
 			let id = e.currentTarget.dataset.id || '';
 			let state = this._loadThreads();
 			let thread = state.threads.find(item => item.id == id);
@@ -795,6 +812,8 @@ Component({
 		_typewriterDisplay(fullText, messages, threadId) {
 			if (this._typewriterTimer) { clearTimeout(this._typewriterTimer); this._typewriterTimer = null; }
 			let text = String(fullText || '');
+			// Fix #35: empty reply shows default text, not permanent loading
+			if (!text) text = 'AI 没有返回文字。';
 			if (text.length < 30) {
 				let updated = trimMessages(messages.concat([{ role: 'assistant', content: text }]));
 				let stillSame = !this.data.activeChatId || this.data.activeChatId === threadId;
@@ -813,17 +832,20 @@ Component({
 			let idx = 0;
 			let speed = typewriterSpeed(text);
 			let self = this;
+			let _capturedThreadId = threadId;
 			function tick() {
+				// Fix #6: stop if component destroyed
+				if (self._destroyed) { self._typewriterTimer = null; return; }
 				if (idx >= text.length) {
 					let final = trimMessages(messages.concat([{ role: 'assistant', content: text }]));
-					let same = !self.data.activeChatId || self.data.activeChatId === threadId;
+					let same = !self.data.activeChatId || self.data.activeChatId === _capturedThreadId;
 					if (same) {
 						self.setData({ chatMessages: final, chatLoading: false });
 						self._scrollChatToBottom();
 					} else {
 						self.setData({ chatLoading: false });
 					}
-					self._saveChat(final, threadId);
+					self._saveChat(final, _capturedThreadId);
 					self._typewriterTimer = null;
 					return;
 				}
@@ -831,7 +853,7 @@ Component({
 				let ch = text[idx - 1];
 				let nextDelay = isPunctuation(ch) ? speed * 2 : speed;
 				let partial = text.slice(0, idx) + '▌';
-				let same = !self.data.activeChatId || self.data.activeChatId === threadId;
+				let same = !self.data.activeChatId || self.data.activeChatId === _capturedThreadId;
 				if (same) {
 					let msgs = trimMessages(messages.concat([{ role: 'assistant', content: partial }]));
 					self.setData({ chatMessages: msgs });
