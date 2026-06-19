@@ -30,10 +30,10 @@
 | 项目 | 状态 |
 |------|------|
 | GitHub 仓库 | https://github.com/lychee20000105/photography-studio-schedule-miniprogram |
-| Commit | 待更新（提交后填入） |
-| Push | 待更新 |
-| 远程验证 | 待更新 |
-| 文件变更 | 待更新 |
+| Commit | `47bc558` — Update longrun Round 036 code fix and docs, fix publish-round027 mojibake |
+| Push | `268ff56..47bc558 main -> main` 成功 |
+| 远程验证 | hash 匹配（`47bc5589556631c0b6d0ccc54e428724d3cfd36e`） |
+| 文件变更 | 7 files changed, +127 -14 |
 | 删除/重命名 | 无 |
 
 ## 剩余风险
