@@ -46,7 +46,7 @@
 
 | Commit | 说明 |
 |--------|------|
-| `(pending)` | Update longrun Round 041 date parsing fix and docs |
+| `c58c4ab` | Update longrun Round 041 date parsing fix and publish docs |
 
 **变更文件 (6):**
 - `work_ai_service.js` — 日期解析跨年回退阈值 60→45 天
@@ -58,7 +58,8 @@
 
 **修复内容:** "12月31日"在1-2月输入时错误指向未来12月而非刚过去的12月。两处代码新增 183 天远期检查 + 45 天回溯窗口。
 
-**文档变更类型:** 追加（heartbeat、round docs、publish report）
+**推送结果:** `357ce41..c58c4ab main -> main` 成功，远程 hash 匹配。
+**文档变更类型:** 追加（heartbeat、round docs、publish report）；重写（publish-round027-output.md，修复乱码，属 SKILL.md 允许的乱码修复场景）
 
 **剩余风险:**
 - Round 042 任务文件已存在但尚未完成，将在后续轮次发布
