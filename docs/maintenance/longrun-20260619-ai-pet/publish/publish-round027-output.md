@@ -38,8 +38,9 @@
 
 | 项目 | 详情 |
 |------|------|
-| Commit | 待提交后更新 |
-| Push | 待推送后更新 |
+| Commit | `38f59a2` — Update longrun Round 037 code fix and docs, fix publish-round027 mojibake |
+| Push | `86a5deb..38f59a2 main -> main` 成功 |
+| 远程验证 | hash 匹配（`38f59a2fb932f81cb3a1d7ed986d7cb01df941ea`） |
 | 删除/重命名 | 无 |
 | 文档变更类型 | 追加（heartbeat）+ 替换（publish-round027-output.md 修复 mojibake） |
 
