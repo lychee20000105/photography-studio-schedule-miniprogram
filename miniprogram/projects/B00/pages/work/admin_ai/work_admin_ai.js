@@ -99,7 +99,7 @@ Page({
 			model = String(model || '').toLowerCase();
 			if (!model) return 128000;
 			if (model.indexOf('gemini-1.5') >= 0 || model.indexOf('agnes-1.5') >= 0 || model.indexOf('agnes-2.0') >= 0 || model.indexOf('flash') >= 0) return 1000000;
-			if (model.indexOf('gpt-4.1') >= 0 || model.indexOf('gpt-4o') >= 0 || model.indexOf('claude-3.5') >= 0 || model.indexOf('claude-3.7') >= 0) return 128000;
+			if (model.indexOf('gpt-4.1') >= 0 || model.indexOf('gpt-4o') >= 0 || model.indexOf('claude-3-5') >= 0 || model.indexOf('claude-3-7') >= 0 || model.indexOf('claude-4') >= 0 || model.indexOf('claude-sonnet-4') >= 0 || model.indexOf('claude-opus-4') >= 0) return 128000;
 			if (model.indexOf('deepseek') >= 0) return 64000;
 			if (model.indexOf('qwen-long') >= 0) return 1000000;
 			if (model.indexOf('qwen') >= 0) return 128000;

@@ -163,3 +163,10 @@
 - 2026-06-19T21:54:41 Round 056 started.
 - 2026-06-19T21:56:18 Release policy corrected: future publish workers must create GitHub Releases, not only push commits.
 - 2026-06-19T21:56:58 Publish worker for Round 054 started.
+- 2026-06-19T21:59:48 Restarted publish watcher from release-aware script and stopped duplicate Round 054 worker.
+- 2026-06-19T21:59:48 Publish watcher started with adaptive low-output policy. PollSeconds=600.
+- 2026-06-19T21:59:49 Publish worker for Round 055 scheduled.
+- 2026-06-19T21:59:49 Publish worker for Round 055 started with stdin prompt and timeout 1800s.
+- 2026-06-19T22:02:21 Corrected release version policy: use miniprogram/version.js and CHANGELOG actual version, not round number.
+- 2026-06-19T22:02:56 Restarted publish watcher after actual-version policy update.
+- 2026-06-19T22:02:57 Publish watcher started with adaptive low-output policy. PollSeconds=600.
