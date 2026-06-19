@@ -370,8 +370,14 @@ class WorkAiService extends WorkPermissionService {
 
 		let start = text.indexOf('{');
 		if (start < 0) return null;
-		let depth = 0, end = -1;
+		let depth = 0, end = -1, inStr = false;
 		for (let i = start; i < text.length; i++) {
+			if (inStr) {
+				if (text[i] === '\\') { i++; continue; }
+				if (text[i] === '"') inStr = false;
+				continue;
+			}
+			if (text[i] === '"') { inStr = true; continue; }
 			if (text[i] === '{') depth++;
 			else if (text[i] === '}') { depth--; if (depth === 0) { end = i; break; } }
 		}

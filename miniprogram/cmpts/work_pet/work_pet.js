@@ -546,6 +546,9 @@ Component({
 		async bindChatSend() {
 			if (this._isSending || this.data.chatLoading) return;
 			this._isSending = true;
+			// Capture the target thread ID before any async work, so that switching
+			// threads during the AI request does not corrupt another thread's history.
+			let _sendThreadId = this.data.activeChatId || '';
 			try {
 				let text = String(this.data.chatInput || '').trim();
 				let originalInput = text;
@@ -565,7 +568,7 @@ Component({
 				let displayText = text + (attachments.length ? `\n[已附加${attachments.length}张图片]` : '');
 				let messages = trimMessages((this.data.chatMessages || []).concat([{ role: 'user', content: displayText, images: messageImages }]));
 				this.setData({ chatMessages: messages, chatInput: '', chatAttachments: [], chatLoading: true });
-				this._saveChat(messages);
+				this._saveChat(messages, _sendThreadId);
 				this._scrollChatToBottom();
 
 				try {
@@ -596,18 +599,25 @@ Component({
 					messages = trimMessages(messages.concat([{ role: 'assistant', content: msg }]));
 				}
 
-				this.setData({ chatMessages: messages, chatLoading: false });
-				this._saveChat(messages);
+				// If the user is still viewing the same thread, update the UI;
+				// otherwise only persist the messages to the original thread silently.
+				let _stillSameThread = !this.data.activeChatId || this.data.activeChatId === _sendThreadId;
+				if (_stillSameThread) {
+					this.setData({ chatMessages: messages, chatLoading: false });
+				} else {
+					this.setData({ chatLoading: false });
+				}
+				this._saveChat(messages, _sendThreadId);
 				this._scrollChatToBottom();
 			} finally {
 				this._isSending = false;
 			}
 		},
-		_saveChat(messages) {
+		_saveChat(messages, threadId) {
 			messages = trimMessages(messages);
 			let state = this._loadThreads();
 			let threads = state.threads;
-			let activeId = this.data.activeChatId || state.activeId;
+			let activeId = threadId || this.data.activeChatId || state.activeId;
 			let thread = threads.find(item => item.id == activeId);
 			if (!thread) {
 				thread = makeThread();

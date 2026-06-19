@@ -111,6 +111,13 @@ function _parseDate(text) {
 			let prev = new Date(year - 1, month - 1, dayNum);
 			if (prev.getTime() >= now.getTime() - 45 * 86400000) year -= 1;
 		}
+		// Cross-year boundary: Dec→Jan or Jan→Dec within ~60 days
+		let nowMonth = now.getMonth() + 1;
+		if (Math.abs(nowMonth - month) >= 11) {
+			let diff = candidate.getTime() - now.getTime();
+			if (diff > 0 && diff <= 60 * 86400000 && month < nowMonth) year += 1;
+			else if (diff < 0 && -diff <= 60 * 86400000 && month > nowMonth) year -= 1;
+		}
 		return `${year}-${String(month).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
 	}
 

@@ -1483,7 +1483,7 @@ class WorkService extends BaseProjectService {
 			ITEM_DATE: input.ITEM_DATE || timeUtil.time('Y-M-D'),
 			ITEM_TIME: input.ITEM_TIME || '',
 			ITEM_END_TIME: input.ITEM_END_TIME || '',
-			ITEM_STATUS: forceActive ? 1 : (staff.STAFF_IS_ADMIN == 1 ? 1 : 0),
+			ITEM_STATUS: old ? old.ITEM_STATUS : (forceActive ? 1 : (staff.STAFF_IS_ADMIN == 1 ? 1 : 0)),
 		};
 		if (old) {
 			await WorkItemModel.edit(id, data);
