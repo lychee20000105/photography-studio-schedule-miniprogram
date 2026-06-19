@@ -72,7 +72,13 @@ function normalizePet(raw) {
 		pet.moodText = '升级啦';
 	} else {
 		pet.mood = pet.mood || 'happy';
-		pet.moodText = pet.mood == 'happy' ? '状态很好' : (pet.moodText || '陪你工作');
+		if (pet.mood == 'happy') {
+			if (pet.hunger >= 80 && pet.health >= 80) pet.moodText = '元气满满';
+			else if (pet.health < 60) pet.moodText = '有点疲惫';
+			else pet.moodText = '状态很好';
+		} else {
+			pet.moodText = pet.moodText || '陪你工作';
+		}
 	}
 	return pet;
 }
@@ -303,7 +309,7 @@ Component({
 			pet.hunger = clamp(pet.hunger + 10, 0, 100);
 			if (pet.health < 80) pet.health = clamp(pet.health + 3, 0, 100);
 			pet.mood = pet.health < 35 ? 'sick' : 'happy';
-			pet.moodText = pet.mood == 'sick' ? '需要照顾' : '等你说话';
+			pet.moodText = pet.mood == 'sick' ? '好一点了' : '在呢';
 			this.savePet(pet);
 			let leveled = pet.level > oldLevel;
 			this.openChat();
