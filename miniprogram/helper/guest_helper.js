@@ -319,8 +319,9 @@ function handleGuestAgent(text, attachments = []) {
 	let type = types.find(item => text.indexOf(item.TYPE_NAME) >= 0) || {};
 	let paid = _parseAmount(text, ['已收', '实收', '收了', '收款']);
 	let deposit = _parseAmount(text, ['定金']);
-	let final = _parseAmount(text, ['尾款', '未收', '待收']);
+	let final = _parseAmount(text, ['尾款']);
 	let amount = _parseAmount(text, ['订单金额', '金额', '总价', '总额', '报价']);
+	if (!final && amount) final = Math.max(0, amount - deposit - paid);
 	let order = saveGuestOrder({
 		date,
 		time: _parseTime(text),
