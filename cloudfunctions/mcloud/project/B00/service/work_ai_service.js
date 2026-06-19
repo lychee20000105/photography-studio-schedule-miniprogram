@@ -484,7 +484,8 @@ class WorkAiService extends WorkPermissionService {
 			if (prev.getTime() >= nowTs - 45 * 86400000) useYear = year - 1;
 		}
 		// Cross-year boundary: Dec→Jan or Jan→Dec within ~60 days
-		if (Math.abs(nowMonth - month) >= 11) {
+		// Only apply when the day-range heuristics above did NOT already adjust the year.
+		else if (Math.abs(nowMonth - month) >= 11) {
 			let diff = candidate.getTime() - nowTs;
 			if (diff > 0 && diff <= 60 * 86400000 && month < nowMonth) useYear = year + 1;
 			else if (diff < 0 && -diff <= 60 * 86400000 && month > nowMonth) useYear = year - 1;
@@ -704,7 +705,8 @@ class WorkAiService extends WorkPermissionService {
 					if (prev.getTime() >= Date.now() - 45 * 86400000) year -= 1;
 				}
 				// Cross-year boundary: Dec→Jan or Jan→Dec within ~60 days
-				if (Math.abs(nowMonth - month) >= 11) {
+				// Only apply when the day-range heuristics above did NOT already adjust the year.
+				else if (Math.abs(nowMonth - month) >= 11) {
 					let diff = candidate.getTime() - Date.now();
 					if (diff > 0 && diff <= 60 * 86400000 && month < nowMonth) year += 1;
 					else if (diff < 0 && -diff <= 60 * 86400000 && month > nowMonth) year -= 1;
@@ -756,7 +758,7 @@ class WorkAiService extends WorkPermissionService {
 
 	_amount(value) {
 		if (value === undefined || value === null || String(value).trim() === '') return 0;
-		let num = Number(String(value).replace(/,/g, ''));
+		let num = Number(String(value).replace(/,/g, '').replace(/[¥￥元\s]/g, ''));
 		if (!Number.isFinite(num) || num < 0) return 0;
 		return Math.round(num * 100) / 100;
 	}

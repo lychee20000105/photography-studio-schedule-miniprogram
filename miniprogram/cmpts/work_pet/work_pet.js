@@ -604,11 +604,11 @@ Component({
 				let _stillSameThread = !this.data.activeChatId || this.data.activeChatId === _sendThreadId;
 				if (_stillSameThread) {
 					this.setData({ chatMessages: messages, chatLoading: false });
+					this._scrollChatToBottom();
 				} else {
 					this.setData({ chatLoading: false });
 				}
 				this._saveChat(messages, _sendThreadId);
-				this._scrollChatToBottom();
 			} finally {
 				this._isSending = false;
 			}
