@@ -187,6 +187,9 @@ function _parseCustomer(text) {
 	if (m) return m[1];
 	m = text.match(/(?:给|帮|为)?([一-龥]{1,3}?)(?<![我你他她它谁请让])(?:姐|哥|总|老师|客户)?(?:新增|记录|安排|登记|定|(?<!跟)拍)/);
 	if (m) return m[1];
+	// Name before type keyword: customer name before type (2-3 char CJK)
+	m = text.match(/(?:^|\s)([\u4e00-\u9be5]{2,3})(?=\s+(?:\u5916\u666f\u5199\u771f|\u5a5a\u793c\u8ddf\u62cd|\u5546\u62cd|\u5546\u4e1a\u62cd\u6444|\u6d3b\u52a8\u8ddf\u62cd|\u5199\u771f|\u767e\u65e5\u5bb4))/);
+	if (m && !/^(\u62cd\u6444|\u5916\u666f|\u5199\u771f|\u5a5a\u793c|\u5546\u62cd|\u6d3b\u52a8|\u8ddf\u62cd|\u91d1\u989d|\u5df2\u6536|\u5b9e\u6536|\u5b9a\u91d1|\u5c3e\u6b3e|\u603b\u4ef7|\u5ba2\u6237|\u8bb0\u5f55|\u5b89\u6392|\u767b\u8bb0)$/.test(m[1])) return m[1];
 	m = text.match(/(?<![一-\d])(?:外景写真|婚礼跟拍|商拍|商业拍摄|活动跟拍|写真|百日宴)[，,、\s]*([\u4e00-\u9fa5A-Za-z0-9]{1,12})/);
 	if (m) return m[1];
 	return '';

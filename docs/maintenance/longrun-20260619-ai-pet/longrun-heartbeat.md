@@ -130,3 +130,5 @@
 - 2026-06-19T21:08:48 Round 053 started.
 - 2026-06-19T21:10:37 Publish worker for Round 027 started.
 - 2026-06-19T21:15:00 Round 027 publish: committed 3c81b93 locally. Push blocked by SSL/TLS schannel handshake failure and invalid gh auth keyring token.
+- 2026-06-19T21:17:27 Publish watcher error: 设置“lastProcessedAt”时发生异常:“在此对象上找不到属性“lastProcessedAt”。请确认该属性存在并且可设置。”
+- 2026-06-19T21:20:27 Publish worker for Round 027 started.
