@@ -538,7 +538,10 @@ Component({
 			try {
 				let text = String(this.data.chatInput || '').trim();
 				let attachments = this.data.chatAttachments || [];
-				if (!text && !attachments.length) return;
+				if (!text && !attachments.length) {
+					wx.showToast({ title: '请输入消息或上传图片', icon: 'none', duration: 1500 });
+					return;
+				}
 				if (!text && attachments.length) text = '请逐张识别我上传的所有截图里的档期/订单信息；一张图可能包含多个订单，能确认的都帮我记录到系统里，不要只记录第一条。';
 
 				let messageImages = attachments.map(item => ({
