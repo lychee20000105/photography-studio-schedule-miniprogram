@@ -698,6 +698,7 @@ Component({
 						chatInput: '',
 						chatAttachments: [],
 					});
+					this._scrollChatToBottom();
 				},
 			});
 		},
