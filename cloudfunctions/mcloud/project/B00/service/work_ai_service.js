@@ -562,6 +562,10 @@ class WorkAiService extends WorkPermissionService {
 			let d = new Date(year, month - 1, day);
 			if (d.getFullYear() == year && d.getMonth() + 1 == month && d.getDate() == day) {
 				if (d.getTime() < Date.now() - 30 * 86400000) year += 1;
+				else if (d.getTime() > Date.now() + 183 * 86400000) {
+					let prev = new Date(year - 1, month - 1, day);
+					if (prev.getTime() >= Date.now() - 45 * 86400000) year -= 1;
+				}
 				return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 			}
 		}
@@ -668,6 +672,10 @@ class WorkAiService extends WorkPermissionService {
 				let month = Number(m[1]), dayNum = Number(m[2]);
 				let candidate = new Date(year, month - 1, dayNum);
 				if (candidate.getTime() < Date.now() - 30 * 86400000) year += 1;
+				else if (candidate.getTime() > Date.now() + 183 * 86400000) {
+					let prev = new Date(year - 1, month - 1, dayNum);
+					if (prev.getTime() >= Date.now() - 45 * 86400000) year -= 1;
+				}
 				date = `${year}-${String(month).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
 			}
 		} else {

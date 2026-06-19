@@ -64,3 +64,32 @@
 **剩余风险:**
 - Round 042 任务文件已存在但尚未完成，将在后续轮次发布
 - `publish-round027-output.md` 此前反复出现编码乱码，本次追加为正确 UTF-8，后续需保持一致
+
+---
+
+**发布报告追加 — Round 042**
+
+| 项目 | 详情 |
+|------|------|
+| **Skill 确认** | `publish-github-open-source` SKILL.md v0.3.2 已读取并遵循 |
+| **安全检查** | 通过 — 扫描 api_key/secret/token/password/sk-/ghp_/AKIA/PRIVATE KEY，无真实密钥泄露，无 .env 文件，无删除/重命名 |
+| **JS 语法检查** | `work_ai_service.js` 通过 `node --check` |
+| **远程仓库** | https://github.com/lychee20000105/photography-studio-schedule-miniprogram |
+
+**本次变更:**
+- `work_ai_service.js` — `_extractSpecificTextDate` 和 `_extractWeekdayTextDate` 两处新增远期日期回退逻辑：当解析出的日期超过当前时间 183 天且前一年同月日在 45 天窗口内时，自动回退到前一年。解决"12月31日"等跨年日期在年初被误判为未来日期的问题。
+- `longrun-heartbeat.md` — 追加 Round 042/043 日志条目
+- `publish-round027-output.md` — 修复工作副本 mojibake 回归，恢复正确 UTF-8 并追加 Round 042 记录
+
+**文档变更类型:** 追加（heartbeat、publish report）；修复（publish-round027-output.md mojibake 回归）
+
+**提交记录:**
+
+| Commit | 说明 |
+|--------|------|
+| *(待填写)* | Round 042 代码修复和文档更新 |
+
+**推送结果:** *(待填写)*
+**剩余风险:**
+- Round 043 任务文件已存在但尚未完成，将在后续轮次发布
+- `publish-round027-output.md` 编码问题需持续关注，确保工作副本始终为 UTF-8
