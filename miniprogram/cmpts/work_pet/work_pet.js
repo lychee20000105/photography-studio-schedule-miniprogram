@@ -143,7 +143,7 @@ function trimMessages(list) {
 		.slice(-12)
 		.map(item => ({
 			role: item.role,
-			content: String(item.content || '').slice(0, 800),
+			content: String(item.content || '').slice(0, item.role == 'assistant' ? 4000 : 800),
 			images: normalizeMessageImages(item.images || item.attachments || []),
 		}));
 }
@@ -720,7 +720,7 @@ Component({
 			if (action == 'create_note') action = 'add_note';
 			if (!['create_order', 'create_orders', 'join_order', 'create_item', 'create_rest', 'add_note'].includes(action)) return;
 			let day = data.data && data.data.date ? data.data.date : '';
-			if (!day && data.data && Array.isArray(data.data.dates) && data.data.dates.length) day = data.data.dates[0];
+			if (!day && data.data && Array.isArray(data.data.dates) && data.data.dates.length) day = data.data.dates.slice().sort()[0];
 			if (day) wx.setStorageSync('WORK_CALENDAR_DAY', day);
 			let pages = getCurrentPages();
 			let page = pages && pages.length ? pages[pages.length - 1] : null;

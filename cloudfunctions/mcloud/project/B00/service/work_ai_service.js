@@ -379,7 +379,8 @@ class WorkAiService extends WorkPermissionService {
 
 	async _handleAgentReply(openId, staff, reply, config, llmResult, attachments = [], pageContext = {}) {
 		let action = this._pickJsonObject(reply);
-		if (!action || !action.action || action.action == 'none') {
+		let VALID_ACTIONS = ['query_schedule', 'create_order', 'create_orders', 'join_order', 'create_item', 'create_rest', 'add_note', 'create_note', 'none'];
+		if (!action || !action.action || action.action == 'none' || !VALID_ACTIONS.includes(action.action)) {
 			return {
 				reply: action && action.reply ? asText(action.reply, 4000) : reply,
 				model: config.model,
@@ -395,7 +396,8 @@ class WorkAiService extends WorkPermissionService {
 		let batchPayload = batchOrders.length ? { orders: batchOrders } : (action.data || action);
 		if (action.action == 'create_note') action.action = 'add_note';
 		if (action.action == 'query_schedule') ret = await this._agentQuerySchedule(openId, staff, action.data || {});
-		else if (action.action == 'create_orders') ret = await this._agentCreateOrders(openId, staff, batchPayload, attachments, pageContext);
+		else if (action.action == 'create_orders' && batchOrders.length) ret = await this._agentCreateOrders(openId, staff, batchPayload, attachments, pageContext);
+		else if (action.action == 'create_orders') ret = await this._agentCreateOrder(openId, staff, action.data || {}, attachments, pageContext);
 		else if (action.action == 'create_order' && batchOrders.length) ret = await this._agentCreateOrders(openId, staff, batchPayload, attachments, pageContext);
 		else if (action.action == 'create_order') ret = await this._agentCreateOrder(openId, staff, action.data || {}, attachments, pageContext);
 		else if (action.action == 'join_order') ret = await this._agentJoinOrder(openId, staff, action.data || {}, pageContext);
@@ -641,7 +643,9 @@ class WorkAiService extends WorkPermissionService {
 	}
 
 	_cleanDate(date, required = true) {
-		date = asText(date, 20)
+		date = asText(date, 30)
+			.replace(/T\d.*/, '')
+			.replace(/\s+\d{1,2}[:：]\d{2}.*/, '')
 			.replace(/[./]/g, '-')
 			.replace(/年|月/g, '-')
 			.replace(/日|号/g, '')

@@ -85,3 +85,44 @@ Publish watcher encountered a `lastProcessedAt` property error, then restarted t
 
 - `publish-round027-output.md`: **restoration** (replaced mojibake with original content from git history, not a content rewrite)
 - `longrun-heartbeat.md`: **append-only** (2 new log lines)
+
+---
+
+## Third Publish Run — 2026-06-19
+
+### Context
+
+Publish watcher restarted for Round 027 again. Found `publish-round027-output.md` corrupted with mojibake a second time. Restored from `git HEAD`. Meanwhile, Round 028 completed with additional code fixes to `work_ai_service.js` and `work_pet.js`. This run commits all accumulated changes (Round 027 + 028 code, docs, heartbeat).
+
+### Safety/Secret Checks Performed
+
+1. **Secret scan** on `cloudfunctions/` and `docs/maintenance/`: only `process.env` reads and `maxTokens` config params. No hardcoded secrets. **Safe.**
+2. **No `.env`, `node_modules`, `project.private.config.json` in staging.** **Safe.**
+3. **No deletions or renames** in diff. **Safe.**
+4. **`node --check`**: `work_ai_service.js` and `work_pet.js` both pass syntax check. **OK.**
+
+### Files Committed
+
+| File | Action | Notes |
+|------|--------|-------|
+| `cloudfunctions/mcloud/project/B00/service/work_ai_service.js` | Modified | Round 028: `create_orders` fallback to single create; `_cleanDate` ISO datetime stripping |
+| `miniprogram/cmpts/work_pet/work_pet.js` | Modified | Assistant message trim limit 800→4000; dates array sorted before picking first |
+| `docs/maintenance/longrun-20260619-ai-pet/longrun-heartbeat.md` | Modified | Append Round 028/029 log entries |
+| `docs/maintenance/longrun-20260619-ai-pet/rounds/round028-output.md` | New | Round 028 output record |
+| `docs/maintenance/longrun-20260619-ai-pet/test-results/round028-checks.md` | New | Round 028 test results |
+| `docs/maintenance/longrun-20260619-ai-pet/rounds/round029-task.md` | New | Round 029 task definition |
+| `docs/maintenance/longrun-20260619-ai-pet/publish/publish-round027-output.md` | Restored | Fixed mojibake (second occurrence), appended this report section |
+
+### Skipped Files
+
+- `*.log` files — excluded by `.gitignore`
+
+### Commit and Push Result
+
+(Pending — will be filled after commit/push)
+
+### Documentation Change Type
+
+- `publish-round027-output.md`: **restoration + append** (fixed mojibake, added third publish run section)
+- `longrun-heartbeat.md`: **append-only** (Round 028/029 log entries)
+- `round028-output.md`, `round028-checks.md`, `round029-task.md`: **new** (longrun documentation)
