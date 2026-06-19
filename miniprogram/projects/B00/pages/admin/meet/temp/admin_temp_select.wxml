@@ -14,3 +14,6 @@
 		<view wx:if="{{!list.length}}" class="empty">暂无可选模板</view>
 	</view>
 </block>
+
+<tech-footer />
+<work-pet id="workPet" />

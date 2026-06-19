@@ -19,6 +19,12 @@ class ProjectBiz extends BaseBiz {
 		skin.NAV_BG = projectSetting.NAV_BG;
 		skin.NAV_COLOR = projectSetting.NAV_COLOR;
 		PubilcBiz.initPageBase(that, { skin, isLoadSkin });
+		try {
+			wx.showShareMenu({
+				withShareTicket: true,
+				menus: ['shareAppMessage', 'shareTimeline'],
+			});
+		} catch (e) {}
 	}
 
 }

@@ -1,1 +1,4 @@
 <view class="margin-top load loading text-l text-grey"></view>
+
+<tech-footer />
+<work-pet id="workPet" />

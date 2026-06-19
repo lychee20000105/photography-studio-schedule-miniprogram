@@ -1,6 +1,5 @@
 {
-	"usingComponents": { 
-	},
-	"enablePullDownRefresh": true, 
-	"navigationBarTitleText": "详细内容"
+	"usingComponents": {},
+	"enablePullDownRefresh": true,
+	"navigationBarTitleText": "云屿摄影-详细内容"
 }

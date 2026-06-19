@@ -1,17 +1,27 @@
 <view wx:if="{{!isLoad}}" class="margin-top load loading text-l text-project"></view>
 
 <view class="work-page" wx:if="{{isLoad}}">
+	<view wx:if="{{isGuest}}" class="guest-banner">
+		<view>
+			<view class="guest-title">访客体验模式</view>
+			<view class="guest-desc">不读取真实数据；访客新增仅保存在本机临时缓存</view>
+		</view>
+		<view class="guest-action" bindtap="bindGoBindTap">绑定后使用</view>
+	</view>
+
 	<view class="topbar">
 		<view class="avatar">{{options.staffInitial}}</view>
 		<view class="seg">
 			<view class="seg-item {{scope=='all'?'active':''}}" bindtap="bindScopeTap" data-scope="all">全店</view>
-			<view class="seg-item {{scope=='mine'?'active':''}}" bindtap="bindScopeTap" data-scope="mine">我的</view>
+			<view class="seg-item {{scope=='created'?'active':''}}" bindtap="bindScopeTap" data-scope="created">我记录的</view>
+			<view class="seg-item {{scope=='joined'?'active':''}}" bindtap="bindScopeTap" data-scope="joined">我参与的</view>
 		</view>
 	</view>
 
 	<view class="monthbar">
 		<view class="month-btn" bindtap="bindPrevMonthTap">‹</view>
-		<view class="month-title" bindtap="bindTodayTap">{{month}}</view>
+		<view class="month-title">{{month}}</view>
+		<view class="today-btn" bindtap="bindTodayTap">今天</view>
 		<view class="month-btn" bindtap="bindNextMonthTap">›</view>
 	</view>
 
@@ -19,12 +29,18 @@
 		<view>日</view><view>一</view><view>二</view><view>三</view><view>四</view><view>五</view><view>六</view>
 	</view>
 
-	<view class="calendar">
-		<view wx:for="{{days}}" wx:key="date" class="day {{item.isCurMonth?'':'muted'}} {{item.isToday?'today':''}} {{item.isSelect?'selected':''}}" bindtap="bindDayTap" data-day="{{item.date}}">
-			<view class="num">{{item.day}}</view>
-			<view class="lunar">{{item.lunar}}</view>
-			<view class="tags">
-				<view wx:for="{{item.tags}}" wx:for-item="tag" wx:key="id" class="tag" style="background:{{tag.color}}">{{tag.typeName}}</view>
+	<view class="calendar-viewport" bindtouchstart="bindCalendarTouchStart" bindtouchmove="bindCalendarTouchMove" bindtouchend="bindCalendarTouchEnd" bindtouchcancel="bindCalendarTouchEnd">
+		<view class="calendar-track" style="width: {{trackWidth}}px; transform: translate3d({{trackX}}px, 0, 0); transition: {{trackTransition}};">
+			<view wx:for="{{calendarPanels}}" wx:key="month" class="calendar-panel" style="width: {{calendarWidth}}px;">
+				<view class="calendar">
+				<view wx:for="{{item.days}}" wx:for-item="dayItem" wx:key="date" class="day {{dayItem.isCurMonth?'':'muted'}} {{dayItem.isToday?'today':''}} {{dayItem.isSelect?'selected':''}}" bindtap="bindDayTap" data-day="{{dayItem.date}}">
+					<view class="num">{{dayItem.day}}</view>
+					<view class="lunar">{{dayItem.lunar}}</view>
+					<view class="tags">
+						<view wx:for="{{dayItem.tags}}" wx:for-item="tag" wx:key="id" class="tag" style="background:{{tag.color}}">{{tag.typeName}}</view>
+					</view>
+				</view>
+			</view>
 			</view>
 		</view>
 	</view>
@@ -44,7 +60,7 @@
 			</view>
 			<view class="customer">{{item.canFull ? item.ORDER_CUSTOMER_NAME : item.ORDER_CUSTOMER_SURNAME + '姓客户'}}</view>
 			<view wx:if="{{item.canFull}}" class="money">
-				订单 {{item.ORDER_AMOUNT || 0}} ｜ 实收 {{item.ORDER_ACTUAL_AMOUNT || 0}} ｜ 未收 {{(item.ORDER_AMOUNT || 0) - ((item.ORDER_DEPOSIT || 0) + (item.ORDER_FINAL || 0))}}
+				订单 {{item.ORDER_AMOUNT || 0}} ｜ 实收 {{item.PAID_AMOUNT || item.ORDER_ACTUAL_AMOUNT || 0}} ｜ 未收 {{item.UNPAID_AMOUNT || 0}}
 			</view>
 			<view class="meta">{{item.ORDER_PROGRESS_DESC}} · {{item.ORDER_SETTLE_STATUS_DESC}}</view>
 		</view>
@@ -59,6 +75,7 @@
 			<view class="simple-desc">{{item.REST_TYPE}} {{item.REST_REASON}}</view>
 		</view>
 	</view>
-
-	<button class="fab" hover-class="fab-hover" bindtap="bindAddTap">+</button>
 </view>
+
+<tech-footer />
+<work-pet id="workPet" />

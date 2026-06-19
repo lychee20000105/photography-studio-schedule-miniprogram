@@ -8,3 +8,6 @@
 		<view class="actions"><button class="reject" bindtap="bindRejectTap" data-idx="{{oi}}">驳回</button><button class="pass" bindtap="bindPassTap" data-idx="{{oi}}">通过并释放</button></view>
 	</view>
 </view>
+
+<tech-footer />
+<work-pet id="workPet" />

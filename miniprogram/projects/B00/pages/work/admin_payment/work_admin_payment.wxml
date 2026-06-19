@@ -29,3 +29,6 @@
 		<button wx:if="{{item.PAYMENT_STATUS==10 && item.PAYMENT_IS_LOCKED!=1}}" class="void" data-id="{{item._id}}" bindtap="bindVoidTap">作废</button>
 	</view>
 </view>
+
+<tech-footer />
+<work-pet id="workPet" />

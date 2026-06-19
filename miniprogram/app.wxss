@@ -1,2 +1,83 @@
 @import "style/base/comm.wxss";
-@import "style/public/project.wxss"; 
+@import "style/public/project.wxss";
+
+page {
+	min-height: 100vh;
+	display: flex;
+	flex-direction: column;
+	background-color: #f5efe4;
+	color: #2a2622;
+	font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+view,
+button,
+input,
+textarea {
+	-webkit-tap-highlight-color: transparent;
+}
+
+button,
+.item,
+.card,
+.block,
+.metric,
+.seg-item,
+.tab,
+.day,
+.order-card,
+.simple-card,
+.menu .item,
+.inline-add,
+.fab {
+	transition: transform .16s ease-out, opacity .16s ease-out, box-shadow .16s ease-out, background-color .16s ease-out;
+}
+
+button:active,
+.item:active,
+.card:active,
+.block:active,
+.metric:active,
+.seg-item:active,
+.tab:active,
+.day:active,
+.order-card:active,
+.simple-card:active,
+.menu .item:active,
+.inline-add:active,
+.fab:active {
+	transform: scale(.97);
+	opacity: .88;
+}
+
+.page,
+.work-page {
+	animation: page-soft-in .24s ease-out both;
+}
+
+@keyframes page-soft-in {
+	from {
+		opacity: .01;
+		transform: translateY(18rpx);
+		filter: blur(4rpx);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+		filter: blur(0);
+	}
+}
+
+.paper-page-bg {
+	background-color: #f5efe4;
+	background-image:
+		linear-gradient(90deg, rgba(122, 96, 68, .035) 1rpx, transparent 1rpx),
+		linear-gradient(180deg, rgba(255, 253, 247, .55), rgba(216, 207, 190, .24));
+	background-size: 48rpx 48rpx, 100% 100%;
+}
+
+.paper-card {
+	background: #fbf7ee;
+	border: 1rpx solid #d8cfbe;
+	box-shadow: 0 12rpx 38rpx rgba(42, 38, 34, .06);
+}

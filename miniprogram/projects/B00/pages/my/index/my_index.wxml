@@ -117,3 +117,6 @@
 	<import src="../../tpls/menu_tpl.wxml" />
 	<template is="menuTpl" data="{{curMenu:'my_index',returnHome:false}}" />
 </block>
+
+<tech-footer />
+<work-pet id="workPet" />

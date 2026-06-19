@@ -30,3 +30,6 @@
 	<button bindtap="bindFormSubmit" class="btn-admin margin-top">确定添加</button>
 
 </view>
+
+<tech-footer />
+<work-pet id="workPet" />

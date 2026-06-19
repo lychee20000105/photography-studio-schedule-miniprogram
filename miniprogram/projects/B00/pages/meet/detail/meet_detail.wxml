@@ -89,3 +89,6 @@
 <!-- top begin -->
 <button wx:if="{{topShow}}" class="btn-fixed bg-gray text-gray btn-top" bindtap="bindTopTap" style="bottom:60rpx"><text class="icon-top"></text></button>
 <!-- top END. -->
+
+<tech-footer />
+<work-pet id="workPet" />

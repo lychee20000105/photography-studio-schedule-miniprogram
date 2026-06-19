@@ -33,3 +33,6 @@
 	</view>
 
 </view>
+
+<tech-footer />
+<work-pet id="workPet" />

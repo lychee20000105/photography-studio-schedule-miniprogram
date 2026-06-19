@@ -1,7 +1,5 @@
 {
-	"usingComponents": {
-
-	},
+	"usingComponents": {},
 	"enablePullDownRefresh": true,
-	"navigationBarTitleText": "我的"
+	"navigationBarTitleText": "云屿摄影-我的"
 }

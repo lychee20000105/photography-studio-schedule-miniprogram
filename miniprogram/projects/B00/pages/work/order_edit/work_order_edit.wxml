@@ -75,7 +75,7 @@
 	<view class="block">
 		<view class="block-head">
 			<text>收款明细</text>
-			<view class="small-btn" bindtap="bindAddPaymentTap">添加</view>
+			<view wx:if="{{canEdit}}" class="small-btn" bindtap="bindAddPaymentTap">添加</view>
 		</view>
 		<view class="pay-tip">逐笔记录实际收款/退款/调整；已锁定收款只能查看。</view>
 		<view wx:for="{{order.ORDER_PAYMENTS}}" wx:key="clientKey" class="payment {{item.IS_DELETE==1?'deleted':''}}">
@@ -100,7 +100,10 @@
 	<view class="block">
 		<view class="block-head">
 			<text>参与人</text>
-			<view class="small-btn" bindtap="bindAddParticipantTap">添加</view>
+			<view wx:if="{{canEdit}}" class="small-btn" bindtap="bindAddParticipantTap">添加</view>
+		</view>
+		<view wx:if="{{id && !canFull}}" class="join-bar">
+			<button class="join-btn" loading="{{isJoining}}" disabled="{{isJoining}}" bindtap="bindJoinParticipantTap">加入参与人</button>
 		</view>
 		<view wx:for="{{order.ORDER_PARTICIPANTS}}" wx:key="id" class="part">
 			<view class="part-line">
@@ -127,20 +130,22 @@
 	<view class="block">
 		<view class="block-head">
 			<text>附件</text>
-			<view class="small-btn" bindtap="bindChooseImageTap">上传</view>
+			<view wx:if="{{canEdit}}" class="small-btn" bindtap="bindChooseImageTap">上传</view>
 		</view>
 		<view class="imgs">
 			<view wx:for="{{imgList}}" wx:key="*this" class="img-wrap">
-				<image src="{{item}}" mode="aspectFill" />
+				<image src="{{item}}" mode="aspectFill" data-src="{{item}}" bindtap="bindPreviewImageTap" />
 				<view class="img-del" bindtap="bindDelImageTap" data-idx="{{index}}">×</view>
 			</view>
 		</view>
 	</view>
 
 	<view class="actions">
-		<button class="save" loading="{{isSaving}}" disabled="{{isSaving}}" bindtap="bindSubmitTap">保存</button>
-		<button wx:if="{{order.ORDER_STATUS!=10}}" class="complete" bindtap="bindCompleteTap">订单完成</button>
-		<button wx:if="{{id && order.ORDER_STATUS!=10}}" class="cancel" bindtap="bindCancelTap">取消订单</button>
-		<button wx:if="{{id && order.ORDER_STATUS==10}}" class="complete" bindtap="bindRestoreTap">恢复订单</button>
+		<button wx:if="{{canEdit}}" class="save" loading="{{isSaving}}" disabled="{{isSaving}}" bindtap="bindSubmitTap">保存</button>
+		<button wx:if="{{id && order.ORDER_STATUS!=10 && canEdit}}" class="cancel danger" disabled="{{isSaving}}" bindtap="bindCancelTap">取消/删除订单</button>
+		<button wx:if="{{id && order.ORDER_STATUS==10 && canEdit}}" class="complete" disabled="{{isSaving}}" bindtap="bindRestoreTap">恢复订单</button>
 	</view>
 </view>
+
+<tech-footer />
+<work-pet id="workPet" />

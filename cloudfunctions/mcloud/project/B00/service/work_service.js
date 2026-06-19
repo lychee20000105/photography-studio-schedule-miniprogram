@@ -24,6 +24,7 @@ const WorkCustomerModel = require('../model/work_customer_model.js');
 
 const DEFAULT_ROLES = ['销售', '摄影', '摄像', '化妆', '选片', '后期', '助理', '运营'];
 const DEFAULT_SOURCES = ['直客', '合作方', '转介绍', '小红书', '抖音', '视频号', '微信', '其他'];
+const FEEDBACK_BOX_STAFF_ID = '__ADMIN_FEEDBACK__';
 const DEFAULT_TYPES = [
 	['跟拍', '#d9001b'],
 	['生日跟拍', '#ff7a70'],
@@ -241,6 +242,29 @@ class WorkService extends BaseProjectService {
 	_isParticipant(order, staffId) {
 		let participants = order.ORDER_PARTICIPANTS || [];
 		return participants.some(item => item.staffId == staffId);
+	}
+
+	_isCreator(order, staff) {
+		if (!order || !staff) return false;
+		return order.ORDER_CREATOR_STAFF_ID == staff._id || order.ORDER_CREATOR_OPENID == staff.STAFF_OPENID;
+	}
+
+	_isInCalendarScope(order, staff, scope) {
+		if (scope == 'joined') return this._isParticipant(order, staff._id);
+		if (scope == 'created' || scope == 'mine') return this._isCreator(order, staff);
+		return true;
+	}
+
+	_isItemInCalendarScope(item, staff, scope) {
+		if (scope == 'joined') return false;
+		if (scope == 'created' || scope == 'mine') return item.ITEM_CREATOR_STAFF_ID == staff._id || item.ITEM_CREATOR_OPENID == staff.STAFF_OPENID;
+		return true;
+	}
+
+	_isRestInCalendarScope(rest, staff, scope) {
+		if (scope == 'joined') return rest.REST_STAFF_ID == staff._id;
+		if (scope == 'created' || scope == 'mine') return rest.REST_STAFF_ID == staff._id;
+		return true;
 	}
 
 	_hasInputValue(value) {
@@ -737,7 +761,7 @@ class WorkService extends BaseProjectService {
 				isSettled: p.isSettled || 0,
 			};
 		});
-		return node;
+		return this._enrichOrderListItem(node);
 	}
 
 	async getCalendar(openId, month, scope = 'all', staffId = '') {
@@ -768,10 +792,11 @@ class WorkService extends BaseProjectService {
 		}, 1000);
 
 		let days = {};
-		let filterStaffId = scope == 'mine' ? staff._id : staffId;
+		let filterStaffId = staffId;
 
 		for (let order of orders) {
 			if (filterStaffId && !this._isParticipant(order, filterStaffId) && order.ORDER_CREATOR_STAFF_ID != filterStaffId) continue;
+			if (!filterStaffId && !this._isInCalendarScope(order, staff, scope)) continue;
 			if (!days[order.ORDER_DATE]) days[order.ORDER_DATE] = [];
 			let canFull = this._canSeeFullOrder(order, staff);
 			days[order.ORDER_DATE].push({
@@ -787,6 +812,7 @@ class WorkService extends BaseProjectService {
 		}
 
 		for (let item of items) {
+			if (!this._isItemInCalendarScope(item, staff, scope)) continue;
 			if (!days[item.ITEM_DATE]) days[item.ITEM_DATE] = [];
 			days[item.ITEM_DATE].push({
 				kind: 'item',
@@ -802,6 +828,7 @@ class WorkService extends BaseProjectService {
 
 		for (let rest of rests) {
 			if (filterStaffId && rest.REST_STAFF_ID != filterStaffId) continue;
+			if (!filterStaffId && !this._isRestInCalendarScope(rest, staff, scope)) continue;
 			if (!days[rest.REST_DATE]) days[rest.REST_DATE] = [];
 			days[rest.REST_DATE].push({
 				kind: 'rest',
@@ -873,8 +900,8 @@ class WorkService extends BaseProjectService {
 			ORDER_ADD_TIME: 'asc',
 		}, 1000);
 
-		if (scope == 'mine') {
-			orders = orders.filter(order => this._isParticipant(order, staff._id) || order.ORDER_CREATOR_STAFF_ID == staff._id);
+		if (scope == 'joined' || scope == 'created' || scope == 'mine') {
+			orders = orders.filter(order => this._isInCalendarScope(order, staff, scope));
 		}
 
 		let items = await WorkItemModel.getAll({
@@ -891,11 +918,73 @@ class WorkService extends BaseProjectService {
 			REST_STAFF_NAME: 'asc',
 		}, 1000);
 
+		if (scope == 'joined' || scope == 'created' || scope == 'mine') {
+			items = items.filter(item => this._isItemInCalendarScope(item, staff, scope));
+			rests = rests.filter(rest => this._isRestInCalendarScope(rest, staff, scope));
+		}
+
 		return {
 			orders: orders.map(order => this._cleanOrderForStaff(order, staff)),
 			items,
 			rests,
 		};
+	}
+
+	async submitFeedback(openId, content) {
+		let staff = await this.getStaffByOpenId(openId);
+		content = String(content || '').trim();
+		if (!content) this.AppError('请填写反馈内容');
+		if (content.length > 800) this.AppError('反馈内容不能超过800字');
+
+		let id = await WorkMessageModel.insert({
+			MSG_STAFF_ID: FEEDBACK_BOX_STAFF_ID,
+			MSG_TITLE: '问题反馈',
+			MSG_CONTENT: content,
+			MSG_REF_TYPE: 'feedback',
+			MSG_REF_ID: staff._id,
+			MSG_IS_READ: 0,
+		});
+
+		let admins = await WorkStaffModel.getAll({
+			STAFF_STATUS: WorkStaffModel.STATUS.COMM,
+			STAFF_IS_ADMIN: 1,
+		}, '_id', {}, 1000);
+		for (let admin of (admins || [])) {
+			await this._notifyStaff(admin._id, '收到新的问题反馈', `${staff.STAFF_NAME || '员工'}：${content}`, 'feedback', id);
+		}
+		return { id };
+	}
+
+	async getAdminFeedbackList(openId) {
+		await this._permission.assertAdmin(openId);
+		let list = await WorkMessageModel.getAll({
+			MSG_STAFF_ID: FEEDBACK_BOX_STAFF_ID,
+			MSG_REF_TYPE: 'feedback',
+		}, '*', {
+			MSG_ADD_TIME: 'desc',
+		}, 1000);
+
+		let staffIds = [...new Set((list || []).map(item => item.MSG_REF_ID).filter(id => id))];
+		let staffMap = {};
+		if (staffIds.length) {
+			let staffList = await WorkStaffModel.getAll({
+				_id: ['in', staffIds],
+			}, '_id,STAFF_NAME,STAFF_MOBILE', {}, 1000);
+			for (let staff of (staffList || [])) staffMap[staff._id] = staff;
+		}
+
+		return (list || []).map(item => {
+			let staff = staffMap[item.MSG_REF_ID] || {};
+			return {
+				_id: item._id,
+				FEEDBACK_STAFF_ID: item.MSG_REF_ID || '',
+				FEEDBACK_STAFF_NAME: staff.STAFF_NAME || '',
+				FEEDBACK_STAFF_MOBILE: staff.STAFF_MOBILE || '',
+				FEEDBACK_CONTENT: item.MSG_CONTENT || '',
+				FEEDBACK_STATUS: item.MSG_IS_READ || 0,
+				FEEDBACK_ADD_TIME: item.MSG_ADD_TIME || 0,
+			};
+		});
 	}
 
 	async getOrderDetail(openId, id) {
@@ -969,6 +1058,137 @@ class WorkService extends BaseProjectService {
 		return list;
 	}
 
+	_normalizeOrderDuplicateText(text, max = 80) {
+		return String(text || '').trim().slice(0, max)
+			.replace(/\s+/g, '')
+			.replace(/[，,。；;、]/g, '')
+			.replace(/^(客户|客人|姓名)[:：]?/, '');
+	}
+
+	_normalizeOrderCustomerName(name) {
+		let text = this._normalizeOrderDuplicateText(name, 80);
+		let stripped = text.replace(/(先生|女士|小姐|老师|客户)$/g, '');
+		return stripped.length >= 2 ? stripped : text;
+	}
+
+	_normalizeOrderMobile(mobile) {
+		let text = String(mobile || '').replace(/\D/g, '');
+		if (text.length > 11 && text.startsWith('86')) text = text.slice(-11);
+		return text.length >= 7 ? text : '';
+	}
+
+	_normalizeOrderTimeForCompare(text) {
+		text = String(text || '').trim().replace(/\s+/g, '');
+		if (!text) return '';
+
+		let isPm = /下午|晚上|晚间|傍晚/.test(text);
+		let isNoon = /中午/.test(text);
+		text = text
+			.replace(/上午|早上|早晨|凌晨|下午|晚上|晚间|傍晚|中午/g, '')
+			.replace(/[：.]/g, ':');
+
+		let m = text.match(/^(\d{1,2})点半$/);
+		let hour, minute;
+		if (m) {
+			hour = Number(m[1]);
+			minute = 30;
+		} else {
+			m = text.match(/^(\d{1,2})点(?:(\d{1,2})分?)?$/);
+			if (m) {
+				hour = Number(m[1]);
+				minute = Number(m[2] || 0);
+			} else {
+				m = text.match(/^(\d{1,2}):(\d{1,2})$/);
+				if (m) {
+					hour = Number(m[1]);
+					minute = Number(m[2]);
+				} else {
+					m = text.match(/^(\d{1,2})$/);
+					if (m) {
+						hour = Number(m[1]);
+						minute = 0;
+					}
+				}
+			}
+		}
+
+		if (!Number.isInteger(hour) || !Number.isInteger(minute)) return text;
+		if ((isPm || (isNoon && hour < 11)) && hour < 12) hour += 12;
+		if (hour < 0 || hour > 23 || minute < 0 || minute > 59) return text;
+		return String(hour).padStart(2, '0') + ':' + String(minute).padStart(2, '0');
+	}
+
+	_isSameOrderCustomerName(a, b) {
+		a = this._normalizeOrderCustomerName(a);
+		b = this._normalizeOrderCustomerName(b);
+		if (!a || !b) return false;
+		if (a == b) return true;
+		if (Math.min(a.length, b.length) < 2) return false;
+		return a.indexOf(b) >= 0 || b.indexOf(a) >= 0;
+	}
+
+	_isSameOrderTypeName(a, b) {
+		a = this._normalizeOrderDuplicateText(a, 60);
+		b = this._normalizeOrderDuplicateText(b, 60);
+		if (!a || !b) return false;
+		if (a == b) return true;
+		if (Math.min(a.length, b.length) < 2) return false;
+		return a.indexOf(b) >= 0 || b.indexOf(a) >= 0;
+	}
+
+	_isSameOrderPlace(a, b) {
+		a = this._normalizeOrderDuplicateText(a, 120);
+		b = this._normalizeOrderDuplicateText(b, 120);
+		if (!a || !b || Math.min(a.length, b.length) < 2) return false;
+		return a == b || a.indexOf(b) >= 0 || b.indexOf(a) >= 0;
+	}
+
+	isSameOrderForDuplicate(order = {}, old = {}) {
+		if (!order.ORDER_DATE || !old.ORDER_DATE || order.ORDER_DATE != old.ORDER_DATE) return false;
+
+		let mobile = this._normalizeOrderMobile(order.ORDER_CUSTOMER_MOBILE);
+		let oldMobile = this._normalizeOrderMobile(old.ORDER_CUSTOMER_MOBILE);
+		let sameMobile = mobile && oldMobile && mobile == oldMobile;
+		let sameName = this._isSameOrderCustomerName(order.ORDER_CUSTOMER_NAME, old.ORDER_CUSTOMER_NAME);
+		if (!sameMobile && !sameName) return false;
+
+		let sameType = this._isSameOrderTypeName(order.ORDER_TYPE_NAME, old.ORDER_TYPE_NAME);
+		if (!sameType) return false;
+
+		let time = this._normalizeOrderTimeForCompare(order.ORDER_TIME);
+		let oldTime = this._normalizeOrderTimeForCompare(old.ORDER_TIME);
+		if (time && oldTime && time == oldTime) return true;
+
+		let samePlace = this._isSameOrderPlace(order.ORDER_PLACE, old.ORDER_PLACE);
+		if (!time || !oldTime) {
+			if (sameMobile) return true;
+			if (sameName && (samePlace || !order.ORDER_PLACE || !old.ORDER_PLACE)) return true;
+		}
+		return false;
+	}
+
+	async findDuplicateOrder(order = {}, excludeId = '') {
+		if (!order.ORDER_DATE || !order.ORDER_CUSTOMER_NAME) return null;
+		let list = await WorkOrderModel.getAll({
+			ORDER_DATE: order.ORDER_DATE,
+			ORDER_STATUS: WorkOrderModel.STATUS.COMM,
+		}, '*', {
+			ORDER_TIME: 'asc',
+			ORDER_ADD_TIME: 'asc',
+		}, 300);
+		for (let old of (list || [])) {
+			if (excludeId && old._id == excludeId) continue;
+			if (this.isSameOrderForDuplicate(order, old)) return old;
+		}
+		return null;
+	}
+
+	async _assertNoDuplicateOrder(order = {}, excludeId = '') {
+		let duplicate = await this.findDuplicateOrder(order, excludeId);
+		if (!duplicate) return;
+		this.AppError('系统已存在同日同客户且同类型的订单，请先确认是否重复录入');
+	}
+
 	async _upsertCustomer(order) {
 		if (!order.ORDER_CUSTOMER_NAME && !order.ORDER_CUSTOMER_MOBILE) return;
 		let where = order.ORDER_CUSTOMER_MOBILE ? {
@@ -1027,6 +1247,7 @@ class WorkService extends BaseProjectService {
 		if (!order.ORDER_CUSTOMER_NAME) this.AppError('请填写客户名称');
 
 		order.ORDER_CUSTOMER_SURNAME = this._getSurname(order.ORDER_CUSTOMER_NAME);
+		await this._assertNoDuplicateOrder(order, id);
 		order.ORDER_ACTUAL_AMOUNT = this._money(order.ORDER_DEPOSIT + order.ORDER_FINAL + order.ORDER_EXTRA);
 		order.ORDER_SHOOT_DUE_CENT = this._centInput(orderInput.ORDER_SHOOT_DUE_CENT, this._moneyCent(order.ORDER_AMOUNT));
 		order.ORDER_EXTRA_DUE_CENT = this._centInput(orderInput.ORDER_EXTRA_DUE_CENT, this._moneyCent(order.ORDER_EXTRA));
@@ -1062,6 +1283,41 @@ class WorkService extends BaseProjectService {
 		await this._syncOrderFinanceAfterSave(id, paymentDtos, staff);
 		await this._upsertCustomer(order);
 		return { id };
+	}
+
+	async joinOrder(openId, id, roleName = '') {
+		let staff = await this.getStaffByOpenId(openId);
+		let order = await WorkOrderModel.getOne(id);
+		if (!order) this.AppError('订单不存在');
+		if (order.ORDER_STATUS == WorkOrderModel.STATUS.CANCEL) this.AppError('订单已取消，不能加入参与人');
+		if (order.ORDER_SETTLE_STATUS == WorkOrderModel.SETTLE.PAID) this.AppError('订单已结算，不能自助加入参与人，请联系管理员调整');
+		if (this._isParticipant(order, staff._id)) {
+			return { id, already: true };
+		}
+		let roles = Array.isArray(staff.STAFF_ROLES) ? staff.STAFF_ROLES : [];
+		roleName = String(roleName || '').trim() || roles[0] || '摄影';
+		if (roles.length && !roles.includes(roleName)) roleName = roles[0];
+		let nextRaw = (order.ORDER_PARTICIPANTS || []).concat([{
+			staffId: staff._id,
+			roleName,
+			calcMode: 'percent',
+		}]);
+		let participants = await this._buildParticipants(nextRaw, order, order.ORDER_PARTICIPANTS || []);
+		await WorkOrderModel.edit(id, { ORDER_PARTICIPANTS: participants });
+		let joined = participants.find(item => item.staffId == staff._id && item.roleName == roleName) || participants.find(item => item.staffId == staff._id);
+		let payments = await this._payment.getOrderPayments(id);
+		let commissions = [];
+		for (let payment of (payments || [])) {
+			let created = await this._commission.generateByPayment(payment, staff);
+			commissions = commissions.concat(created || []);
+		}
+		await this._commission.refreshOrderCommissionStatus(id, { operatorStaff: staff });
+		if (order.ORDER_CREATOR_STAFF_ID && order.ORDER_CREATOR_STAFF_ID != staff._id) {
+			await this._notifyStaff(order.ORDER_CREATOR_STAFF_ID, '订单新增参与人', `${staff.STAFF_NAME || '员工'}已将自己加入订单参与人：${order.ORDER_DATE || ''} ${order.ORDER_TYPE_NAME || '订单'}，岗位：${roleName}`, 'order', id);
+		}
+		let mine = commissions.filter(item => item && (item.COMMISSION_PARTICIPANT_ID == (joined && joined.id) || item.COMMISSION_STAFF_ID == staff._id));
+		await this._notifyStaff(staff._id, '参与提成待核实', `你已加入订单：${order.ORDER_DATE || ''} ${order.ORDER_TYPE_NAME || '订单'}，岗位：${roleName}。系统已按当前员工规则核算${mine.length ? mine.length + '条提成记录' : '待计算提成'}，如有问题请向管理员申诉。`, 'order', id);
+		return { id, roleName, commissionCount: mine.length };
 	}
 
 	async completeOrder(openId, id) {
@@ -1137,11 +1393,40 @@ class WorkService extends BaseProjectService {
 		return { id };
 	}
 
+	_isAiOperationNote(note = {}) {
+		return String(note.NOTE_TITLE || '').indexOf('AI操作记录') === 0;
+	}
+
+	_decorateNoteList(list = [], type = 'all') {
+		return (list || [])
+			.map(item => {
+				let note = Object.assign({}, item || {});
+				note.NOTE_IS_AI_RECORD = this._isAiOperationNote(note) ? 1 : 0;
+				return note;
+			})
+			.filter(note => type == 'ai' ? note.NOTE_IS_AI_RECORD : !note.NOTE_IS_AI_RECORD);
+	}
+
 	async getNoteList(openId, type = 'all') {
 		let staff = await this.getStaffByOpenId(openId);
 		let where = {
 			NOTE_STATUS: 1,
 		};
+		if (type == 'ai') {
+			let orderBy = { NOTE_EDIT_TIME: 'desc' };
+			let teamList = await WorkNoteModel.getAllBig({
+				NOTE_STATUS: 1,
+				NOTE_TYPE: 'team',
+			}, '*', orderBy, 1000);
+			let personalList = await WorkNoteModel.getAllBig({
+				NOTE_STATUS: 1,
+				NOTE_TYPE: 'personal',
+				NOTE_CREATOR_STAFF_ID: staff._id,
+			}, '*', orderBy, 1000);
+			let list = this._decorateNoteList(teamList.concat(personalList), 'ai');
+			list.sort((a, b) => Number(b.NOTE_EDIT_TIME || 0) - Number(a.NOTE_EDIT_TIME || 0));
+			return list;
+		}
 		if (type == 'personal') {
 			where.NOTE_TYPE = 'personal';
 			where.NOTE_CREATOR_STAFF_ID = staff._id;
@@ -1167,11 +1452,12 @@ class WorkService extends BaseProjectService {
 				return true;
 			});
 			list.sort((a, b) => Number(b.NOTE_EDIT_TIME || 0) - Number(a.NOTE_EDIT_TIME || 0));
-			return list;
+			return this._decorateNoteList(list, 'all');
 		}
-		return await WorkNoteModel.getAllBig(where, '*', {
+		let list = await WorkNoteModel.getAllBig(where, '*', {
 			NOTE_EDIT_TIME: 'desc',
 		}, 1000);
+		return this._decorateNoteList(list, type);
 	}
 
 	async getNoteDetail(openId, id) {
@@ -1182,18 +1468,19 @@ class WorkService extends BaseProjectService {
 		return note;
 	}
 
-	async saveItem(openId, input) {
+	async saveItem(openId, input, options = {}) {
 		let staff = await this.getStaffByOpenId(openId);
 		let id = input._id || input.id || '';
 		let old = id ? await WorkItemModel.getOne(id) : null;
 		if (old && old.ITEM_CREATOR_STAFF_ID != staff._id && staff.STAFF_IS_ADMIN != 1) this.AppError('你无权修改该事项');
+		let forceActive = options && options.forceActive === true;
 		let data = {
 			ITEM_TITLE: input.ITEM_TITLE || '未命名事项',
 			ITEM_CONTENT: input.ITEM_CONTENT || '',
 			ITEM_DATE: input.ITEM_DATE || timeUtil.time('Y-M-D'),
 			ITEM_TIME: input.ITEM_TIME || '',
 			ITEM_END_TIME: input.ITEM_END_TIME || '',
-			ITEM_STATUS: staff.STAFF_IS_ADMIN == 1 ? 1 : 0,
+			ITEM_STATUS: forceActive ? 1 : (staff.STAFF_IS_ADMIN == 1 ? 1 : 0),
 		};
 		if (old) {
 			await WorkItemModel.edit(id, data);
@@ -1203,6 +1490,17 @@ class WorkService extends BaseProjectService {
 			data.ITEM_CREATOR_NAME = staff.STAFF_NAME;
 			id = await WorkItemModel.insert(data);
 		}
+		return { id };
+	}
+
+	async cancelItem(openId, id) {
+		let staff = await this.getStaffByOpenId(openId);
+		let item = await WorkItemModel.getOne(id);
+		if (!item) this.AppError('事项不存在');
+		if (item.ITEM_CREATOR_STAFF_ID != staff._id && staff.STAFF_IS_ADMIN != 1) this.AppError('你无权删除该事项');
+		await WorkItemModel.edit(id, {
+			ITEM_STATUS: 10,
+		});
 		return { id };
 	}
 
@@ -1229,6 +1527,15 @@ class WorkService extends BaseProjectService {
 		}, 1000);
 	}
 
+	async getMessageSummary(openId) {
+		let staff = await this.getStaffByOpenId(openId);
+		let unreadCount = await WorkMessageModel.count({
+			MSG_STAFF_ID: staff._id,
+			MSG_IS_READ: ['!=', 1],
+		});
+		return { unreadCount };
+	}
+
 	async readMessage(openId, id) {
 		let staff = await this.getStaffByOpenId(openId);
 		await WorkMessageModel.edit({
@@ -1237,6 +1544,17 @@ class WorkService extends BaseProjectService {
 		}, {
 			MSG_IS_READ: 1,
 		});
+	}
+
+	async readAllMessages(openId) {
+		let staff = await this.getStaffByOpenId(openId);
+		await WorkMessageModel.edit({
+			MSG_STAFF_ID: staff._id,
+			MSG_IS_READ: ['!=', 1],
+		}, {
+			MSG_IS_READ: 1,
+		});
+		return await this.getMessageSummary(openId);
 	}
 
 	async _notifyStaff(staffId, title, content, refType = '', refId = '') {

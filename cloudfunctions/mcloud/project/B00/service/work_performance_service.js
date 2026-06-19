@@ -179,15 +179,60 @@ class WorkPerformanceService extends BaseProjectService {
 		return this._finishStat(stat);
 	}
 
-	async getRank(openId, month, scope = 'staff') {
-		await this._getStaffByOpenId(openId);
+	_cleanRankItem(item = {}, staff = {}, scope = 'staff', options = {}) {
+		let selfTeamId = this._text(staff.STAFF_TEAM_ID || '未分组', 80);
+		let isSelf = scope == 'staff' && item.id == staff._id;
+		let isOwnRank = isSelf || (scope == 'team' && item.id == selfTeamId);
+		let amountVisible = !!options.showAllAmounts || isSelf;
+		let ret = {
+			id: item.id || '',
+			name: item.name || '',
+			rankNo: item.rankNo || 0,
+			amountVisible,
+			isSelf,
+			isOwnRank,
+		};
+		if (amountVisible) {
+			ret.netPerformanceCent = item.netPerformanceCent || 0;
+			ret.performanceCent = item.performanceCent || 0;
+			ret.incomeCent = item.incomeCent || 0;
+			ret.refundCent = item.refundCent || 0;
+			ret.refundAbsCent = item.refundAbsCent || 0;
+			ret.paymentCount = item.paymentCount || 0;
+			ret.incomeCount = item.incomeCount || 0;
+			ret.refundCount = item.refundCount || 0;
+			ret.netPerformance = item.netPerformance || '0';
+			ret.performance = item.performance || ret.netPerformance;
+			ret.income = item.income || '0';
+			ret.refund = item.refund || '0';
+			ret.refundAbs = item.refundAbs || '0';
+		}
+		return ret;
+	}
+
+	async getRank(openId, month, scope = 'staff', options = {}) {
+		let staff = await this._getStaffByOpenId(openId);
 		month = this._month(month);
 		scope = this._text(scope || 'staff', 20);
+		let map = {};
+		let staffList = await WorkStaffModel.getAll(this._withProjectWhere({
+			STAFF_STATUS: WorkStaffModel.STATUS.COMM,
+		}), '_id,STAFF_NAME,STAFF_TEAM_ID,STAFF_TEAM_NAME', {
+			STAFF_ADD_TIME: 'asc',
+		}, 1000);
+		for (let item of staffList || []) {
+			let id = scope == 'team' ? this._text(item.STAFF_TEAM_ID || '未分组', 80) : item._id;
+			if (!id) continue;
+			if (!map[id]) {
+				map[id] = this._emptyStat();
+				map[id].id = id;
+				map[id].name = scope == 'team' ? this._text(item.STAFF_TEAM_NAME || '未分组', 80) : this._text(item.STAFF_NAME || '未命名', 80);
+			}
+		}
 		let payments = await WorkPaymentModel.getAll(this._withProjectWhere({
 			PAYMENT_MONTH: month,
 			PAYMENT_STATUS: financeConfig.PAYMENT_STATUS.EFFECTIVE,
 		}), '*', { PAYMENT_DATE: 'asc' }, 1000);
-		let map = {};
 		for (let payment of payments || []) {
 			let id = scope == 'team' ? this._text(payment.PAYMENT_TEAM_ID || '未分组', 80) : this._text(payment.PAYMENT_STAFF_ID || '', 120);
 			if (!id) continue;
@@ -200,7 +245,12 @@ class WorkPerformanceService extends BaseProjectService {
 		}
 		let list = Object.keys(map).map(key => this._finishStat(map[key]));
 		list.sort((a, b) => b.netPerformanceCent - a.netPerformanceCent || b.incomeCent - a.incomeCent);
-		return list.map((item, idx) => Object.assign({ rankNo: idx + 1 }, item));
+		let ret = list.map((item, idx) => this._cleanRankItem(Object.assign({ rankNo: idx + 1 }, item), staff, scope, options));
+		if (!options.showAllAmounts) {
+			let selfIdx = ret.findIndex(item => item.isOwnRank);
+			if (selfIdx > 0) ret.unshift(ret.splice(selfIdx, 1)[0]);
+		}
+		return ret;
 	}
 
 	async getSummary(openId, month) {
@@ -251,8 +301,8 @@ class WorkPerformanceService extends BaseProjectService {
 		return {
 			month,
 			stat,
-			rankList: await this.getRank(openId, month, 'staff'),
-			teamRankList: await this.getRank(openId, month, 'team'),
+			rankList: await this.getRank(openId, month, 'staff', { showAllAmounts: true }),
+			teamRankList: await this.getRank(openId, month, 'team', { showAllAmounts: true }),
 		};
 	}
 }

@@ -6,6 +6,16 @@ page {
 	padding: 28rpx;
 }
 
+.guest-banner {
+	margin-bottom: 20rpx;
+	padding: 20rpx 22rpx;
+	border-radius: 14rpx;
+	background: #111827;
+	color: #fff;
+	font-size: 25rpx;
+	line-height: 1.45;
+}
+
 .head {
 	display: flex;
 	align-items: center;
@@ -229,4 +239,105 @@ page {
 	color: #fff;
 	border-radius: 999rpx;
 	padding: 18rpx 34rpx;
+}
+
+/* Warm paper overrides */
+page {
+	background-color: #f5efe4;
+	background-image:
+		linear-gradient(90deg, rgba(122, 96, 68, .035) 1rpx, transparent 1rpx),
+		linear-gradient(180deg, rgba(255, 253, 247, .56), rgba(216, 207, 190, .22));
+	background-size: 48rpx 48rpx, 100% 100%;
+	color: #2a2622;
+}
+
+.page {
+	padding-bottom: 150rpx;
+}
+
+.guest-banner,
+.head,
+.summary-item,
+.quick,
+.order {
+	background: #fbf7ee;
+	border: 1rpx solid #d8cfbe;
+	box-shadow: 0 12rpx 38rpx rgba(42, 38, 34, .06);
+}
+
+.guest-banner,
+.head {
+	color: #2a2622;
+}
+
+.head {
+	border-radius: 12rpx;
+}
+
+.eyebrow,
+.sub,
+.summary-label,
+.quick-title,
+.line,
+.money,
+.settle,
+.empty {
+	color: #6b6158;
+}
+
+.title,
+.summary-num,
+.customer,
+.money text,
+.month {
+	color: #2a2622;
+}
+
+.add-btn,
+.tab.cur,
+.empty-btn {
+	background: #537d96;
+	color: #fff;
+	box-shadow: 0 8rpx 22rpx rgba(83, 125, 150, .2);
+}
+
+.filters {
+	flex-wrap: wrap;
+}
+
+.tab,
+.month,
+.quick-item {
+	background: rgba(251, 247, 238, .92);
+	border: 1rpx solid #d8cfbe;
+	color: #6b6158;
+}
+
+.quick-item {
+	background: rgba(83, 125, 150, .06);
+	color: #3f6179;
+}
+
+.summary-item,
+.quick,
+.order {
+	border-radius: 10rpx;
+}
+
+.status {
+	background: rgba(83, 125, 150, .08);
+	color: #3f6179;
+}
+
+.money .paid {
+	color: #4a6b4a;
+}
+
+.money .unpaid,
+.date.undated {
+	color: #8b2c1f;
+}
+
+.settle {
+	background: rgba(216, 207, 190, .26);
 }

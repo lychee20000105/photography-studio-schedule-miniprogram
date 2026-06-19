@@ -1,4 +1,12 @@
 <view class="page">
+	<view wx:if="{{isGuest}}" class="guest block">
+		<view>
+			<view class="guest-title">正在访客体验</view>
+			<view class="guest-desc">当前不读取任何真实档期、订单、工资或客户资料；访客新增只保存在本机临时缓存。</view>
+		</view>
+		<button class="plain-btn" bindtap="bindExitGuestTap">退出访客</button>
+	</view>
+
 	<view wx:if="{{me && !me.isBind}}" class="bind block">
 		<view class="title">绑定员工</view>
 		<view class="row">
@@ -10,6 +18,7 @@
 			<input value="{{code}}" placeholder="个人绑定码/工号" data-field="code" bindinput="bindInput" />
 		</view>
 		<button class="primary" bindtap="bindBindTap">确认绑定</button>
+		<button class="guest-btn" bindtap="bindGuestTap">访客进入，先体验功能</button>
 	</view>
 
 	<view wx:if="{{me && me.isBind}}" class="profile block">
@@ -20,6 +29,34 @@
 			<view class="roles">
 				<text wx:for="{{me.staff.STAFF_ROLES}}" wx:key="*this">{{item}}</text>
 			</view>
+		</view>
+	</view>
+
+	<view wx:if="{{me && me.isBind && pet}}" class="pet-panel block">
+		<view class="pet-row">
+			<view>
+				<view class="pet-title">云屿小助手</view>
+				<view class="pet-desc">{{pet.typeText}} · Lv.{{pet.level}} · {{pet.moodText}}</view>
+			</view>
+			<switch checked="{{pet.enabled}}" color="#ff2d62" bindchange="bindPetSwitch" />
+		</view>
+		<view class="pet-bars">
+			<view class="pet-bar">
+				<view class="pet-bar-label">饱腹 {{pet.hunger}}</view>
+				<view class="pet-bar-track"><view class="pet-bar-fill hunger" style="width: {{pet.hunger}}%;"></view></view>
+			</view>
+			<view class="pet-bar">
+				<view class="pet-bar-label">健康 {{pet.health}}</view>
+				<view class="pet-bar-track"><view class="pet-bar-fill health" style="width: {{pet.health}}%;"></view></view>
+			</view>
+		</view>
+		<picker mode="selector" range="{{petTypes}}" range-key="label" value="{{petTypeIndex}}" bindchange="bindPetTypeChange">
+			<view class="pet-picker">宠物类型：{{pet.typeText}}<text>›</text></view>
+		</picker>
+		<view class="pet-actions">
+			<view bindtap="bindFeedPetTap">喂食</view>
+			<view bindtap="bindCarePetTap">照顾</view>
+			<view bindtap="bindCustomPetTap">定制</view>
 		</view>
 	</view>
 
@@ -42,6 +79,22 @@
 			<view class="item-left">
 				<text class="icon-messagefill"></text>
 				<text>消息中心</text>
+				<text wx:if="{{unreadCount>0}}" class="unread-badge">{{unreadCount>99?'99+':unreadCount}}</text>
+			</view>
+			<text class="arrow">›</text>
+		</view>
+		<view class="item" bindtap="url" data-url="../version/work_version">
+			<view class="item-left">
+				<text class="icon-info"></text>
+				<text>版本更新</text>
+				<text class="version-chip">v{{versionInfo.current}}</text>
+			</view>
+			<text class="arrow">›</text>
+		</view>
+		<view class="item" bindtap="url" data-url="../feedback/work_feedback">
+			<view class="item-left">
+				<text class="icon-comment"></text>
+				<text>问题反馈</text>
 			</view>
 			<text class="arrow">›</text>
 		</view>
@@ -57,3 +110,6 @@
 		</view>
 	</view>
 </view>
+
+<tech-footer />
+<work-pet id="workPet" />

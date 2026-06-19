@@ -1,4 +1,6 @@
 <view class="page">
+	<view wx:if="{{isGuest}}" class="guest-banner">访客体验：不读取真实订单；仅显示本机临时访客记录，绑定员工后不会同步。</view>
+
 	<view class="head">
 		<view class="head-main">
 			<view class="eyebrow">订单工作台</view>
@@ -61,3 +63,6 @@
 		<view class="empty-btn" bindtap="url" data-url="{{addOrderUrl}}">新增订单</view>
 	</view>
 </view>
+
+<tech-footer />
+<work-pet id="workPet" />

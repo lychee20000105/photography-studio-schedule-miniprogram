@@ -16,3 +16,6 @@
 		<button class="btn muted" bindtap="bindRefreshTap">刷新导出状态</button>
 	</view>
 </block>
+
+<tech-footer />
+<work-pet id="workPet" />

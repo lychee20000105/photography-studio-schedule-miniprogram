@@ -1,0 +1,12 @@
+<view class="page">
+	<view class="card">
+		<view class="title">问题反馈</view>
+		<view class="desc">使用中遇到的问题、建议或需要管理员处理的事项，都可以在这里提交。</view>
+		<textarea class="textarea" value="{{content}}" maxlength="800" placeholder="请填写问题描述，最多800字" bindinput="bindInput"></textarea>
+		<view class="count">{{content.length || 0}}/800</view>
+		<button class="submit" bindtap="bindSubmitTap">提交反馈</button>
+	</view>
+</view>
+
+<tech-footer />
+<work-pet id="workPet" />

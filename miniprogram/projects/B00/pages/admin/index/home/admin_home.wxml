@@ -111,3 +111,6 @@
 	<view class="foot-bottom"><cmpt-foot /></view> 
 
 </view>
+
+<tech-footer />
+<work-pet id="workPet" />

@@ -1,7 +1,46 @@
 page { background: #f6f7f9; }
 .page { padding: 24rpx; }
+.message-head { display: flex; align-items: center; justify-content: space-between; gap: 18rpx; margin-bottom: 22rpx; padding: 24rpx; border-radius: 14rpx; background: #fff; box-sizing: border-box; }
+.head-title { color: #111827; font-size: 34rpx; font-weight: 900; line-height: 1.35; }
+.head-sub { margin-top: 8rpx; color: #8b9099; font-size: 24rpx; line-height: 1.35; }
+.read-all { flex: none; height: 58rpx; line-height: 58rpx; padding: 0 22rpx; border-radius: 29rpx; background: #111827; color: #fff; font-size: 24rpx; font-weight: 800; }
+.read-all.disabled { background: #e5e7eb; color: #9ca3af; }
 .empty { height: 300rpx; display: flex; align-items: center; justify-content: center; color: #8b9099; }
-.card { background: #fff; border-radius: 12rpx; padding: 28rpx; margin-bottom: 20rpx; border-left: 8rpx solid #ff2d62; }
+.card { position: relative; background: #fff; border-radius: 12rpx; padding: 28rpx; margin-bottom: 20rpx; border-left: 8rpx solid #ff2d62; }
 .card.read { border-left-color: #cfd3da; }
+.unread-dot { position: absolute; right: 24rpx; top: 24rpx; width: 18rpx; height: 18rpx; border-radius: 50%; background: #ef4444; }
+.title-row { display: flex; align-items: center; gap: 16rpx; padding-right: 24rpx; }
 .title { font-size: 32rpx; font-weight: 900; }
+.read-state { flex: none; color: #ef4444; font-size: 22rpx; font-weight: 800; }
+.card.read .read-state { color: #9ca3af; }
 .content { margin-top: 16rpx; color: #6b7280; font-size: 28rpx; line-height: 1.6; }
+.ref-chip { display: inline-flex; margin-top: 18rpx; padding: 8rpx 16rpx; border-radius: 999rpx; background: #eff6ff; color: #3b6f8b; font-size: 22rpx; font-weight: 800; }
+.detail-mask { position: fixed; left: 0; right: 0; top: 0; bottom: 0; z-index: 9997; display: flex; align-items: flex-end; justify-content: center; padding: 24rpx; background: rgba(20, 18, 16, .45); box-sizing: border-box; }
+.detail-panel { width: 100%; max-height: 78vh; overflow: auto; padding: 28rpx; border-radius: 18rpx; background: #fff; box-sizing: border-box; box-shadow: 0 24rpx 70rpx rgba(0,0,0,.22); }
+.detail-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 20rpx; }
+.detail-title { color: #111827; font-size: 34rpx; font-weight: 900; line-height: 1.35; }
+.detail-state { margin-top: 8rpx; color: #9ca3af; font-size: 22rpx; font-weight: 800; }
+.detail-close { flex: none; width: 54rpx; height: 54rpx; line-height: 50rpx; text-align: center; border-radius: 50%; background: #f3f4f6; color: #6b7280; font-size: 40rpx; }
+.detail-content { margin-top: 28rpx; white-space: pre-wrap; color: #374151; font-size: 29rpx; line-height: 1.72; }
+.detail-ref { margin-top: 28rpx; padding: 22rpx; border-radius: 14rpx; background: #f3f8fb; }
+.detail-ref-title { color: #2f6078; font-size: 28rpx; font-weight: 900; }
+.detail-ref-sub { margin-top: 8rpx; color: #6b7280; font-size: 24rpx; }
+.detail-ref-btn { margin-top: 18rpx; height: 64rpx; line-height: 64rpx; text-align: center; border-radius: 32rpx; background: #537d96; color: #fff; font-size: 25rpx; font-weight: 900; }
+
+/* Warm paper overrides */
+page { background: #f5efe4; background-image: linear-gradient(90deg, rgba(122,96,68,.035) 1rpx, transparent 1rpx), linear-gradient(180deg, rgba(255,253,247,.56), rgba(216,207,190,.22)); background-size: 48rpx 48rpx, 100% 100%; color: #2a2622; }
+.page { padding-bottom: 150rpx; }
+.message-head, .card { background: #fbf7ee; border: 1rpx solid #d8cfbe; box-shadow: 0 12rpx 38rpx rgba(42,38,34,.06); }
+.card { border-left-color: #537d96; }
+.card.read { border-left-color: #d8cfbe; opacity: .78; }
+.head-title, .title { color: #2a2622; }
+.head-sub, .content, .empty { color: #6b6158; }
+.read-all { background: #537d96; }
+.read-all.disabled { background: rgba(216,207,190,.55); color: #8b8175; }
+.ref-chip { background: rgba(83,125,150,.12); color: #537d96; }
+.detail-panel { background: #fbf7ee; border: 1rpx solid #d8cfbe; }
+.detail-title { color: #2a2622; }
+.detail-close { background: rgba(216,207,190,.5); color: #6b6158; }
+.detail-content { color: #3d352f; }
+.detail-ref { background: rgba(83,125,150,.1); border: 1rpx solid rgba(83,125,150,.18); }
+.detail-ref-sub { color: #6b6158; }

@@ -6,5 +6,5 @@ Page({
 	onPullDownRefresh:async function(){await this._loadData();wx.stopPullDownRefresh();},
 	_loadData:async function(){let data=await cloudHelper.callCloudData('work/admin_performance_board',{month:this.data.month},{title:'bar'});this.setData({data,rankList:data?(data.rankList||[]):[]});},
 	bindMonthChange:async function(e){this.setData({month:e.detail.value});await this._loadData();},
-	bindScopeTap:async function(e){let scope=e.currentTarget.dataset.scope;let list=await cloudHelper.callCloudData('work/performance_rank',{month:this.data.month,scope},{title:'bar'});this.setData({rankList:list||[]});}
+	bindScopeTap:function(e){let scope=e.currentTarget.dataset.scope;let data=this.data.data||{};this.setData({rankList:scope=='team'?(data.teamRankList||[]):(data.rankList||[])});}
 });

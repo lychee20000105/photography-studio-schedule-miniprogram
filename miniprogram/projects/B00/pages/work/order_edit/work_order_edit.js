@@ -22,6 +22,9 @@ Page({
 	data: {
 		id: '',
 		isSaving: false,
+		canFull: false,
+		canEdit: false,
+		isJoining: false,
 		options: null,
 		paymentTypeOptions: PAYMENT_TYPE_OPTIONS,
 		paymentBaseTypeOptions: PAYMENT_BASE_TYPE_OPTIONS,
@@ -58,11 +61,12 @@ Page({
 		if (id) await this._loadDetail();
 		else {
 			let day = options.day || wx.getStorageSync('WORK_ADD_DAY') || '';
-			if (day) {
-				this.setData({
-					'order.ORDER_DATE': day,
-				});
-			}
+			let data = {
+				canFull: true,
+				canEdit: true,
+			};
+			if (day) data['order.ORDER_DATE'] = day;
+			this.setData(data);
 		}
 	},
 
@@ -82,10 +86,14 @@ Page({
 	_loadDetail: async function () {
 		let order = await cloudHelper.callCloudData('work/order_detail', { id: this.data.id }, { title: '加载中' });
 		if (!order) return;
+		let canFull = !!order.canFull;
+		let canEdit = !!order.canEdit;
 		order.ORDER_PAYMENTS = this._normalizePayments(order.ORDER_PAYMENTS || []);
 		order.ORDER_PARTICIPANTS = this._normalizeParticipants(order.ORDER_PARTICIPANTS || []);
 		this.setData({
 			order,
+			canFull,
+			canEdit,
 			imgList: order.ORDER_ATTACHMENTS || [],
 		});
 	},
@@ -241,6 +249,20 @@ Page({
 		this.setData({ 'order.ORDER_PAYMENTS': list });
 	},
 
+	bindJoinParticipantTap: async function () {
+		if (this.data.isJoining) return;
+		this.setData({ isJoining: true });
+		try {
+			await cloudHelper.callCloudSumbit('work/order_join', { id: this.data.id }, { title: '加入中' });
+			pageHelper.showSuccToast('已加入参与人');
+			await this._loadDetail();
+		} catch (err) {
+			console.error(err);
+		} finally {
+			this.setData({ isJoining: false });
+		}
+	},
+
 	bindAddParticipantTap: function () {
 		let list = this.data.order.ORDER_PARTICIPANTS || [];
 		list.push({
@@ -342,6 +364,16 @@ Page({
 		this.setData({ imgList });
 	},
 
+	bindPreviewImageTap: function (e) {
+		let src = e.currentTarget.dataset.src || '';
+		if (!src) return;
+		let urls = (this.data.imgList || []).filter(item => item);
+		wx.previewImage({
+			current: src,
+			urls: urls.length ? urls : [src],
+		});
+	},
+
 	_prepareOrder: async function () {
 		let order = Object.assign({}, this.data.order);
 		order._id = this.data.id;
@@ -394,12 +426,28 @@ Page({
 			let res = await cloudHelper.callCloudSumbit('work/order_save', { order }, { title: '保存中' });
 			let id = res.data.id;
 			this.setData({ id });
-			pageHelper.showSuccToastReturn('已保存');
+			this._backToCalendar(order.ORDER_DATE || '');
 		} catch (err) {
 			console.error(err);
 		} finally {
 			this.setData({ isSaving: false });
 		}
+	},
+
+	_backToCalendar: function (day = '') {
+		if (day) wx.setStorageSync('WORK_CALENDAR_DAY', day);
+		wx.showToast({
+			title: '已保存',
+			icon: 'success',
+			duration: 700,
+			success() {
+				setTimeout(() => {
+					wx.switchTab({
+						url: '/projects/B00/pages/work/calendar/work_calendar',
+					});
+				}, 700);
+			},
+		});
 	},
 
 	bindCompleteTap: async function () {

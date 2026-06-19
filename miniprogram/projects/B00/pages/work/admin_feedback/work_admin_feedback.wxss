@@ -1,0 +1,55 @@
+page {
+	background: #f6f7f9;
+}
+
+.page {
+	width: 100%;
+	padding: 24rpx;
+	box-sizing: border-box;
+}
+
+.empty {
+	height: 320rpx;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: #8b9099;
+	font-size: 28rpx;
+}
+
+.card {
+	background: #fff;
+	border-radius: 14rpx;
+	padding: 26rpx;
+	margin-bottom: 18rpx;
+	box-sizing: border-box;
+}
+
+.head {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 18rpx;
+}
+
+.name {
+	color: #111827;
+	font-size: 30rpx;
+	font-weight: 900;
+	line-height: 1.35;
+}
+
+.mobile,
+.time {
+	color: #8b9099;
+	font-size: 24rpx;
+	line-height: 1.45;
+}
+
+.content {
+	margin-top: 20rpx;
+	color: #303846;
+	font-size: 28rpx;
+	line-height: 1.65;
+	white-space: pre-wrap;
+}

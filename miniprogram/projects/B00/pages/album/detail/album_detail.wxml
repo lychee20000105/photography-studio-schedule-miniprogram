@@ -42,3 +42,6 @@
 	<!--回页首 end-->
 
 </block>
+
+<tech-footer />
+<work-pet id="workPet" />

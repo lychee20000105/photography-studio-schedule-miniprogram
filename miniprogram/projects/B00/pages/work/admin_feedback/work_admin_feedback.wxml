@@ -1,0 +1,17 @@
+<view class="page">
+	<view wx:if="{{!isLoad}}" class="empty">加载中...</view>
+	<view wx:if="{{isLoad && list.length==0}}" class="empty">暂无问题反馈</view>
+	<view wx:for="{{list}}" wx:key="_id" class="card">
+		<view class="head">
+			<view>
+				<view class="name">{{item.FEEDBACK_STAFF_NAME || '未知员工'}}</view>
+				<view class="mobile">{{item.FEEDBACK_STAFF_MOBILE}}</view>
+			</view>
+			<view class="time">{{item.addTimeText}}</view>
+		</view>
+		<view class="content">{{item.FEEDBACK_CONTENT}}</view>
+	</view>
+</view>
+
+<tech-footer />
+<work-pet id="workPet" />

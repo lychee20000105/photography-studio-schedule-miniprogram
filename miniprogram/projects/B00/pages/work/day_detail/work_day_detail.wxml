@@ -1,0 +1,46 @@
+<view class="page">
+	<view wx:if="{{!isLoad}}" class="empty">加载中...</view>
+
+	<view wx:if="{{isLoad}}">
+		<view class="head">
+			<view>
+				<view class="title">{{day}}<text wx:if="{{dayLabel}}" class="day-label">{{dayLabel}}</text></view>
+				<view class="sub">当天档期</view>
+			</view>
+			<view class="add" bindtap="bindAddTap">新增</view>
+		</view>
+
+		<view wx:if="{{dayData.orders.length==0 && dayData.items.length==0 && dayData.rests.length==0}}" class="empty-card">
+			<view class="empty-title">当天暂无档期</view>
+			<view class="empty-desc">可以点击右上角新增订单、事项或休息</view>
+		</view>
+
+		<view wx:for="{{dayData.orders}}" wx:key="_id" class="order-card" bindtap="bindOrderTap" data-id="{{item._id}}" data-full="{{item.canFull}}">
+			<view class="order-head">
+				<view class="order-type" style="background:{{item.ORDER_TYPE_COLOR}}">{{item.ORDER_TYPE_NAME}}</view>
+				<view class="order-time">{{item.ORDER_TIME || '全天'}}</view>
+			</view>
+			<view class="customer">{{item.canFull ? item.ORDER_CUSTOMER_NAME : item.ORDER_CUSTOMER_SURNAME + '姓客户'}}</view>
+			<view wx:if="{{item.canFull}}" class="money">
+				订单 {{item.ORDER_AMOUNT || 0}} ｜ 实收 {{item.PAID_AMOUNT || item.ORDER_ACTUAL_AMOUNT || 0}} ｜ 未收 {{item.UNPAID_AMOUNT || 0}}
+			</view>
+			<view class="meta">{{item.ORDER_PROGRESS_DESC}} · {{item.ORDER_SETTLE_STATUS_DESC}}</view>
+		</view>
+
+		<view wx:for="{{dayData.items}}" wx:key="_id" class="simple-card item-card">
+			<view class="simple-top">
+				<view class="simple-title">事项｜{{item.ITEM_TITLE}}</view>
+				<view class="mini-danger" data-id="{{item._id}}" catchtap="bindItemCancelTap">删除</view>
+			</view>
+			<view class="simple-desc">{{item.ITEM_TIME}} {{item.ITEM_CONTENT}}</view>
+		</view>
+
+		<view wx:for="{{dayData.rests}}" wx:key="_id" class="simple-card rest">
+			<view class="simple-title">休息｜{{item.REST_STAFF_NAME}}</view>
+			<view class="simple-desc">{{item.REST_TYPE}} {{item.REST_REASON}}</view>
+		</view>
+	</view>
+</view>
+
+<tech-footer />
+<work-pet id="workPet" />

@@ -34,3 +34,6 @@
 		<view class="amount">{{item.amount}}</view>
 	</view>
 </view>
+
+<tech-footer />
+<work-pet id="workPet" />

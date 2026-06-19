@@ -48,7 +48,7 @@
 	},
 	"appid": "wx16193bf2c2e4c22b",
 	"projectname": "云屿摄影",
-	"libVersion": "3.8.9",
+	"libVersion": "3.16.1",
 	"simulatorType": "wechat",
 	"simulatorPluginLibVersion": {},
 	"cloudfunctionTemplateRoot": "cloudfunctionTemplate/",
@@ -74,7 +74,15 @@
 			"list": []
 		},
 		"miniprogram": {
-			"list": []
+			"list": [
+				{
+					"name": "AI小助手配置",
+					"pathName": "projects/B00/pages/work/admin_ai/work_admin_ai",
+					"query": "",
+					"launchMode": "default",
+					"scene": null
+				}
+			]
 		}
 	}
 }

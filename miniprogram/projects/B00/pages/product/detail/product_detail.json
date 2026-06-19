@@ -1,7 +1,7 @@
 {
-	"usingComponents": { 
+	"usingComponents": {
 		"cmpt-swiper": "/cmpts/public/swiper/swiper_cmpt"
 	},
-	"enablePullDownRefresh": true, 
-	"navigationBarTitleText": "服务详情"
+	"enablePullDownRefresh": true,
+	"navigationBarTitleText": "云屿摄影-服务详情"
 }

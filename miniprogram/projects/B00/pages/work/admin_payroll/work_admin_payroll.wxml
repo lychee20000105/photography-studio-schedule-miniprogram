@@ -39,3 +39,6 @@
 		<view class="amount muted">¥{{item.amount}}</view>
 	</view>
 </view>
+
+<tech-footer />
+<work-pet id="workPet" />

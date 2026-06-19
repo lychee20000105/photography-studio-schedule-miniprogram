@@ -1,10 +1,12 @@
 const cloudHelper = require('../../../../../helper/cloud_helper.js');
 const pageHelper = require('../../../../../helper/page_helper.js');
+const guestHelper = require('../../../../../helper/guest_helper.js');
 const ProjectBiz = require('../../../biz/project_biz.js');
 
 Page({
 	data: {
 		isLoad: false,
+		isGuest: false,
 		day: '',
 		addOrderUrl: '../order_edit/work_order_edit',
 		month: '',
@@ -68,6 +70,23 @@ Page({
 		return (list || []).filter(order => this._isUndatedOrder(order) || (order.ORDER_DATE && order.ORDER_DATE.indexOf(month) === 0));
 	},
 	_loadOrders: async function () {
+		if (guestHelper.isGuest()) {
+			let list = guestHelper.getOrders(this.data.month);
+			let monthList = this._filterMonthOrders(list);
+			let showList = this.data.scope == 'month' ? monthList : list;
+			let undatedOrderCount = 0;
+			for (let order of monthList) {
+				if (this._isUndatedOrder(order)) undatedOrderCount++;
+			}
+			this.setData({
+				isLoad: true,
+				isGuest: true,
+				orders: showList.map(order => this._formatOrder(order)),
+				monthOrderCount: monthList.length,
+				undatedOrderCount,
+			});
+			return;
+		}
 		let scope = this.data.scope;
 		let params = {
 			scope: scope == 'month' ? 'all' : scope,
@@ -83,6 +102,7 @@ Page({
 		}
 		this.setData({
 			isLoad: true,
+			isGuest: false,
 			orders: showList.map(order => this._formatOrder(order)),
 			monthOrderCount: monthList.length,
 			undatedOrderCount,
@@ -98,11 +118,13 @@ Page({
 		await this._loadOrders();
 	},
 	bindOrderTap: function (e) {
+		if (this.data.isGuest) return guestHelper.showReadonlyTip();
 		let id = e.currentTarget.dataset.id;
 		if (!id) return;
 		wx.navigateTo({ url: '../order_edit/work_order_edit?id=' + id });
 	},
 	url: function (e) {
+		if (this.data.isGuest) return guestHelper.showReadonlyTip();
 		pageHelper.url(e, this);
 	},
 });

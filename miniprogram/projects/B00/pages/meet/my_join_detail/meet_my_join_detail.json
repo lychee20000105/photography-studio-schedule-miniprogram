@@ -1,6 +1,5 @@
 {
-	"usingComponents": { 
-	},  
-	"enablePullDownRefresh": true, 
-	"navigationBarTitleText": "我的预约详情"
+	"usingComponents": {},
+	"enablePullDownRefresh": true,
+	"navigationBarTitleText": "云屿摄影-我的预约详情"
 }

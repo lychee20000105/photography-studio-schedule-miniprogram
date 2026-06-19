@@ -1,0 +1,80 @@
+<view class="page">
+	<view wx:if="{{!isLoad}}" class="empty">加载中...</view>
+
+	<view wx:if="{{isLoad}}">
+		<view class="block">
+			<view class="head">
+				<view>
+					<view class="title">AI 小助手配置</view>
+					<view class="desc">猫咪对话会通过云函数代理调用，不会把 API Key 放进小程序前端。</view>
+				</view>
+				<switch checked="{{form.enabled}}" color="#ff2d62" bindchange="bindEnabledChange" />
+			</view>
+		</view>
+
+		<view class="block">
+			<view class="row">
+				<text>服务名称</text>
+				<input value="{{form.providerName}}" data-field="providerName" bindinput="bindInput" placeholder="例如 Agnes APIHub / DeepSeek" />
+			</view>
+			<view class="form-group">
+				<view class="label">接口地址 / Base URL</view>
+				<textarea value="{{form.apiUrl}}" data-field="apiUrl" bindinput="bindInput" maxlength="400" auto-height="{{true}}" placeholder="https://apihub.agnes-ai.com/v1"></textarea>
+			</view>
+			<view class="form-group">
+				<view class="label-line">
+					<view class="label">模型</view>
+					<button class="fetch-btn" loading="{{modelLoading}}" disabled="{{modelLoading}}" bindtap="bindLoadModelsTap">{{modelLoading?'获取中':'获取模型'}}</button>
+				</view>
+				<picker mode="selector" range="{{modelOptions}}" value="{{modelIndex}}" bindchange="bindModelChange" disabled="{{!modelOptions.length}}">
+					<view class="model-picker {{modelOptions.length?'':'disabled'}}">
+						<text>{{modelPickerText}}</text>
+						<text class="arrow">›</text>
+					</view>
+				</picker>
+				<input value="{{form.model}}" data-field="model" bindinput="bindInput" placeholder="也可手动填写模型 ID" />
+				<view class="key-state">预估上下文窗口：{{form.contextLimit || 128000}} tokens（按模型名估算，实际以接口返回为准）</view>
+			</view>
+			<view class="form-group">
+				<view class="label">API Key</view>
+				<input password="{{true}}" value="{{keyInput}}" bindinput="bindKeyInput" placeholder="{{keyPlaceholder}}" />
+				<view wx:if="{{hasApiKey}}" class="key-state">当前已保存：{{apiKeyMasked}}</view>
+				<view wx:if="{{hasApiKey}}" class="clear-line">
+					<text>清空已保存 Key</text>
+					<switch checked="{{clearKey}}" color="#ff2d62" bindchange="bindClearKeyChange" />
+				</view>
+			</view>
+			<view class="form-group">
+				<view class="label">小猫性格</view>
+				<picker mode="selector" range="{{form.personalities}}" range-key="name" value="{{personalityIndex}}" bindchange="bindPersonalityChange">
+					<view class="model-picker">
+						<text>{{form.personalityName || '值班小猫'}}</text>
+						<text class="arrow">›</text>
+					</view>
+				</picker>
+				<view class="key-state">值班适合日常录单，温柔适合新员工和话术，审查适合财务/审核边界，成交适合客户跟进。</view>
+			</view>
+		</view>
+
+		<view class="block">
+			<view class="row small">
+				<text>温度</text>
+				<input type="digit" value="{{form.temperature}}" data-field="temperature" bindinput="bindInput" placeholder="0-2" />
+			</view>
+			<view class="row small">
+				<text>最大回复</text>
+				<input type="number" value="{{form.maxTokens}}" data-field="maxTokens" bindinput="bindInput" placeholder="600" />
+			</view>
+			<view class="form-group">
+				<view class="label">系统提示词</view>
+				<textarea value="{{form.systemPrompt}}" data-field="systemPrompt" bindinput="bindInput" maxlength="3000" auto-height="{{true}}" placeholder="告诉 AI 它是谁、怎么回答、不能做什么"></textarea>
+			</view>
+		</view>
+
+		<button class="submit" bindtap="bindSubmitTap">保存配置</button>
+		<button class="submit plain" bindtap="bindTestTap">测试对话</button>
+	</view>
+</view>
+
+<tech-footer />
+<work-pet id="workPet" />

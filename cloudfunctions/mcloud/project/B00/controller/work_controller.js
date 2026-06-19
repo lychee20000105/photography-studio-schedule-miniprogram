@@ -4,6 +4,7 @@
 
 const BaseProjectController = require('./base_project_controller.js');
 const WorkService = require('../service/work_service.js');
+const WorkAiService = require('../service/work_ai_service.js');
 
 class WorkController extends BaseProjectController {
 
@@ -70,6 +71,15 @@ class WorkController extends BaseProjectController {
 		return await service.saveOrder(this._userId, input.order);
 	}
 
+	async joinOrder() {
+		let input = this.validateData({
+			id: 'must|id|name=订单ID',
+			roleName: 'string|max:40|name=参与岗位',
+		});
+		let service = new WorkService();
+		return await service.joinOrder(this._userId, input.id, input.roleName || '');
+	}
+
 	async completeOrder() {
 		let input = this.validateData({
 			id: 'must|id|name=订单ID',
@@ -127,6 +137,14 @@ class WorkController extends BaseProjectController {
 		return await service.saveItem(this._userId, input.item);
 	}
 
+	async cancelItem() {
+		let input = this.validateData({
+			id: 'must|id|name=事项ID',
+		});
+		let service = new WorkService();
+		return await service.cancelItem(this._userId, input.id);
+	}
+
 	async saveRest() {
 		let input = this.validateData({
 			rest: 'must|object|name=休息日期',
@@ -140,12 +158,41 @@ class WorkController extends BaseProjectController {
 		return await service.getMessages(this._userId);
 	}
 
+	async getMessageSummary() {
+		let service = new WorkService();
+		return await service.getMessageSummary(this._userId);
+	}
+
 	async readMessage() {
 		let input = this.validateData({
 			id: 'must|id|name=消息ID',
 		});
 		let service = new WorkService();
 		return await service.readMessage(this._userId, input.id);
+	}
+
+	async readAllMessages() {
+		let service = new WorkService();
+		return await service.readAllMessages(this._userId);
+	}
+
+	async submitFeedback() {
+		let input = this.validateData({
+			content: 'must|string|min:1|max:800|name=反馈内容',
+		});
+		let service = new WorkService();
+		return await service.submitFeedback(this._userId, input.content);
+	}
+
+	async aiChat() {
+		let input = this.validateData({
+			message: 'must|string|min:1|max:800|name=消息内容',
+			history: 'array|name=历史消息',
+			attachments: 'array|name=附件',
+			pageContext: 'object|name=页面上下文',
+		});
+		let service = new WorkAiService();
+		return await service.chat(this._userId, input.message, input.history || [], input.attachments || [], input.pageContext || {});
 	}
 
 	async getMyPayroll() {

@@ -1,0 +1,199 @@
+<movable-area wx:if="{{pet.enabled}}" class="pet-area">
+	<movable-view
+		class="pet-movable pet-{{pet.type}} mood-{{pet.mood}} mode-{{mode}} {{burst?'burst':''}} {{dragging?'dragging':''}}"
+		direction="all"
+		x="{{pos.x}}"
+		y="{{pos.y}}"
+		damping="22"
+		friction="2"
+		inertia="{{true}}"
+		out-of-bounds="{{false}}"
+		bindchange="bindMoveChange"
+		bindtap="bindPetTap"
+		bindtouchstart="bindTouchStart"
+		bindtouchend="bindTouchEnd"
+		catchtouchcancel="bindTouchEnd">
+		<view class="pet-bubble" wx:if="{{bubble}}">
+			<view class="bubble-title">{{bubble}}</view>
+			<view class="bubble-meta">Lv.{{pet.level}} · {{pet.moodText}}</view>
+		</view>
+		<view class="cat-stage">
+			<view class="cat-shadow"></view>
+			<view class="cat-scruff"></view>
+			<image class="pet-img" src="/projects/B00/images/work/pet_cat_ref.png" mode="aspectFit"></image>
+			<view class="pet-spark one"></view>
+			<view class="pet-spark two"></view>
+		</view>
+	</movable-view>
+</movable-area>
+
+<view wx:if="{{chatVisible}}" class="pet-chat-mask {{chatFullscreen?'is-fullscreen':''}}" bindtap="bindChatClose">
+	<view class="pet-chat-panel {{chatFullscreen?'is-fullscreen':''}}" catchtap="noop">
+		<view class="pet-chat-head">
+			<text wx:if="{{chatFullscreen}}" class="chat-icon-btn" bindtap="bindToggleSidebar">☰</text>
+			<view class="pet-title-wrap">
+				<view class="pet-chat-title">云屿小猫助手</view>
+			</view>
+			<view class="context-pill">
+				<view class="context-ring" style="{{activeThread.contextStyle}}">
+					<view class="context-inner">{{activeThread.contextPercent}}%</view>
+				</view>
+				<view class="context-text">上下文 {{activeThread.contextUsed}} / {{activeThread.contextLimit}}</view>
+			</view>
+			<view class="pet-chat-actions">
+				<text class="chat-icon-btn" bindtap="bindNewChat">＋</text>
+				<text class="chat-icon-btn" bindtap="bindToggleFullscreen">{{chatFullscreen?'↙':'↗'}}</text>
+				<text class="chat-icon-btn" bindtap="bindChatClose">×</text>
+			</view>
+		</view>
+
+		<view class="pet-chat-body">
+			<view wx:if="{{chatFullscreen && sidebarVisible}}" class="chat-sidebar-scrim" bindtap="bindHideSidebar"></view>
+			<view wx:if="{{chatFullscreen && sidebarVisible}}" class="chat-sidebar">
+				<view class="sidebar-search-row">
+					<view class="sidebar-search">⌕ 搜索</view>
+					<text class="sidebar-compose" bindtap="bindNewChat">✎</text>
+				</view>
+				<view class="sidebar-user-card">
+					<view class="sidebar-avatar">猫</view>
+					<view>
+						<view class="sidebar-name">云屿小猫</view>
+						<view class="sidebar-sub">摄影工作台 Agent</view>
+					</view>
+				</view>
+				<view class="sidebar-menu">
+					<view class="sidebar-menu-item" data-text="这个小程序现在能帮工作室做什么？" bindtap="bindQuickAsk">
+						<text class="sidebar-menu-icon">✦</text>
+						<text>功能说明</text>
+					</view>
+					<view class="sidebar-menu-item" data-text="逐张识别截图，记录所有未记录的订单档期；一张图可能有多个档期，不要只记录一个。" bindtap="bindQuickAsk">
+						<text class="sidebar-menu-icon">▣</text>
+						<text>截图录单</text>
+					</view>
+					<view class="sidebar-menu-item" data-text="我明天要干什么？请结合档期和小记整理" bindtap="bindQuickAsk">
+						<text class="sidebar-menu-icon">☷</text>
+						<text>明日安排</text>
+					</view>
+				</view>
+				<view class="sidebar-divider"></view>
+				<scroll-view class="thread-list" scroll-y="{{true}}">
+					<view wx:for="{{chatThreads}}" wx:key="id" class="thread-item {{item.id==activeChatId?'active':''}}" data-id="{{item.id}}" bindtap="bindSwitchChat">
+						<view class="thread-dot color-{{index}}">…</view>
+						<view class="thread-copy">
+							<view class="thread-title">{{item.title}}</view>
+							<view class="thread-meta">上下文 {{item.contextPercent}}%</view>
+						</view>
+						<text class="thread-del" data-id="{{item.id}}" catchtap="bindDeleteChat">×</text>
+					</view>
+				</scroll-view>
+				<view class="sidebar-bottom">
+					<view class="sidebar-bottom-user">
+						<view class="sidebar-avatar small">我</view>
+						<text>当前员工</text>
+					</view>
+					<text class="sidebar-bottom-icon" bindtap="bindNewChat">＋</text>
+					<text class="sidebar-bottom-icon" bindtap="bindOpenAgentInfo">⚙</text>
+				</view>
+			</view>
+
+			<view class="chat-main">
+					<scroll-view class="pet-chat-list" scroll-y="{{true}}" enable-flex="{{true}}" scroll-into-view="{{chatAnchor}}">
+						<view wx:for="{{chatMessages}}" wx:key="index" class="chat-msg {{item.role}}">
+							<view class="chat-bubble">
+								<view>{{item.content}}</view>
+								<view wx:if="{{item.images && item.images.length}}" class="chat-image-grid">
+									<image
+										wx:for="{{item.images}}"
+										wx:for-item="img"
+										wx:key="src"
+										class="chat-image-thumb"
+										src="{{img.src}}"
+										mode="aspectFill"
+										data-src="{{img.src}}"
+										bindtap="bindPreviewMessageImage"></image>
+								</view>
+							</view>
+						</view>
+					<view wx:if="{{chatLoading}}" class="chat-msg assistant">
+						<view class="chat-bubble loading">小猫正在思考...</view>
+					</view>
+					<view id="chat-bottom"></view>
+				</scroll-view>
+
+				<view class="quick-row">
+					<text class="quick-chip" data-text="我明天要干什么？请结合档期和小记整理" bindtap="bindQuickAsk">明日安排</text>
+					<text class="quick-chip" data-text="逐张识别截图，记录所有未记录的订单档期；一张图可能有多个档期，不要只记录一个。" bindtap="bindQuickAsk">截图录单</text>
+					<text class="quick-chip" data-text="帮我整理一段客户跟进话术" bindtap="bindQuickAsk">跟进话术</text>
+					<text class="quick-chip" data-text="这个小程序现在能帮工作室做什么？" bindtap="bindQuickAsk">功能说明</text>
+				</view>
+
+				<view wx:if="{{chatAttachments.length}}" class="attach-preview">
+					<view wx:for="{{chatAttachments}}" wx:key="fileID" class="attach-chip">
+						<image wx:if="{{item.src || item.localPath}}" class="attach-thumb" src="{{item.src || item.localPath}}" mode="aspectFill" data-src="{{item.src || item.localPath}}" bindtap="bindPreviewAttachment"></image>
+						<text>{{item.name || '图片'}}</text>
+						<text class="attach-del" data-idx="{{index}}" bindtap="bindRemoveAttachment">×</text>
+					</view>
+				</view>
+
+				<view class="pet-chat-input">
+					<button class="attach-btn {{uploadingAttachment?'is-disabled':''}}" loading="{{uploadingAttachment}}" disabled="{{uploadingAttachment || chatLoading}}" bindtap="bindAttachTap">+</button>
+					<input class="chat-text-input" value="{{chatInput}}" bindinput="bindChatInput" bindconfirm="bindChatSend" confirm-type="send" maxlength="800" placeholder="问问这只小猫..." />
+					<button class="chat-send-btn {{chatLoading?'is-disabled':''}}" loading="{{chatLoading}}" disabled="{{chatLoading}}" bindtap="bindChatSend">发送</button>
+				</view>
+			</view>
+		</view>
+	</view>
+</view>
+
+<view wx:if="{{agentInfoVisible}}" class="agent-info-mask" catchtouchmove="noop" catchtap="bindCloseAgentInfo">
+	<view class="agent-info-panel" catchtap="noop">
+		<view class="agent-info-title">云屿小猫 Agent</view>
+		<view class="agent-info-version">{{agentInfo.name}} v{{agentInfo.version}}</view>
+		<view class="agent-info-meta">
+			<view class="agent-info-row">
+				<text>更新日期</text>
+				<text>{{agentInfo.date}}</text>
+			</view>
+			<view class="agent-info-row">
+				<text>服务商</text>
+				<text>{{agentInfo.provider}}</text>
+			</view>
+			<view class="agent-info-row">
+				<text>模型</text>
+				<text>{{agentInfo.model}}</text>
+			</view>
+			<view class="agent-info-row">
+				<text>上下文</text>
+				<text>{{agentInfo.context}}</text>
+			</view>
+		</view>
+		<view class="agent-info-log-title">更新日志</view>
+		<view class="agent-info-log">
+			<view wx:for="{{agentInfo.items}}" wx:key="index" class="agent-info-log-item">
+				<text class="agent-info-log-index">{{index + 1}}</text>
+				<text class="agent-info-log-text">{{item}}</text>
+			</view>
+		</view>
+		<view class="agent-info-actions">
+			<text bindtap="bindCloseAgentInfo">确定</text>
+		</view>
+	</view>
+</view>
+
+<view wx:if="{{versionNoticeVisible}}" class="version-notice-mask" catchtouchmove="noop">
+	<view class="version-notice-panel">
+		<view class="version-notice-title">{{versionNotice.title}}</view>
+		<view wx:if="{{versionNotice.name}}" class="version-notice-name">{{versionNotice.name}}</view>
+		<view class="version-notice-list">
+			<view wx:for="{{versionNotice.items}}" wx:key="index" class="version-notice-item">
+				<text class="version-notice-index">{{index + 1}}.</text>
+				<text class="version-notice-text">{{item}}</text>
+			</view>
+		</view>
+		<view wx:if="{{versionNotice.date}}" class="version-notice-date">更新时间：{{versionNotice.date}}</view>
+		<view class="version-notice-actions">
+			<text bindtap="bindVersionNoticeClose">关闭</text>
+			<text bindtap="bindVersionNoticeMute">不再提醒</text>
+		</view>
+	</view>
+</view>

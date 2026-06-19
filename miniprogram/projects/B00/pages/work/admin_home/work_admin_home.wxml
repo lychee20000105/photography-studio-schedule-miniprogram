@@ -21,3 +21,6 @@
 		<view wx:if="{{isLoad && !data}}" class="empty">暂无管理数据，请检查权限或下拉刷新</view>
 	</view>
 </view>
+
+<tech-footer />
+<work-pet id="workPet" />

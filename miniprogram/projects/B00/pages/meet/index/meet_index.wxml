@@ -23,3 +23,6 @@
 	</block>
 
 </block>
+
+<tech-footer />
+<work-pet id="workPet" />

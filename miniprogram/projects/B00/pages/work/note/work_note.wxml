@@ -1,19 +1,34 @@
 <view class="page">
+	<view wx:if="{{isGuest}}" class="guest-banner">访客体验：当前是演示小记，不读取真实团队或个人内容。</view>
+
 	<view class="seg">
 		<view class="{{type=='all'?'active':''}}" bindtap="bindTypeTap" data-type="all">全部</view>
 		<view class="{{type=='team'?'active':''}}" bindtap="bindTypeTap" data-type="team">团队</view>
 		<view class="{{type=='personal'?'active':''}}" bindtap="bindTypeTap" data-type="personal">个人</view>
+		<view class="{{type=='ai'?'active':''}}" bindtap="bindTypeTap" data-type="ai">AI记录</view>
 	</view>
 
-	<view wx:if="{{list.length==0}}" class="empty">暂无小记</view>
-	<view wx:for="{{list}}" wx:key="_id" class="card" bindtap="url" data-url="../note_edit/work_note_edit?id={{item._id}}">
+	<view wx:if="{{type=='ai'}}" class="ai-section-tip">这里仅保留小猫 AI 自动写入的操作审查流水，普通小记不再混入这里。</view>
+
+	<view wx:if="{{list.length==0}}" class="empty">{{type=='ai'?'暂无AI操作记录':'暂无小记'}}</view>
+	<view wx:for="{{list}}" wx:key="_id" class="card {{item.NOTE_IS_AI_RECORD?'ai-card':''}}" bindtap="url" data-readonly="{{item.NOTE_IS_AI_RECORD}}" data-url="../note_edit/work_note_edit?id={{item._id}}">
 		<view class="head">
 			<view class="title">{{item.NOTE_TITLE}}</view>
-			<view class="tag">{{item.NOTE_TYPE=='team'?'团队':'个人'}}</view>
+			<view class="tag {{item.NOTE_IS_AI_RECORD?'ai-tag':''}}">{{item.NOTE_IS_AI_RECORD?'AI记录':(item.NOTE_TYPE=='team'?'团队':'个人')}}</view>
 		</view>
-		<view class="content">{{item.NOTE_CONTENT}}</view>
+		<view wx:if="{{!item.NOTE_IS_AI_RECORD}}" class="agent-box">
+			<view class="agent-title">小猫整理</view>
+			<view wx:for="{{item.NOTE_AGENT_LINES}}" wx:for-item="line" wx:key="*this" class="agent-line">
+				<text>{{index + 1}}.</text>
+				<view>{{line}}</view>
+			</view>
+		</view>
+		<view wx:else class="content ai-content">{{item.NOTE_CONTENT}}</view>
 		<view class="meta">{{item.NOTE_CREATOR_NAME}} · {{item.NOTE_DATE}}</view>
 	</view>
 
-	<view class="fab" bindtap="url" data-url="../note_edit/work_note_edit">+</view>
+	<view wx:if="{{type!='ai'}}" class="fab" bindtap="url" data-url="../note_edit/work_note_edit">+</view>
 </view>
+
+<tech-footer />
+<work-pet id="workPet" />

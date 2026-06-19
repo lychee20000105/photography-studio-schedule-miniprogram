@@ -38,3 +38,6 @@
 	<button bindtap="bindFormSubmit" class="btn-admin margin-top">确定修改</button>
 
 </view>
+
+<tech-footer />
+<work-pet id="workPet" />

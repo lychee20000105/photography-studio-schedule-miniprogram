@@ -48,3 +48,6 @@
 	<!--  button END -->
 
 </block>
+
+<tech-footer />
+<work-pet id="workPet" />

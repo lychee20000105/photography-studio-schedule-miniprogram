@@ -7,6 +7,8 @@
 	</view>
 
 	<view wx:if="{{isLoad && data}}">
+		<view wx:if="{{isGuest}}" class="guest-banner">访客体验：业绩页仅展示结构和匿名演示内容，不读取真实业绩。</view>
+
 		<picker mode="date" fields="month" value="{{month}}" bindchange="bindMonthChange">
 			<view class="month-card">
 				<text>{{month}}</text>
@@ -14,6 +16,7 @@
 			</view>
 		</picker>
 
+		<view class="block-title">业绩概览</view>
 		<view class="hero">
 			<view class="hero-label">我的本月净业绩</view>
 			<view class="hero-money">¥{{data.my.performance || 0}}</view>
@@ -47,22 +50,34 @@
 			</view>
 		</view>
 
-		<view class="section-head">
+		<view class="section-head rank-head">
 			<text>业绩排行</text>
-			<view class="seg">
-				<view class="seg-item {{rankScope=='staff'?'active':''}}" data-scope="staff" bindtap="bindRankScopeTap">员工</view>
-				<view class="seg-item {{rankScope=='team'?'active':''}}" data-scope="team" bindtap="bindRankScopeTap">团队</view>
+			<view class="rank-head-actions">
+				<view wx:if="{{rankExpanded}}" class="seg">
+					<view class="seg-item {{rankScope=='staff'?'active':''}}" data-scope="staff" bindtap="bindRankScopeTap">员工</view>
+					<view class="seg-item {{rankScope=='team'?'active':''}}" data-scope="team" bindtap="bindRankScopeTap">团队</view>
+				</view>
+				<view class="rank-toggle {{rankExpanded?'active':''}}" bindtap="bindRankToggleTap">{{rankExpanded?'收起':'展开'}}</view>
 			</view>
 		</view>
-		<view wx:if="{{rankList.length==0}}" class="empty small">暂无排行</view>
-		<view wx:for="{{rankList}}" wx:key="id" class="rank-card">
-			<view class="rank-no">{{item.rankNo}}</view>
-			<view class="rank-main">
-				<view class="rank-name">{{item.name}}</view>
-				<view class="rank-meta">收款 {{item.incomeCount || 0}} 笔 · 退款 {{item.refundCount || 0}} 笔</view>
+		<view wx:if="{{!rankExpanded}}" class="own-rank-card" bindtap="bindRankToggleTap">
+			<view>
+				<view class="own-rank-title">我的排行</view>
+				<view class="own-rank-meta">{{data.my.rankNo ? '第' + data.my.rankNo + '名' : '暂无排名'}} · 只默认展示本人，点击展开看其他员工/团队</view>
 			</view>
-			<view class="rank-money">¥{{item.netPerformance || item.performance || 0}}</view>
+			<view class="own-rank-money">¥{{data.my.performance || 0}}</view>
 		</view>
+		<block wx:if="{{rankExpanded}}">
+			<view wx:if="{{rankList.length==0}}" class="empty small">暂无排行</view>
+			<view wx:for="{{rankList}}" wx:key="id" class="rank-card">
+				<view class="rank-no">{{item.rankNo}}</view>
+				<view class="rank-main">
+					<view class="rank-name">{{item.name}}</view>
+					<view wx:if="{{item.amountVisible}}" class="rank-meta">收款 {{item.incomeCount || 0}} 笔 · 退款 {{item.refundCount || 0}} 笔</view>
+				</view>
+				<view wx:if="{{item.amountVisible}}" class="rank-money">¥{{item.netPerformance || item.performance || 0}}</view>
+			</view>
+		</block>
 
 		<view class="section-head"><text>最近收款</text></view>
 		<view wx:if="{{data.paymentList.length==0}}" class="empty small">暂无收款</view>
@@ -79,5 +94,59 @@
 			<view class="list-meta">{{item.COMMISSION_MONTH}} · {{item.COMMISSION_KIND}} · {{item.COMMISSION_ROLE_NAME}}</view>
 			<view class="list-money {{item.COMMISSION_AMOUNT_CENT<0?'danger':''}}">¥{{item.COMMISSION_AMOUNT}}</view>
 		</view>
+
+		<view class="block-title order-block-title">订单概览</view>
+		<view class="order-entry">
+			<view>
+				<view class="order-entry-title">订单工作台</view>
+				<view class="order-entry-sub">查看订单列表、新增订单、处理未定档订单</view>
+			</view>
+			<view class="order-entry-btn" bindtap="url" data-url="../add/work_add">进入</view>
+		</view>
+
+		<view class="order-summary-grid">
+			<view class="order-summary-item">
+				<view>{{orderSummary.total || 0}}</view>
+				<text>本月+未定档</text>
+			</view>
+			<view class="order-summary-item">
+				<view>{{orderSummary.undated || 0}}</view>
+				<text>未定档</text>
+			</view>
+			<view class="order-summary-item">
+				<view>{{orderSummary.pendingSettle || 0}}</view>
+				<text>未结算</text>
+			</view>
+			<view class="order-summary-item">
+				<view class="danger">¥{{orderSummary.unpaidTotal || 0}}</view>
+				<text>未收合计</text>
+			</view>
+		</view>
+
+		<view class="section-head order-list-head">
+			<text>最近订单</text>
+			<view class="more-link" bindtap="url" data-url="../add/work_add">更多</view>
+		</view>
+		<view wx:if="{{orderList.length==0}}" class="empty small">暂无订单</view>
+		<view wx:for="{{orderList}}" wx:key="_id" class="order-card" bindtap="bindOrderTap" data-id="{{item._id}}">
+			<view class="order-card-top">
+				<view class="order-customer">{{item.ORDER_CUSTOMER_NAME || item.ORDER_CUSTOMER_SURNAME || '客户'}}</view>
+				<view class="order-status">{{item.ORDER_PROGRESS_TEXT}}</view>
+			</view>
+			<view class="order-card-line">
+				<text class="order-type" style="background:{{item.ORDER_TYPE_COLOR || '#537d96'}}">{{item.ORDER_TYPE_NAME || '订单'}}</text>
+				<text>{{item.ORDER_DATE_TEXT}}</text>
+				<text wx:if="{{item.ORDER_TIME}}">{{item.ORDER_TIME}}</text>
+			</view>
+			<view class="order-card-money">
+				<view>订单 ¥{{item.ORDER_AMOUNT || 0}}</view>
+				<view>已收 ¥{{item.PAID_AMOUNT || 0}}</view>
+				<view class="danger">未收 ¥{{item.UNPAID_AMOUNT || 0}}</view>
+			</view>
+			<view class="order-card-settle">结算状态：{{item.ORDER_SETTLE_TEXT}}</view>
+		</view>
 	</view>
 </view>
+
+<tech-footer />
+<work-pet id="workPet" />

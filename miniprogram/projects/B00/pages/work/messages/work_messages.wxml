@@ -1,7 +1,41 @@
 <view class="page">
+	<view class="message-head">
+		<view>
+			<view class="head-title">消息中心</view>
+			<view class="head-sub">{{unreadCount ? '还有 ' + unreadCount + ' 条未读消息' : '全部消息已读'}}</view>
+		</view>
+		<view class="read-all {{unreadCount?'':'disabled'}}" bindtap="bindReadAllTap">一键已读</view>
+	</view>
+
 	<view wx:if="{{list.length==0}}" class="empty">暂无消息</view>
-	<view wx:for="{{list}}" wx:key="_id" class="card {{item.MSG_IS_READ?'read':''}}">
-		<view class="title">{{item.MSG_TITLE}}</view>
-		<view class="content">{{item.MSG_CONTENT}}</view>
+	<view wx:for="{{list}}" wx:key="_id" class="card {{item.MSG_IS_READ?'read':''}}" data-id="{{item._id}}" data-idx="{{index}}" bindtap="bindMessageTap">
+		<view wx:if="{{!item.MSG_IS_READ}}" class="unread-dot"></view>
+		<view class="title-row">
+			<view class="title">{{item.MSG_TITLE}}</view>
+			<view class="read-state">{{item.MSG_IS_READ?'已读':'未读'}}</view>
+		</view>
+		<view wx:if="{{item.MSG_BRIEF}}" class="content">{{item.MSG_BRIEF}}</view>
+		<view wx:if="{{item.MSG_REF_LABEL}}" class="ref-chip">{{item.MSG_REF_LABEL}} · 点开查看</view>
 	</view>
 </view>
+
+<view wx:if="{{detailVisible}}" class="detail-mask" bindtap="bindCloseDetailTap" catchtouchmove="noop">
+	<view class="detail-panel" catchtap="noop">
+		<view class="detail-head">
+			<view>
+				<view class="detail-title">{{detail.MSG_TITLE}}</view>
+				<view class="detail-state">{{detail.MSG_IS_READ?'已读':'未读'}}</view>
+			</view>
+			<view class="detail-close" bindtap="bindCloseDetailTap">×</view>
+		</view>
+		<view class="detail-content">{{detail.MSG_CONTENT || '暂无详细内容'}}</view>
+		<view wx:if="{{detail.MSG_REF_LABEL}}" class="detail-ref">
+			<view class="detail-ref-title">{{detail.MSG_REF_LABEL}}</view>
+			<view class="detail-ref-sub">可打开查看关联业务记录</view>
+			<view class="detail-ref-btn" bindtap="bindOpenRefTap">打开关联内容</view>
+		</view>
+	</view>
+</view>
+
+<tech-footer />
+<work-pet id="workPet" />

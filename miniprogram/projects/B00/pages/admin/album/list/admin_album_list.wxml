@@ -63,3 +63,6 @@
     </cmpt-comm-list>
 
 </block>
+
+<tech-footer />
+<work-pet id="workPet" />

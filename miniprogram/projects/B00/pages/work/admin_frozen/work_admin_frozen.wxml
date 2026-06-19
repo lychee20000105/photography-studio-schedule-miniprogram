@@ -11,3 +11,6 @@
 		<view class="amount">¥{{item.frozenRemainText}}</view>
 	</view>
 </view>
+
+<tech-footer />
+<work-pet id="workPet" />

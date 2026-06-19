@@ -181,7 +181,7 @@ class AdminWorkService extends BaseProjectAdminService {
 				ORDER_AUDIT_TIME: timeUtil.time(),
 			});
 			if (updated !== 1) this.AppError('订单审核状态已变化，请刷新后重试');
-			await this._notifyOrderPeople(order, '订单审核驳回', reason || '请查看订单后重新提交', id);
+			await this._notifyOrderPeople(order, '订单审核驳回', this._buildOrderMessageSummary(order, reason || '请查看订单后重新提交'), id);
 			return;
 		}
 
@@ -230,7 +230,7 @@ class AdminWorkService extends BaseProjectAdminService {
 		});
 		if (updated !== 1) this.AppError('订单审核状态已变化，请刷新后重试');
 		await this._commission.releaseFrozenByOrder(id, admin, { month: auditMonth });
-		await this._notifyOrderPeople(order, '订单审核通过', '该订单已进入待结算', id);
+		await this._notifyOrderPeople(order, '订单审核通过', this._buildOrderMessageSummary(order, '该订单已进入待结算'), id);
 	}
 
 	async auditItem(admin, id, pass, reason = '') {
@@ -268,6 +268,16 @@ class AdminWorkService extends BaseProjectAdminService {
 			sent[p.staffId] = true;
 			await this._work._notifyStaff(p.staffId, title, content, 'order', orderId);
 		}
+	}
+
+	_buildOrderMessageSummary(order = {}, prefix = '') {
+		let parts = [];
+		if (prefix) parts.push(prefix);
+		let head = `${order.ORDER_DATE || ''} ${order.ORDER_TIME || ''} ${order.ORDER_TYPE_NAME || '订单'}`.replace(/\s+/g, ' ').trim();
+		if (head) parts.push(head);
+		if (order.ORDER_CUSTOMER_NAME) parts.push('客户：' + order.ORDER_CUSTOMER_NAME);
+		if (order.ORDER_AMOUNT || order.ORDER_ACTUAL_AMOUNT) parts.push(`金额：订单¥${order.ORDER_AMOUNT || 0}，实收¥${order.ORDER_ACTUAL_AMOUNT || 0}`);
+		return parts.join('\n');
 	}
 
 	async getPayroll(staffId, month) {

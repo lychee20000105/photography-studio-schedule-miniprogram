@@ -5,3 +5,6 @@
 	<import src="../../tpls/menu_tpl.wxml" />
 	<template is="menuTpl" data="{{curMenu:'news_cate1',returnHome:false}}" />
 </block>
+
+<tech-footer />
+<work-pet id="workPet" />

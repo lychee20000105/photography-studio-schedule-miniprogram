@@ -4,3 +4,6 @@
 <view class="main-admin" wx:if="{{isAdmin&&isLoad}}">
 	<include src="../admin_album_form_tpl.wxml" /> 
 </view>
+
+<tech-footer />
+<work-pet id="workPet" />

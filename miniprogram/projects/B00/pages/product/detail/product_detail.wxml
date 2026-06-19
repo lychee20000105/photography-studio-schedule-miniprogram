@@ -49,3 +49,6 @@
 		<button open-type="contact" show-message-card="{{true}}" send-message-title="服务咨询-{{product.PRODUCT_TITLE}}" class="clearbtn svr">立即咨询</button>
 	</view>
 </block>
+
+<tech-footer />
+<work-pet id="workPet" />

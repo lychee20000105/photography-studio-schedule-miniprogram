@@ -1,6 +1,5 @@
 {
-	"usingComponents": { 
-	}, 
-	"disableScroll": true, 
-	"navigationBarTitleText": "拍摄服务"
+	"usingComponents": {},
+	"disableScroll": true,
+	"navigationBarTitleText": "云屿摄影-拍摄服务"
 }

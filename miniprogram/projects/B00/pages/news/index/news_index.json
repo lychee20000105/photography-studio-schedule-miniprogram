@@ -1,6 +1,5 @@
 {
-	"usingComponents": { 
-	}, 
-	"disableScroll": true, 
-	"navigationBarTitleText": "资讯"
+	"usingComponents": {},
+	"disableScroll": true,
+	"navigationBarTitleText": "云屿摄影-资讯"
 }

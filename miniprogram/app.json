@@ -1,14 +1,18 @@
 {
 	"pages": [
 		"projects/B00/pages/work/calendar/work_calendar",
+		"projects/B00/pages/work/day_detail/work_day_detail",
 		"projects/B00/pages/work/performance/work_performance",
 		"projects/B00/pages/work/add/work_add",
+		"projects/B00/pages/work/knowledge/work_knowledge",
 		"projects/B00/pages/work/order_edit/work_order_edit",
 		"projects/B00/pages/work/item_edit/work_item_edit",
 		"projects/B00/pages/work/rest_edit/work_rest_edit",
 		"projects/B00/pages/work/note/work_note",
 		"projects/B00/pages/work/note_edit/work_note_edit",
 		"projects/B00/pages/work/messages/work_messages",
+		"projects/B00/pages/work/version/work_version",
+		"projects/B00/pages/work/feedback/work_feedback",
 		"projects/B00/pages/work/my/work_my",
 		"projects/B00/pages/work/payroll/work_payroll",
 		"projects/B00/pages/work/admin_home/work_admin_home",
@@ -19,6 +23,8 @@
 		"projects/B00/pages/work/admin_frozen/work_admin_frozen",
 		"projects/B00/pages/work/admin_payroll/work_admin_payroll",
 		"projects/B00/pages/work/admin_audit/work_admin_audit",
+		"projects/B00/pages/work/admin_feedback/work_admin_feedback",
+		"projects/B00/pages/work/admin_ai/work_admin_ai",
 		"projects/B00/pages/default/index/default_index",
 		"projects/B00/pages/about/index/about_index",
 		"projects/B00/pages/product/detail/product_detail",
@@ -84,17 +90,18 @@
 		"cmpts/public/form/form_show/content/form_show_content"
 	],
 	"window": {
-		"backgroundColor": "#f1f1f1",
+		"backgroundColor": "#f5efe4",
 		"backgroundTextStyle": "dark",
-		"navigationBarBackgroundColor": "#ffffff",
+		"navigationBarBackgroundColor": "#f5efe4",
 		"navigationBarTitleText": "云屿摄影",
 		"navigationBarTextStyle": "black"
 	},
 	"tabBar": {
 		"custom": false,
-		"backgroundColor": "#fefefe",
-		"color": "#999999",
-		"selectedColor": "#ff6b6b",
+		"backgroundColor": "#f5efe4",
+		"borderStyle": "white",
+		"color": "#7e7568",
+		"selectedColor": "#537d96",
 		"list": [
 			{
 				"pagePath": "projects/B00/pages/work/calendar/work_calendar",
@@ -109,8 +116,8 @@
 				"selectedIconPath": "/projects/B00/images/tabbar/album_cur.png"
 			},
 			{
-				"pagePath": "projects/B00/pages/work/add/work_add",
-				"text": "订单",
+				"pagePath": "projects/B00/pages/work/knowledge/work_knowledge",
+				"text": "知识",
 				"iconPath": "/projects/B00/images/tabbar/product.png",
 				"selectedIconPath": "/projects/B00/images/tabbar/product_cur.png"
 			},
@@ -132,7 +139,9 @@
 	"usingComponents": {
 		"cmpt-comm-list": "/cmpts/public/list/comm_list_cmpt",
 		"cmpt-picker": "/cmpts/public/picker/picker_cmpt",
-		"cmpt-modal": "/cmpts/public/modal/modal_cmpt"
+		"cmpt-modal": "/cmpts/public/modal/modal_cmpt",
+		"tech-footer": "/cmpts/tech_footer/tech_footer",
+		"work-pet": "/cmpts/work_pet/work_pet"
 	},
 	"sitemapLocation": "sitemap.json"
 }

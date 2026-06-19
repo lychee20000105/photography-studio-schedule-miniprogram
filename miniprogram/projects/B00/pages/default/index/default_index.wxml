@@ -73,3 +73,5 @@
 	<template is="menuTpl" data="{{curMenu:'home_index',returnHome:false}}" />
 </block>
 
+<tech-footer />
+<work-pet id="workPet" />

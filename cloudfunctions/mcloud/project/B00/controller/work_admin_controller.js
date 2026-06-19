@@ -13,6 +13,7 @@ const WorkPayrollService = require('../service/work_payroll_service.js');
 const WorkAdminStaffService = require('../service/work_admin_staff_service.js');
 const AdminWorkService = require('../service/admin/admin_work_service.js');
 const WorkService = require('../service/work_service.js');
+const WorkAiService = require('../service/work_ai_service.js');
 const WorkStaffModel = require('../model/work_staff_model.js');
 
 class WorkAdminController extends BaseProjectController {
@@ -68,8 +69,36 @@ class WorkAdminController extends BaseProjectController {
 				{ title: '待释放提成', desc: '查看冻结余额，不手动释放', url: '/projects/B00/pages/work/admin_frozen/work_admin_frozen' },
 				{ title: '工资结算', desc: '预览并确认发放工资', url: '/projects/B00/pages/work/admin_payroll/work_admin_payroll' },
 				{ title: '订单审核', desc: '审核完成订单并触发释放', url: '/projects/B00/pages/work/admin_audit/work_admin_audit' },
+				{ title: '问题反馈', desc: '查看员工提交的问题和建议', url: '/projects/B00/pages/work/admin_feedback/work_admin_feedback' },
+				{ title: 'AI 小助手', desc: '配置猫咪对话的接口、模型和提示词', url: '/projects/B00/pages/work/admin_ai/work_admin_ai' },
 			],
 		};
+	}
+
+	async getAiConfig() {
+		await this._assertMiniAdmin();
+		let service = new WorkAiService();
+		return await service.getAdminConfig();
+	}
+
+	async saveAiConfig() {
+		let input = this.validateData({
+			config: 'must|object|name=AI配置',
+			clearKey: 'bool|name=清空Key',
+		});
+		await this._assertMiniAdmin();
+		let service = new WorkAiService();
+		return await service.saveAdminConfig(input.config, { clearKey: !!input.clearKey });
+	}
+
+	async getAiModels() {
+		let input = this.validateData({
+			apiUrl: 'string|max:400|name=接口地址',
+			apiKey: 'string|max:400|name=API Key',
+		});
+		await this._assertMiniAdmin();
+		let service = new WorkAiService();
+		return await service.listModels(input);
 	}
 
 	async getPerformanceBoard() {
@@ -235,6 +264,12 @@ class WorkAdminController extends BaseProjectController {
 		await this._assertMiniAdmin();
 		let service = new AdminWorkService();
 		return await service.getAuditList();
+	}
+
+	async getFeedbackList() {
+		await this._assertMiniAdmin();
+		let service = new WorkService();
+		return await service.getAdminFeedbackList(this._userId);
 	}
 
 	async auditOrder() {

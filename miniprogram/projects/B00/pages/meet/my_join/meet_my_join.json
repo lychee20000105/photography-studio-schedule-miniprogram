@@ -1,6 +1,5 @@
 {
-	"usingComponents": { 
-	}, 
-	"disableScroll": true, 
-	"navigationBarTitleText": "我的预约"
+	"usingComponents": {},
+	"disableScroll": true,
+	"navigationBarTitleText": "云屿摄影-我的预约"
 }

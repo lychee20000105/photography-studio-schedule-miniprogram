@@ -1,1 +1,4 @@
 <include src="../../../../tpls/project/search_tpl.wxml" />
+
+<tech-footer />
+<work-pet id="workPet" />

@@ -1,7 +1,6 @@
 {
-	"usingComponents": { 
-	},  
-	"enablePullDownRefresh": true, 
+	"usingComponents": {},
+	"enablePullDownRefresh": true,
 	"navigationStyle": "custom",
-	"navigationBarTitleText": "首页"
+	"navigationBarTitleText": "云屿摄影-首页"
 }

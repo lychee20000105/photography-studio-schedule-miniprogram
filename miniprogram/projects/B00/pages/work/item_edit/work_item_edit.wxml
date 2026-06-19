@@ -21,3 +21,6 @@
 	</view>
 	<button class="submit" bindtap="bindSubmitTap">确认保存</button>
 </view>
+
+<tech-footer />
+<work-pet id="workPet" />

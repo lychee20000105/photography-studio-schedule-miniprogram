@@ -4,5 +4,6 @@
 	},
 	"disableScroll": true,
 	"navigationBarBackgroundColor": "#ffffff",
-	"navigationBarTextStyle": "black"
+	"navigationBarTextStyle": "black",
+	"navigationBarTitleText": "云屿摄影"
 }

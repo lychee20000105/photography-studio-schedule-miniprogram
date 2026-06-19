@@ -1,9 +1,7 @@
 {
-	"usingComponents": {
-	 
-	},
+	"usingComponents": {},
 	"navigationBarBackgroundColor": "#2499f2",
-	"navigationBarTextStyle": "white", 
-	"enablePullDownRefresh": true,  
-	"navigationBarTitleText": "小程序码"
+	"navigationBarTextStyle": "white",
+	"enablePullDownRefresh": true,
+	"navigationBarTitleText": "云屿摄影-小程序码"
 }

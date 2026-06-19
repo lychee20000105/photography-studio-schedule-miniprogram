@@ -47,7 +47,7 @@ Page({
 				titleEn: options.title
 			});
 			wx.setNavigationBarTitle({
-				title: '预约名单统计 - ' + title
+				title: '云屿摄影-预约名单统计 - ' + title
 			});
 		}
 

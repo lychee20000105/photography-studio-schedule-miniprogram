@@ -1,0 +1,14 @@
+.tech-footer {
+	width: 100%;
+	margin-top: auto;
+	padding: 28rpx 24rpx calc(28rpx + env(safe-area-inset-bottom));
+	text-align: center;
+	color: #a3a8b0;
+	font-size: 22rpx;
+	line-height: 1.4;
+	box-sizing: border-box;
+}
+
+.tech-footer {
+	color: #8f867b;
+}

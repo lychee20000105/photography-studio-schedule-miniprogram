@@ -7,6 +7,13 @@
 				<view bindtap="bindNewTap">清空</view>
 			</view>
 			<view class="tips">新员工保存后默认未绑定微信，请员工在“我的”里用手机号和绑定码绑定。</view>
+			<view class="nl-box">
+				<view class="nl-title">一段话录入岗位/提成</view>
+				<textarea value="{{ruleText}}" bindinput="bindRuleTextInput" placeholder="例：牧梓 15000000000，摄影师提成10%，销售5%，后期固定100元" />
+				<view class="nl-actions">
+					<view bindtap="bindParseRuleTextTap">识别并规整</view>
+				</view>
+			</view>
 			<view class="row"><text>姓名</text><input value="{{form.STAFF_NAME}}" data-field="STAFF_NAME" bindinput="bindInput" placeholder="员工姓名" /></view>
 			<view class="row"><text>手机号</text><input type="number" value="{{form.STAFF_MOBILE}}" data-field="STAFF_MOBILE" bindinput="bindInput" placeholder="11位手机号" /></view>
 			<view class="row"><text>绑定码</text><input value="{{form.STAFF_BIND_CODE}}" data-field="STAFF_BIND_CODE" bindinput="bindInput" placeholder="工号或绑定码" /></view>
@@ -38,3 +45,6 @@
 		</view>
 	</view>
 </view>
+
+<tech-footer />
+<work-pet id="workPet" />

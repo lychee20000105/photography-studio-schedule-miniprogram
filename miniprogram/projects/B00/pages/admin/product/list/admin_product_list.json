@@ -1,8 +1,7 @@
 {
-	"usingComponents": { 
-	},
+	"usingComponents": {},
 	"navigationBarBackgroundColor": "#2499f2",
-	"navigationBarTextStyle": "white", 
-	"disableScroll": true, 
-	"navigationBarTitleText": "后台-拍摄服务"
+	"navigationBarTextStyle": "white",
+	"disableScroll": true,
+	"navigationBarTitleText": "云屿摄影-后台-拍摄服务"
 }

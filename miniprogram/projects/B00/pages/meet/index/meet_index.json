@@ -1,6 +1,5 @@
 {
-	"usingComponents": { 
-	}, 
-	"disableScroll": true, 
-	"navigationBarTitleText": "预约列表"
+	"usingComponents": {},
+	"disableScroll": true,
+	"navigationBarTitleText": "云屿摄影-预约列表"
 }

@@ -5,3 +5,6 @@
 	<include src="user_form.wxml" />
 	<button bindtap="bindSubmitTap" class="btn-base btn-project">提交</button>
 </view>
+
+<tech-footer />
+<work-pet id="workPet" />

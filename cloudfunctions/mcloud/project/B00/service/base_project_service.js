@@ -236,7 +236,7 @@ class BaseProjectService extends BaseService {
 			{ type: 'text', val: '云屿摄影，专注县城多场景拍摄服务。' },
 			{ type: 'text', val: '我们主要承接生日跟拍、百日宴、婚礼跟拍、订婚宴、寿宴、乔迁跟拍、写真、外景约拍、活动商拍和艺术肖像等拍摄。' },
 			{ type: 'text', val: '小程序用于团队档期查看、客户预约记录和订单进度协同。' },
-			{ type: 'text', val: '技术由云屿科技支撑。' }
+			{ type: 'text', val: '技术由云屿科技支持。' }
 		];
 		await setupUtil.set('SETUP_ABOUT_KEY', aboutContent);
 		await setupUtil.set(SETUP_DONE_KEY, true);

@@ -12,3 +12,6 @@
 		<view bindtap="bindFormSubmit" class="save">保存修改</view>
 	</view>
 </block>
+
+<tech-footer />
+<work-pet id="workPet" />

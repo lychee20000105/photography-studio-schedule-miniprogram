@@ -13,3 +13,6 @@
 	<button bindtap="bindFormSubmit" class="btn-admin margin-top">保存配置</button>
 	<button bindtap="bindTestTap" class="btn-admin plain margin-top-xs">测试发送今天档期</button>
 </view>
+
+<tech-footer />
+<work-pet id="workPet" />

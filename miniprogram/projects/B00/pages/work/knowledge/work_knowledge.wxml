@@ -1,0 +1,37 @@
+<view class="page">
+	<view wx:if="{{isGuest}}" class="guest-banner">访客体验：店内知识不展示真实资料，绑定员工后按权限查看。</view>
+
+	<view class="head">
+		<view>
+			<view class="eyebrow">店内知识</view>
+			<view class="title">知识库与权限</view>
+			<view class="sub">后续上传 SOP、话术、套餐、制度，并由管理员配置可读权限。</view>
+		</view>
+		<view class="admin-btn" bindtap="bindAdminHintTap">权限配置</view>
+	</view>
+
+	<view class="seg">
+		<view class="seg-item {{scope=='all'?'cur':''}}" data-scope="all" bindtap="bindScopeTap">全部</view>
+		<view class="seg-item {{scope=='流程'?'cur':''}}" data-scope="流程" bindtap="bindScopeTap">流程</view>
+		<view class="seg-item {{scope=='成交'?'cur':''}}" data-scope="成交" bindtap="bindScopeTap">成交</view>
+		<view class="seg-item {{scope=='资料'?'cur':''}}" data-scope="资料" bindtap="bindScopeTap">资料</view>
+		<view class="seg-item {{scope=='制度'?'cur':''}}" data-scope="制度" bindtap="bindScopeTap">制度</view>
+	</view>
+
+	<view wx:for="{{showList}}" wx:key="id" class="card" data-id="{{item.id}}" bindtap="bindCardTap">
+		<view class="card-top">
+			<view>
+				<view class="card-title">{{item.title}}</view>
+				<view class="card-summary">{{item.summary}}</view>
+			</view>
+			<view class="type">{{item.type}}</view>
+		</view>
+		<view class="meta">
+			<text>{{item.permission}}</text>
+			<text>{{item.status}}</text>
+		</view>
+	</view>
+</view>
+
+<tech-footer />
+<work-pet id="workPet" />

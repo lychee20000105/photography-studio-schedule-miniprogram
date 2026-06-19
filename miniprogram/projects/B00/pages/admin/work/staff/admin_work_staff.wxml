@@ -31,3 +31,6 @@
 		<view class="meta">{{item.STAFF_MOBILE}} ｜ {{item.ROLE_TEXT}}</view>
 	</view>
 </view>
+
+<tech-footer />
+<work-pet id="workPet" />

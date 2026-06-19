@@ -68,3 +68,5 @@
 	<view bindtap="bindSaveTap" class="save">保存封面设置</view>
 </view>
 
+<tech-footer />
+<work-pet id="workPet" />

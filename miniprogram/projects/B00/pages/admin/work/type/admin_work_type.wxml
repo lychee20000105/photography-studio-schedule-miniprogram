@@ -17,3 +17,6 @@
 		<view class="meta">排序 {{item.TYPE_ORDER}} {{item.TYPE_STATUS==1?'启用':'停用'}}</view>
 	</view>
 </view>
+
+<tech-footer />
+<work-pet id="workPet" />
