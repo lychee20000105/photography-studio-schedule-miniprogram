@@ -52,3 +52,8 @@
 - 2026-06-19T18:30:10 Round 037 completed; output: rounds/round037-output.md
 - 2026-06-19T18:31:10 Round 038 started.
 - 2026-06-19T18:32:38 Publish worker for Round 027 started.
+- 2026-06-19T18:37:14 Publish watcher error: 设置”lastProcessedAt”时发生异常:”在此对象上找不到属性”lastProcessedAt”。请确认该属性存在并且可设置。”
+- 2026-06-19T18:40:00 Round 038 completed; output: rounds/round038-output.md. UX fix: pet stat recovery — added hunger +10 and health +3 (when < 80) on tap. Addresses rigid interaction: pet was permanently stuck in 'sick' mood with no recovery path.
+- 2026-06-19T18:39:12 Round 038 completed; output: rounds/round038-output.md
+- 2026-06-19T18:40:12 Round 039 started.
+- 2026-06-19T18:40:14 Publish worker for Round 027 started.

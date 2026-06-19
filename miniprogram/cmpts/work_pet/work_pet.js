@@ -265,6 +265,7 @@ Component({
 		detached() {
 			if (this._scrollTimer1) { clearTimeout(this._scrollTimer1); this._scrollTimer1 = null; }
 			if (this._scrollTimer2) { clearTimeout(this._scrollTimer2); this._scrollTimer2 = null; }
+			if (this._burstTimer) { clearTimeout(this._burstTimer); this._burstTimer = null; }
 		},
 	},
 	pageLifetimes: {
@@ -296,12 +297,24 @@ Component({
 		bindPetTap() {
 			if (this.data.dragging || Date.now() < (this._tapBlockedUntil || 0)) return;
 			if (this.data.hasMoved) return;
+			let oldLevel = Number(this.data.pet.level || 1);
 			let pet = normalizePet(this.data.pet);
 			pet.exp = clamp(pet.exp + 5, 0, 99999);
+			pet.hunger = clamp(pet.hunger + 10, 0, 100);
+			if (pet.health < 80) pet.health = clamp(pet.health + 3, 0, 100);
 			pet.mood = pet.health < 35 ? 'sick' : 'happy';
 			pet.moodText = pet.mood == 'sick' ? '需要照顾' : '等你说话';
 			this.savePet(pet);
+			let leveled = pet.level > oldLevel;
 			this.openChat();
+			if (leveled) {
+				this.setData({ bubble: '升级啦！Lv.' + pet.level, burst: true });
+				if (this._burstTimer) clearTimeout(this._burstTimer);
+				this._burstTimer = setTimeout(() => {
+					this.setData({ burst: false, bubble: '' });
+					this._burstTimer = null;
+				}, 2500);
+			}
 		},
 		openChat() {
 			let state = this._loadThreads();
