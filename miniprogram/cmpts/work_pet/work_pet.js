@@ -309,21 +309,21 @@ Component({
 			pet.hunger = clamp(pet.hunger + 10, 0, 100);
 			if (pet.health < 80) pet.health = clamp(pet.health + 3, 0, 100);
 			if (pet.health < 35) { pet.mood = 'sick'; pet.moodText = '好一点了'; }
-			else if (pet.hunger < 25) { pet.mood = 'hungry'; pet.moodText = '在呢'; }
+			else if (pet.hunger < 25) { pet.mood = 'hungry'; pet.moodText = '吃饱啦'; }
 			else { pet.mood = 'happy'; pet.moodText = '在呢'; }
 			this.savePet(pet);
 			let leveled = pet.level > oldLevel;
-			this.openChat();
-			if (leveled) {
-				this.setData({ bubble: '升级啦！Lv.' + pet.level, burst: true });
-				if (this._burstTimer) clearTimeout(this._burstTimer);
-				this._burstTimer = setTimeout(() => {
-					this.setData({ burst: false, bubble: '' });
-					this._burstTimer = null;
-				}, 2500);
-			}
+			let bubble = leveled
+				? '升级啦！Lv.' + pet.level
+				: (pet.mood === 'sick' ? '好一点了' : (pet.mood === 'hungry' ? '吃饱啦' : '在呢'));
+			this.openChat(bubble);
+			if (this._burstTimer) clearTimeout(this._burstTimer);
+			this._burstTimer = setTimeout(() => {
+				this.setData({ burst: false, bubble: '' });
+				this._burstTimer = null;
+			}, leveled ? 2500 : 1500);
 		},
-		openChat() {
+		openChat(bubble) {
 			let state = this._loadThreads();
 			this.setData({
 				chatVisible: true,
@@ -334,10 +334,9 @@ Component({
 				activeThread: state.activeThread,
 				chatMessages: state.activeThread.messages,
 				burst: true,
-				bubble: '我在，问我吧',
+				bubble: bubble || '',
 			});
 			this._scrollChatToBottom();
-			setTimeout(() => this.setData({ burst: false, bubble: '' }), 1000);
 		},
 		bindChatClose() {
 			if (this._scrollTimer1) { clearTimeout(this._scrollTimer1); this._scrollTimer1 = null; }
