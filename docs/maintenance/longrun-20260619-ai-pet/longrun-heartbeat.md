@@ -172,3 +172,5 @@
 - 2026-06-19T22:02:57 Publish watcher started with adaptive low-output policy. PollSeconds=600.
 - 2026-06-19T22:04:59 Round 056 completed; output: rounds/round056-output.md
 - 2026-06-19T22:05:59 Round 057 started.
+- 2026-06-19T22:12:57 Publish worker for Round 056 scheduled.
+- 2026-06-19T22:12:58 Publish worker for Round 056 started with stdin prompt and timeout 1800s.
