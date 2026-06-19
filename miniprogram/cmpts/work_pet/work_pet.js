@@ -536,6 +536,7 @@ Component({
 			this._isSending = true;
 			try {
 				let text = String(this.data.chatInput || '').trim();
+				let originalInput = text;
 				let attachments = this.data.chatAttachments || [];
 				if (!text && !attachments.length) {
 					wx.showToast({ title: '请输入消息或上传图片', icon: 'none', duration: 1500 });
@@ -580,6 +581,7 @@ Component({
 				} catch (err) {
 					let msg = (err && err.msg) || (err && err.message) || 'AI 小助手暂时不可用，请稍后再试。';
 					messages = trimMessages(messages.concat([{ role: 'assistant', content: msg }]));
+					this.setData({ chatInput: originalInput });
 				}
 
 				this.setData({ chatMessages: messages, chatLoading: false });
