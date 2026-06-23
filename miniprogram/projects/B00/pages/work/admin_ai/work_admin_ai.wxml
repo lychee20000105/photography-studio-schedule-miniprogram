@@ -8,32 +8,22 @@
 					<view class="title">AI 小助手配置</view>
 					<view class="desc">猫咪对话会通过云函数代理调用，不会把 API Key 放进小程序前端。</view>
 				</view>
-				<switch checked="{{form.enabled}}" color="#ff2d62" bindchange="bindEnabledChange" />
+				<switch checked="{{form.enabled}}" color="#537d96" bindchange="bindEnabledChange" />
 			</view>
 		</view>
 
 		<view class="block">
-			<view class="row">
-				<text>服务名称</text>
-				<input value="{{form.providerName}}" data-field="providerName" bindinput="bindInput" placeholder="例如 Agnes APIHub / DeepSeek" />
+			<view class="section-title">服务商</view>
+			<view class="preset-grid">
+				<button wx:for="{{providerPresets}}" wx:key="name" class="preset {{providerPresetIndex==index?'active':''}}" data-index="{{index}}" bindtap="bindPresetTap">{{item.name}}</button>
+			</view>
+			<view class="form-group">
+				<view class="label">服务名称</view>
+				<input value="{{form.providerName}}" data-field="providerName" bindinput="bindInput" placeholder="例如 Agnes APIHub / DeepSeek / Mimo" />
 			</view>
 			<view class="form-group">
 				<view class="label">接口地址 / Base URL</view>
 				<textarea value="{{form.apiUrl}}" data-field="apiUrl" bindinput="bindInput" maxlength="400" auto-height="{{true}}" placeholder="https://apihub.agnes-ai.com/v1"></textarea>
-			</view>
-			<view class="form-group">
-				<view class="label-line">
-					<view class="label">模型</view>
-					<button class="fetch-btn" loading="{{modelLoading}}" disabled="{{modelLoading}}" bindtap="bindLoadModelsTap">{{modelLoading?'获取中':'获取模型'}}</button>
-				</view>
-				<picker mode="selector" range="{{modelOptions}}" value="{{modelIndex}}" bindchange="bindModelChange" disabled="{{!modelOptions.length}}">
-					<view class="model-picker {{modelOptions.length?'':'disabled'}}">
-						<text>{{modelPickerText}}</text>
-						<text class="arrow">›</text>
-					</view>
-				</picker>
-				<input value="{{form.model}}" data-field="model" bindinput="bindInput" placeholder="也可手动填写模型 ID" />
-				<view class="key-state">预估上下文窗口：{{form.contextLimit || 128000}} tokens（按模型名估算，实际以接口返回为准）</view>
 			</view>
 			<view class="form-group">
 				<view class="label">API Key</view>
@@ -41,9 +31,65 @@
 				<view wx:if="{{hasApiKey}}" class="key-state">当前已保存：{{apiKeyMasked}}</view>
 				<view wx:if="{{hasApiKey}}" class="clear-line">
 					<text>清空已保存 Key</text>
-					<switch checked="{{clearKey}}" color="#ff2d62" bindchange="bindClearKeyChange" />
+					<switch checked="{{clearKey}}" color="#537d96" bindchange="bindClearKeyChange" />
 				</view>
 			</view>
+		</view>
+
+		<view class="block">
+			<view class="section-title">文本模型</view>
+			<view class="form-group">
+				<view class="label-line">
+					<view class="label">模型 ID</view>
+					<button class="fetch-btn" loading="{{modelLoading && modelLoadingTarget=='text'}}" disabled="{{modelLoading}}" data-target="text" bindtap="bindLoadModelsTap">{{modelLoading && modelLoadingTarget=='text'?'获取中':'获取列表'}}</button>
+				</view>
+				<picker wx:if="{{textModelOptions.length}}" mode="selector" range="{{textModelOptions}}" value="{{textModelIndex}}" data-target="text" bindchange="bindModelChange">
+					<view class="model-picker">
+						<text>{{textModelPickerText}}</text>
+						<text class="arrow">›</text>
+					</view>
+				</picker>
+				<input value="{{form.model}}" data-field="model" bindinput="bindInput" placeholder="deepseek-chat / gpt-4o-mini / mimo 等模型 ID" />
+				<view class="key-state">普通文字聊天、查询、录单默认使用这个模型。无需等模型列表，知道模型 ID 就能直接填写。</view>
+				<view class="key-state">预估上下文：{{form.contextLimit || 128000}} tokens（按模型名估算）</view>
+			</view>
+		</view>
+
+		<view class="block">
+			<view class="section-title">图片识别模型</view>
+			<view class="desc compact">聊天带图片时优先用这里的视觉模型；视觉地址和视觉 Key 留空时，会沿用上面的接口地址和 Key。</view>
+			<view class="form-group">
+				<view class="label">视觉接口地址（可选）</view>
+				<textarea value="{{form.visionApiUrl}}" data-field="visionApiUrl" bindinput="bindInput" maxlength="400" auto-height="{{true}}" placeholder="留空沿用主 Base URL"></textarea>
+			</view>
+			<view class="form-group">
+				<view class="label-line">
+					<view class="label">视觉模型 ID</view>
+					<button class="fetch-btn" loading="{{modelLoading && modelLoadingTarget=='vision'}}" disabled="{{modelLoading}}" data-target="vision" bindtap="bindLoadModelsTap">{{modelLoading && modelLoadingTarget=='vision'?'获取中':'获取列表'}}</button>
+				</view>
+				<picker wx:if="{{visionModelOptions.length}}" mode="selector" range="{{visionModelOptions}}" value="{{visionModelIndex}}" data-target="vision" bindchange="bindModelChange">
+					<view class="model-picker">
+						<text>{{visionModelPickerText}}</text>
+						<text class="arrow">›</text>
+					</view>
+				</picker>
+				<input value="{{form.visionModel}}" data-field="visionModel" bindinput="bindInput" placeholder="例如 gpt-4o-mini / qwen-vl-plus；留空沿用文本模型" />
+				<view class="key-state">DeepSeek 等纯文本模型不一定能读图；要读图就填一个支持图片的兼容模型。</view>
+				<view class="key-state">预估上下文：{{form.visionContextLimit || form.contextLimit || 128000}} tokens</view>
+			</view>
+			<view class="form-group">
+				<view class="label">视觉 API Key（可选）</view>
+				<input password="{{true}}" value="{{visionKeyInput}}" bindinput="bindVisionKeyInput" placeholder="{{visionKeyPlaceholder}}" />
+				<view wx:if="{{hasVisionApiKey}}" class="key-state">当前已保存：{{visionApiKeyMasked}}</view>
+				<view wx:if="{{hasVisionApiKey}}" class="clear-line">
+					<text>清空视觉 Key</text>
+					<switch checked="{{clearVisionKey}}" color="#537d96" bindchange="bindClearVisionKeyChange" />
+				</view>
+			</view>
+		</view>
+
+		<view class="block">
+			<view class="section-title">小猫行为</view>
 			<view class="form-group">
 				<view class="label">小猫性格</view>
 				<picker mode="selector" range="{{form.personalities}}" range-key="name" value="{{personalityIndex}}" bindchange="bindPersonalityChange">
@@ -54,16 +100,15 @@
 				</picker>
 				<view class="key-state">值班适合日常录单，温柔适合新员工和话术，审查适合财务/审核边界，成交适合客户跟进。</view>
 			</view>
-		</view>
-
-		<view class="block">
-			<view class="row small">
-				<text>温度</text>
-				<input type="digit" value="{{form.temperature}}" data-field="temperature" bindinput="bindInput" placeholder="0-2" />
-			</view>
-			<view class="row small">
-				<text>最大回复</text>
-				<input type="number" value="{{form.maxTokens}}" data-field="maxTokens" bindinput="bindInput" placeholder="600" />
+			<view class="two-cols">
+				<view class="mini-field">
+					<view class="label">温度</view>
+					<input type="digit" value="{{form.temperature}}" data-field="temperature" bindinput="bindInput" placeholder="0-2" />
+				</view>
+				<view class="mini-field">
+					<view class="label">最大回复</view>
+					<input type="number" value="{{form.maxTokens}}" data-field="maxTokens" bindinput="bindInput" placeholder="600" />
+				</view>
 			</view>
 			<view class="form-group">
 				<view class="label">系统提示词</view>

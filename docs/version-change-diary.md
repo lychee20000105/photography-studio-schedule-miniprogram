@@ -1,6 +1,239 @@
 ﻿# 版本修改日记
 
 
+## v1.86 - 2026-06-24 03:20 CST
+
+### 改动级别
+
+功能升级，v1.76 -> v1.86。
+
+### 本次目标
+
+参考桌面方案《云屿小猫Agent-HanaAgent迁移完整方案.md》，把小猫 Agent 从“一个大提示词 + 一组硬编码动作”推进到更容易维护的底座：技能注册、工具白名单、轻量记忆、审计流水，以及可自由切换 DeepSeek/Mimo/自定义 API 的配置体验。
+
+### 和 AI 讨论后的需求结论
+
+- HanaAgent 的桌面文件、终端、浏览器能力不能直接搬到小程序；应迁移的是 Agent 分层、工具注册、记忆、审计和安全边界。
+- 小程序端优先落地“受控业务 Agent”：动作可以执行，但必须由后台权限和数据校验兜底。
+- 长期记忆和知识库要分阶段做；本次先做轻量会话记忆，不自动写长期库，避免生产数据被错误沉淀。
+- 手机端 AI 配置页要能真正换 DeepSeek、Mimo 或任意兼容接口；自定义预设不能继续保留 Agnes 的旧 URL 和模型。
+
+### 主要修改
+
+- 新增 `work_ai_agent_registry.js`，按技能声明触发词、提示词和允许动作，覆盖档期查询、订单录入、图片录单、改期纠错、财务、工资审核、小记事项、休息请假、客户跟进和知识问答。
+- `work_ai_service.js` 接入技能注册表：本轮对话先选择技能，再生成工具提示词和动作白名单；越界动作不执行，成功幻觉会被改写成未执行提示。
+- 新增 `work_ai_agent_memory.js`，把当前员工、页面上下文、订单上下文和本轮客户跟进线索压缩到系统提示词。
+- 新增 `work_agent_audit_model.js`，AI 写入动作在团队小记之外额外尝试写 Agent 审计流水，失败不阻塞原业务。
+- `work_admin_ai.js` 将 `Mimo` 和 `自定义` 拆成独立预设；选择自定义类预设会清空旧接口和模型，便于直接填新的 Base URL。
+- `work_pet.js` 将小猫 Agent 内置版本更新为 `0.3.0 HanaAgent 架构底座`。
+- 更新 `miniprogram/version.js`、`miniprogram/setting/setting.js`、`CHANGELOG.md`、`README.md` 和本文档到 v1.86。
+
+### 涉及文件
+
+- `cloudfunctions/mcloud/project/B00/service/work_ai_service.js`
+- `cloudfunctions/mcloud/project/B00/service/work_ai_agent_registry.js`
+- `cloudfunctions/mcloud/project/B00/service/work_ai_agent_memory.js`
+- `cloudfunctions/mcloud/project/B00/model/work_agent_audit_model.js`
+- `miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.js`
+- `miniprogram/cmpts/work_pet/work_pet.js`
+- `miniprogram/version.js`
+- `miniprogram/setting/setting.js`
+- `CHANGELOG.md`
+- `README.md`
+- `docs/version-change-diary.md`
+
+### 验证结果
+
+- `node --check cloudfunctions/mcloud/project/B00/service/work_ai_service.js` 通过。
+- `node --check cloudfunctions/mcloud/project/B00/service/work_ai_agent_registry.js` 通过。
+- `node --check cloudfunctions/mcloud/project/B00/service/work_ai_agent_memory.js` 通过。
+- `node --check cloudfunctions/mcloud/project/B00/model/work_agent_audit_model.js` 通过。
+- `node --check cloudfunctions/mcloud/work_ai_service_live_patch.js` 通过。
+- `node --check cloudfunctions/mcloud/index.js` 通过。
+- `node --check miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.js` 通过。
+- `node --check miniprogram/cmpts/work_pet/work_pet.js` 通过。
+- `node --check miniprogram/version.js` 通过。
+- `node --check miniprogram/setting/setting.js` 通过。
+- `miniprogram/app.json` 与 `project.config.json` JSON 解析通过。
+- 技能白名单样例通过：档期查询只开放 `query_schedule`，收款查询只开放 `query_payments`，改期只开放 `update_order/cancel_order/query_schedule`，工资写入开放工资/审核相关动作。
+- `git diff --check` 通过，仅有 Windows 换行提示。
+
+### 部署状态
+
+- 小程序开发版已通过微信开发者工具 CLI 上传，版本号 `1.86`，包体 `1.5 MB` / `1,533,406 Byte`。
+- `mcloud` 云函数入口 `index.js` 已通过增量部署上传。
+- `work_admin_controller_live_patch.js` 已通过增量部署上传。
+- `work_ai_service_live_patch.js` 已改为内联依赖版本，并通过增量部署上传；它会在云端运行时注入 `work_ai_agent_registry.js`、`work_ai_agent_memory.js`、`work_agent_audit_model.js` 和新版 `work_ai_service.js`。
+- 完整 `mcloud` 部署仍遇到微信开发者工具已知 `EISDIR` 问题；本次没有继续强行全量部署，避免影响现有云函数包。
+
+### 未完成风险
+
+- 本次只实现轻量会话记忆，尚未启用 `agent_memories` 长期记忆库和后台管理页。
+- Agent 审计模型已加入代码，但云数据库如果尚未创建集合，写入会失败并被兜底忽略；后续需要补管理端审计列表和集合初始化。
+
+## v1.76 - 2026-06-24 02:31 CST
+
+### 改动级别
+
+小改，v1.75 -> v1.76。
+
+### 本次目标
+
+修复手机端 AI 小助手配置页“不够自由”和“不规整”的问题：小李需要能直接换 DeepSeek、Mimo 或任意兼容 API，也需要文字模型和图片识别模型分开配置，不能再被“先获取模型列表”的单一流程卡住。
+
+### 和 AI 讨论后的需求结论
+
+- 配置页必须允许手动填写 Base URL 和模型 ID；获取模型列表只能是辅助，不应该成为修改模型的前置条件。
+- DeepSeek、Mimo/自定义这类模型不应被固定在 Agnes APIHub 的默认值里；预设只做快捷入口，管理员仍可自由覆盖。
+- 图片识别和普通文字对话可以使用不同模型；有图片时优先用视觉模型，没图片时走文本模型。
+- 手机端页面要单列分组，避免标签、输入框、按钮和说明文字挤在同一行造成“点修改没反应”的错觉。
+
+### 主要修改
+
+- `work_admin_ai.js` 新增服务商预设、文本模型列表、视觉模型列表、视觉接口地址、视觉 API Key 和手动模型 ID 流程。
+- `work_admin_ai.wxml` 将配置页拆成“服务商 / 文本模型 / 图片识别模型 / 小猫行为”四块，保留手动输入作为主路径。
+- `work_admin_ai.wxss` 增加手机端优先的单列布局、预设按钮、固定宽度获取按钮和输入框溢出约束。
+- `work_admin_controller.js` 支持 `clearVisionKey` 和 `target=vision` 的模型列表请求。
+- `work_ai_service.js` 保存视觉配置，并在聊天带图片时优先选择视觉接口、视觉 Key 和视觉模型。
+- 更新 `miniprogram/version.js`、`miniprogram/setting/setting.js`、`CHANGELOG.md`、`README.md` 和本文档到 v1.76。
+
+### 涉及文件
+
+- `miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.js`
+- `miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.wxml`
+- `miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.wxss`
+- `cloudfunctions/mcloud/project/B00/controller/work_admin_controller.js`
+- `cloudfunctions/mcloud/project/B00/service/work_ai_service.js`
+- `cloudfunctions/mcloud/work_ai_service_live_patch.js`
+- `miniprogram/version.js`
+- `miniprogram/setting/setting.js`
+- `CHANGELOG.md`
+- `README.md`
+- `docs/version-change-diary.md`
+
+### 验证结果
+
+- `node --check miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.js` 通过。
+- `node --check cloudfunctions/mcloud/index.js` 通过。
+- `node --check cloudfunctions/mcloud/project/B00/controller/work_admin_controller.js` 通过。
+- `node --check cloudfunctions/mcloud/project/B00/service/work_ai_service.js` 通过。
+- `node --check cloudfunctions/mcloud/work_ai_service_live_patch.js` 通过。
+- `node --check cloudfunctions/mcloud/work_admin_controller_live_patch.js` 通过。
+- `node --check miniprogram/version.js` 通过。
+- `node --check miniprogram/setting/setting.js` 通过。
+- `miniprogram/app.json` 与 `project.config.json` JSON 解析通过。
+- `work_ai_service_live_patch.js` 和 `work_admin_controller_live_patch.js` 解压后均与对应源码一致。
+- `git diff --check` 通过，仅有 Windows 换行提示。
+
+### 部署状态
+
+- `mcloud` 已增量部署 `work_ai_service_live_patch.js`、`work_admin_controller_live_patch.js` 和 `index.js`。
+- 完整 `mcloud` 部署仍遇到微信开发者工具已知 `EISDIR` 问题，本次通过 live patch 让云端加载最新服务与控制器逻辑。
+- 小程序开发版已通过微信开发者工具 CLI 上传，版本号 `1.76`，包体 `1.5 MB` / `1,532,105 Byte`。
+
+## v1.75 - 2026-06-24 02:10 CST
+
+### 改动级别
+
+小改，v1.74 -> v1.75。
+
+### 本次目标
+
+修复小猫助手在截图录单、改档期确认和 AI 超时场景下的误判：页面顶部日期不能被卡片备注覆盖；用户补充“第4张漏了”“1”“无补充”时，应优先进入本地可确定的业务流程，而不是反复调用长耗时 AI。
+
+### 和 AI 讨论后的需求结论
+
+- 每日详情页顶部 `2026.09.11` 是订单档期日期；卡片里的 `9.16摄影` 只能当备注。两者冲突时，应先向用户追问确认，而不是直接覆盖订单日期。
+- 多张相似截图不能因为版式相近就合并判断；一张图可能对应一条订单，也可能漏识别，用户指出“第几张漏了”时要只追补那张。
+- 小猫回复“已改”必须以真实落库或可执行确认流程为前提；不能模型先承诺成功，后续云函数才超时失败。
+- 对“无补充”“只有一个”“1”等短回复，若能从上下文确定意图，应走本地流程快速收口，减少外部模型和 20 秒云函数超时影响。
+
+### 主要修改
+
+- `work_ai_service.js` 加强截图日期规则：页面顶部日期优先，备注日期冲突先追问；多张相似图按图片独立处理。
+- `work_ai_service.js` 新增漏图追补解析，识别“第4张漏了”等说法，无法拿到历史图片时明确提示重新上传指定图片。
+- `work_pet.js` 前端补齐漏图追补：从历史消息里取指定图片的 `fileID`，只重送该图给云函数。
+- `work_pet.js` 前端改期确认补齐关键词和数字选择，支持“爱公馆9.16那个改为9.11”后回复“1”继续保存。
+- `work_pet.js` 对“无补充”等确认回复做本地响应，避免再次触发 AI 调用超时。
+- `index.js` 预加载 `work_ai_service_live_patch.js`，用于在完整云函数部署受本地目录打包问题影响时，先让云端使用最新小猫逻辑。
+- 更新 `miniprogram/version.js`、`miniprogram/setting/setting.js`、`CHANGELOG.md`、`README.md` 和本文档到 v1.75。
+
+### 涉及文件
+
+- `cloudfunctions/mcloud/index.js`
+- `cloudfunctions/mcloud/work_ai_service_live_patch.js`
+- `cloudfunctions/mcloud/project/B00/service/work_ai_service.js`
+- `miniprogram/cmpts/work_pet/work_pet.js`
+- `miniprogram/version.js`
+- `miniprogram/setting/setting.js`
+- `CHANGELOG.md`
+- `README.md`
+- `docs/version-change-diary.md`
+
+### 验证结果
+
+- `node --check cloudfunctions/mcloud/project/B00/service/work_ai_service.js` 通过。
+- `node --check cloudfunctions/mcloud/work_ai_service_live_patch.js` 通过。
+- `node --check miniprogram/cmpts/work_pet/work_pet.js` 通过。
+- `node --check miniprogram/version.js` 通过。
+- `node --check miniprogram/setting/setting.js` 通过。
+- `git diff --check` 通过；仅保留换行符提示。
+- 已下载云端 `mcloud` 函数并核对 `work_ai_service_live_patch.js` 哈希一致。
+
+### 部署状态
+
+- `mcloud` 云函数 live patch 已通过微信开发者工具 CLI 增量部署。
+- 小程序开发版已通过微信开发者工具 CLI 上传，版本号 `1.75`，包体 `1.5 MB` / `1,521,594 Byte`。
+
+## v1.74 - 2026-06-21 18:25 CST
+
+### 改动级别
+
+小改，v1.73 -> v1.74。
+
+### 本次目标
+
+修复小猫助手在“把20号档期改到21号 / 只有一个”场景下仍追问或遇到 AI 服务不可用的问题，并把小猫权限改为基于当前登录账号的真实业务权限。
+
+### 和 AI 讨论后的需求结论
+
+- 小猫不应在提示词层面自我限制“高风险操作都不能做”，而应按当前登录账号权限生成动作，由后端服务做最终权限和数据校验。
+- 收款、提成、工资、审核等敏感动作可以由管理员账号触发，但必须保留明确对象、金额、月份、原因和审查流水。
+- 对截图和聊天记录要强化误导约束：区分套餐/应收与实收/到账，红包或转账必须确认方向和到账状态。
+- “只有一个”属于上一轮改期确认，应能回看历史消息并自动处理；若外部 AI 服务不可用，前端也应能兜底处理唯一订单改期。
+
+### 主要修改
+
+- `work_ai_service.js` 扩展小猫工具动作，新增收款查询/录入/作废、提成查询、工资查询/发放、订单审核，并按普通员工/管理员分别走权限边界。
+- `work_ai_service.js` 增加截图、红包、转账、定金、套餐金额等误导约束，避免把套餐价误判成实收。
+- `work_pet.js` 新增前端唯一订单改期兜底：先查目标日期当天订单，只有一个则拉取订单详情、改写日期并保存。
+- `work_pet.js` 改期后自动刷新日历，并同步写入团队小记审查流水。
+- 更新 `miniprogram/version.js`、`miniprogram/setting/setting.js`、`CHANGELOG.md`、`README.md` 和本文档到 v1.74。
+
+### 涉及文件
+
+- `cloudfunctions/mcloud/project/B00/service/work_ai_service.js`
+- `miniprogram/cmpts/work_pet/work_pet.js`
+- `miniprogram/version.js`
+- `miniprogram/setting/setting.js`
+- `CHANGELOG.md`
+- `README.md`
+- `docs/version-change-diary.md`
+
+### 验证结果
+
+- `node --check cloudfunctions/mcloud/project/B00/service/work_ai_service.js` 通过。
+- `node --check miniprogram/cmpts/work_pet/work_pet.js` 通过。
+- `node --check miniprogram/version.js` 通过。
+- `node --check miniprogram/setting/setting.js` 通过。
+- `git diff --check` 通过。
+
+### 部署状态
+
+- 仅本地代码已修改。
+- 需要在微信开发者工具重新编译前端。
+- 需要重新部署 `cloudfunctions/mcloud` 云函数后，云端 AI 权限与深度分析能力才完整生效。
+
 ## v1.72 - 2026-06-20 小猫助手录单解析与多会话安全修复
 
 ### 修改原因
@@ -1540,5 +1773,3 @@
 - 用户曾要求配置 AI API 默认接口。代码已支持默认 APIHub Base URL，但密钥不写入代码、文档或本地规则。
 - 用户要求小程序支持分享能力，已在前序工作中增加默认分享处理。
 - 用户要求宠物猫贴近底部导航、优化外观和拖拽交互，已在前序工作中迭代相关组件。
-
-

@@ -11,13 +11,13 @@ const PET_BOX = { width: 84, height: 92 };
 const DEFAULT_CONTEXT_LIMIT = 128000;
 const LOCAL_IMAGE_DIR = 'work_pet_images';
 const AGENT_VERSION = {
-	version: '0.2.0',
-	date: '2026-06-11',
-	name: '安全访客与清晰录单',
+	version: '0.3.0',
+	date: '2026-06-24',
+	name: 'HanaAgent 架构底座',
 	items: [
-		'访客模式不读取真实业务数据，访客新增只保存在本机临时缓存。',
-		'小猫助手支持多对话、本地图片预览和截图录单提示。',
-		'Agent设置入口展示当前模型、服务商、上下文估算和更新日志。',
+		'小猫后端新增技能注册表，本轮对话会按场景开放档期、录单、财务、审核等受控动作。',
+		'AI 配置页支持文本模型和视觉模型分开配置，可用 DeepSeek/Mimo 等文本模型搭配独立读图模型。',
+		'写入动作除团队小记外增加 Agent 审计流水兜底，动作越界或信息不足时不会展示成已执行。',
 	],
 };
 
@@ -132,7 +132,7 @@ function normalizePos(pos) {
 function defaultMessages() {
 	return [{
 		role: 'assistant',
-		content: '我在值班。可以帮你查档期、看小记、识别截图录订单、记录事项/休息，也能整理客户跟进话术。高风险的收款、提成、工资和审核我会提醒你走管理中心。',
+		content: '我在值班。可以帮你查档期、看小记、识别截图录订单、记录事项/休息，也能整理客户跟进话术。收款、提成、工资和审核会按当前登录账号权限处理，系统后台会做最终校验。',
 	}];
 }
 
@@ -177,6 +177,177 @@ function normalizeMessageImages(images) {
 			fileID: String(item.fileID || '').slice(0, 500),
 			name: String(item.name || '图片').slice(0, 80),
 		}));
+}
+
+function chineseImageIndexToNumber(text) {
+	text = String(text || '').replace(/\s+/g, '');
+	if (!text) return 0;
+	if (/^\d+$/.test(text)) return Number(text);
+	const map = { '\u4e00': 1, '\u4e8c': 2, '\u4e24': 2, '\u4e09': 3, '\u56db': 4, '\u4e94': 5, '\u516d': 6, '\u4e03': 7, '\u516b': 8, '\u4e5d': 9, '\u5341': 10 };
+	if (text == '\u5341') return 10;
+	if (text.length == 1) return map[text] || 0;
+	if (text.startsWith('\u5341')) return 10 + (map[text.slice(1)] || 0);
+	if (text.endsWith('\u5341')) return (map[text[0]] || 0) * 10;
+	let m = text.match(/^([\u4e00\u4e8c\u4e24\u4e09\u56db\u4e94\u516d\u4e03\u516b\u4e5d])\u5341([\u4e00\u4e8c\u4e09\u56db\u4e94\u516d\u4e03\u516b\u4e5d])$/);
+	if (m) return (map[m[1]] || 0) * 10 + (map[m[2]] || 0);
+	return 0;
+}
+
+function parseMissedImageIndex(text) {
+	text = String(text || '').replace(/\s+/g, '');
+	if (!/(\u6f0f|\u9057\u6f0f|\u8865|\u8865\u5f55|\u6ca1\u8bc6\u522b|\u5c11\u4e86|\u8fd8\u6709|\u91cd\u65b0\u8bc6\u522b|\u7ee7\u7eed\u8bc6\u522b)/.test(text)) return 0;
+	let match = text.match(/\u7b2c([\u4e00\u4e8c\u4e24\u4e09\u56db\u4e94\u516d\u4e03\u516b\u4e5d\u5341\d]+)\u5f20/);
+	if (!match) return 0;
+	let index = chineseImageIndexToNumber(match[1]);
+	return index > 0 && index <= 20 ? index : 0;
+}
+
+function findMissedImageFollowup(text, history = []) {
+	let index = parseMissedImageIndex(text);
+	if (!index) return null;
+	let list = Array.isArray(history) ? history.slice().reverse() : [];
+	for (let msg of list) {
+		let images = normalizeMessageImages(msg && msg.images || []);
+		if (!msg || msg.role != 'user' || images.length < index) continue;
+		let image = images[index - 1];
+		if (!image || !image.fileID) {
+			return {
+				index,
+				reply: '\u6211\u77e5\u9053\u4f60\u8bf4\u7b2c ' + index + ' \u5f20\u6f0f\u4e86\uff0c\u4f46\u8fd9\u6761\u5386\u53f2\u56fe\u7247\u6ca1\u6709\u53ef\u4f9b\u4e91\u7aef\u8bc6\u522b\u7684\u6587\u4ef6ID\u3002\u8bf7\u91cd\u65b0\u4e0a\u4f20\u7b2c ' + index + ' \u5f20\u56fe\uff0c\u6211\u4f1a\u53ea\u8bc6\u522b\u8fd9\u4e00\u5f20\u3002',
+			};
+		}
+		return {
+			index,
+			message: '\u8bf7\u53ea\u8bc6\u522b\u4e0a\u4e00\u8f6e\u4e0a\u4f20\u622a\u56fe\u4e2d\u7684\u7b2c ' + index + ' \u5f20\u56fe\u7247\uff1b\u8fd9\u5f20\u662f\u4e4b\u524d\u6f0f\u6389\u7684\uff0c\u53ea\u8865\u5f55\u8fd9\u4e00\u5f20\u91cc\u80fd\u786e\u8ba4\u7684\u6863\u671f/\u8ba2\u5355/\u6536\u6b3e\u4fe1\u606f\uff0c\u4e0d\u8981\u91cd\u590d\u5904\u7406\u5176\u4ed6\u56fe\u7247\u3002',
+			attachment: {
+				src: image.src || '',
+				fileID: image.fileID,
+				name: image.name || '\u7b2c' + index + '\u5f20\u56fe\u7247',
+			},
+		};
+	}
+	return {
+		index,
+		reply: '\u6211\u6ca1\u627e\u5230\u4e0a\u4e00\u8f6e\u7684\u7b2c ' + index + ' \u5f20\u56fe\u7247\u3002\u8bf7\u91cd\u65b0\u4e0a\u4f20\u8fd9\u5f20\u56fe\uff0c\u6211\u4f1a\u53ea\u8bc6\u522b\u8fd9\u4e00\u5f20\u3002',
+	};
+}
+
+function pad2(num) {
+	return String(num).padStart(2, '0');
+}
+
+function todayYmd() {
+	let now = new Date();
+	return `${now.getFullYear()}-${pad2(now.getMonth() + 1)}-${pad2(now.getDate())}`;
+}
+
+function normalizeQuickDate(text, baseDate = '') {
+	text = String(text || '').replace(/\s+/g, '').trim();
+	if (!text) return '';
+	let full = text.match(/(\d{4})[-/.年](\d{1,2})[-/.月](\d{1,2})(?:日|号)?/);
+	if (full) return `${full[1]}-${pad2(full[2])}-${pad2(full[3])}`;
+
+	let today = todayYmd();
+	let base = /^(\d{4})-(\d{2})-(\d{2})$/.test(baseDate) ? baseDate : today;
+	let baseParts = base.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+	let year = baseParts ? baseParts[1] : today.slice(0, 4);
+	let month = baseParts ? baseParts[2] : today.slice(5, 7);
+
+	let md = text.match(/(\d{1,2})[./月](\d{1,2})(?:日|号)?/);
+	if (md) return `${year}-${pad2(md[1])}-${pad2(md[2])}`;
+
+	let day = text.match(/(^|[^\d])(\d{1,2})(?:日|号)(?![张条位个名组批次套件])/);
+	if (day) return `${year}-${month}-${pad2(day[2])}`;
+	return '';
+}
+
+function extractQuickOrderKeyword(text) {
+	text = String(text || '').slice(0, 120);
+	if (!text) return '';
+	text = text.replace(/(\d{4}\s*[年./-]\s*\d{1,2}\s*[月./-]\s*\d{1,2}\s*(?:日|号)?|\d{1,2}\s*[月./-]\s*\d{1,2}\s*(?:日|号)?|\d{1,2}\s*(?:日|号))/g, ' ');
+	text = text.replace(/(把|将|从|的|这个|那个|这条|那条|唯一|只有|一个|1个|第\d+条|订单|档期|拍摄|日期|客户|改|修改|更改|更正|调整|调到|调|换|移|挪|到|为|成|至|应该是|应为|正确是|实际是|是)/g, ' ');
+	text = text.replace(/[：:，,。.、；;（）()[\]【】"'“”‘’\s]+/g, ' ').trim();
+	return text.length > 40 ? text.slice(0, 40).trim() : text;
+}
+
+function quickOrderMatchesKeyword(order = {}, keyword = '') {
+	keyword = String(keyword || '').replace(/\s+/g, '').toLowerCase();
+	if (!keyword) return true;
+	let fields = [
+		order.ORDER_CUSTOMER_NAME,
+		order.ORDER_CUSTOMER_SURNAME,
+		order.ORDER_TYPE_NAME,
+		order.ORDER_PLACE,
+		order.ORDER_CONTENT,
+	];
+	return fields.some(value => {
+		let text = String(value || '').replace(/\s+/g, '').toLowerCase();
+		return text && (text.includes(keyword) || keyword.includes(text));
+	});
+}
+
+function parseQuickDateUpdateText(text, pageContext = {}) {
+	text = String(text || '').trim();
+	if (!text) return null;
+	if (!/(改|修改|更改|更正|调整|调|换|移|挪)/.test(text)) return null;
+	if (!/(档期|订单|拍摄|日期|号|日|月|\d[./]\d)/.test(text)) return null;
+
+	let patterns = [
+		/(?:把|将)?([\s\S]{0,60}?)(?:的)?(?:档期|订单|拍摄|日期)?\s*(?:改|修改|更改|更正|调整|调|换|移|挪)(?:到|为|成|至)\s*([\s\S]{1,60})/,
+		/(?:从)\s*([\s\S]{1,40}?)(?:改|修改|更改|更正|调整|调|换|移|挪)?(?:到|为|成|至)\s*([\s\S]{1,60})/,
+	];
+	for (let pattern of patterns) {
+		let match = text.match(pattern);
+		if (!match) continue;
+		let sourceDate = normalizeQuickDate(match[1]) || pageContext.day || '';
+		let targetDate = normalizeQuickDate(match[2], sourceDate);
+		if (sourceDate && targetDate && sourceDate != targetDate) {
+			return { date: sourceDate, newDate: targetDate, keyword: extractQuickOrderKeyword(match[1]) };
+		}
+	}
+	return null;
+}
+
+function parseQuickDateUpdateIntent(text, history = [], pageContext = {}) {
+	let direct = parseQuickDateUpdateText(text, pageContext);
+	if (direct) return direct;
+	let pending = parsePendingQuickDateSelection(text, history, pageContext);
+	if (pending) return pending;
+	if (!/(只有|就一|唯一|一个|1个)/.test(String(text || ''))) return null;
+	let list = Array.isArray(history) ? history.slice().reverse() : [];
+	for (let item of list) {
+		if (!item || item.role != 'user') continue;
+		let intent = parseQuickDateUpdateText(item.content || '', pageContext);
+		if (intent) return intent;
+	}
+	return null;
+}
+
+function parsePendingQuickDateSelection(text, history = [], pageContext = {}) {
+	let match = String(text || '').replace(/\s+/g, '').match(/^(?:第)?([1-9])(?:条|个|项|号)?$/);
+	if (!match) return null;
+	let pickIndex = Number(match[1]);
+	let list = Array.isArray(history) ? history.slice().reverse() : [];
+	let sawPendingQuestion = false;
+	for (let item of list) {
+		let content = String(item && item.content || '');
+		if (!content) continue;
+		if (item.role == 'assistant' && /找到\s*\d+\s*个.*订单档期/.test(content) && /(第几条|哪一条|哪一个客户|第几项)/.test(content)) {
+			sawPendingQuestion = true;
+			continue;
+		}
+		if (!sawPendingQuestion || item.role != 'user') continue;
+		let intent = parseQuickDateUpdateText(content, pageContext);
+		if (intent) return Object.assign({}, intent, { pickIndex });
+	}
+	return null;
+}
+
+function shouldQuickAckNoSupplement(text, history = []) {
+	if (!/^(无补充|不用补充|不补充|没有补充|没了|不用|否)$/.test(String(text || '').replace(/\s+/g, ''))) return false;
+	let list = Array.isArray(history) ? history.slice().reverse() : [];
+	let lastAssistant = list.find(item => item && item.role == 'assistant' && item.content);
+	return !!(lastAssistant && /(补充|备注|确认|还需要)/.test(String(lastAssistant.content || '')));
 }
 
 function buildThreadTitle(messages) {
@@ -610,16 +781,28 @@ Component({
 						});
 					} else {
 						let history = trimMessages(messages.slice(0, -1));
-						let res = await cloudHelper.callCloud('work/ai_chat', {
-							message: text,
-							history,
-							attachments,
-							pageContext: this._getPageContext(),
-						}, { hint: false });
-						let data = res && res.data ? res.data : {};
-						reply = data.reply || '我收到啦，但 AI 没有返回文字。';
-						this._applyContextMeta(data);
-						this._refreshPageAfterAgentAction(data);
+						let missedImage = findMissedImageFollowup(text, history);
+						let quickRet = shouldQuickAckNoSupplement(text, history)
+							? { action: 'none', reply: '收到，不补充。本次对话不再继续调用 AI。' }
+							: await this._tryHandleQuickDateUpdate(text, history);
+						if (!quickRet && missedImage && missedImage.reply) {
+							quickRet = { action: 'none', reply: missedImage.reply };
+						}
+						if (quickRet) {
+							reply = quickRet.reply || '已处理完成。';
+							this._refreshPageAfterAgentAction(quickRet);
+						} else {
+							let res = await cloudHelper.callCloud('work/ai_chat', {
+								message: missedImage && missedImage.message ? missedImage.message : text,
+								history,
+								attachments: missedImage && missedImage.attachment ? [missedImage.attachment] : attachments,
+								pageContext: this._getPageContext(),
+							}, { hint: false });
+							let data = res && res.data ? res.data : {};
+							reply = data.reply || '我收到啦，但 AI 没有返回文字。';
+							this._applyContextMeta(data);
+							this._refreshPageAfterAgentAction(data);
+						}
 					}
 					// Phase 3: Use typewriter effect for AI replies
 					this._typewriterDisplay(reply, messages, _sendThreadId);
@@ -681,6 +864,84 @@ Component({
 				route: page.route || '',
 				orderId: page.data && page.data.id ? page.data.id : '',
 				day: page.data && page.data.day ? page.data.day : '',
+				scope: page.data && page.data.scope ? page.data.scope : '',
+			};
+		},
+		async _tryHandleQuickDateUpdate(text, history) {
+			let pageContext = this._getPageContext();
+			let intent = parseQuickDateUpdateIntent(text, history, pageContext);
+			if (!intent) return null;
+
+			let dayData = await cloudHelper.callCloudData('work/day_list', {
+				day: intent.date,
+				scope: pageContext.scope || 'all',
+			}, { hint: false });
+			let orders = (dayData && dayData.orders ? dayData.orders : []).filter(order => order && (order._id || order.ORDER_ID));
+			if (intent.keyword) orders = orders.filter(order => quickOrderMatchesKeyword(order, intent.keyword));
+			if (intent.pickIndex) {
+				if (orders.length >= intent.pickIndex) {
+					orders = [orders[intent.pickIndex - 1]];
+				} else {
+					return {
+						action: 'none',
+						reply: `只找到 ${orders.length} 个可选订单，没有第 ${intent.pickIndex} 条，请重新告诉我要改哪一条。`,
+					};
+				}
+			}
+			if (!orders.length) {
+				return {
+					action: 'none',
+					reply: `${intent.keyword ? `「${intent.keyword}」` : intent.date} 没有找到可修改的订单档期，请确认客户名或原日期是否正确。`,
+				};
+			}
+			if (orders.length > 1) {
+				let lines = orders.slice(0, 8).map((order, idx) => {
+					let name = order.ORDER_CUSTOMER_NAME || order.ORDER_CUSTOMER_SURNAME || '未填客户';
+					return `${idx + 1}. ${order.ORDER_DATE || intent.date} ${order.ORDER_TIME || '未填时间'} ${order.ORDER_TYPE_NAME || '其他'}，客户${name}`;
+				}).join('\n');
+				return {
+					action: 'none',
+					reply: `${intent.date} 找到 ${orders.length} 个订单档期，请回复数字告诉我要改第几条：\n${lines}`,
+				};
+			}
+
+			let baseOrder = orders[0];
+			let orderId = baseOrder._id || baseOrder.ORDER_ID;
+			let order = await cloudHelper.callCloudData('work/order_detail', { id: orderId }, { hint: false });
+			if (!order || !order._id) {
+				return {
+					action: 'none',
+					reply: '找到唯一订单，但拉取订单详情失败，请稍后重试或从订单详情页修改。',
+				};
+			}
+			let oldDate = order.ORDER_DATE || intent.date;
+			order.ORDER_DATE = intent.newDate;
+			await cloudHelper.callCloudSumbit('work/order_save', { order }, { title: '修改中' });
+
+			let name = order.ORDER_CUSTOMER_NAME || order.ORDER_CUSTOMER_SURNAME || '未填客户';
+			let line = `${order.ORDER_TIME || ''} ${order.ORDER_TYPE_NAME || '其他'}，客户${name}`.replace(/\s+/g, ' ').trim();
+			try {
+				await cloudHelper.callCloud('work/note_save', {
+					note: {
+						NOTE_TYPE: 'team',
+						NOTE_TITLE: 'AI操作记录：修改订单',
+						NOTE_CONTENT: `小猫本地兜底修改订单：${oldDate} → ${intent.newDate}。订单：${line}。记录ID：${order._id || orderId}`,
+						NOTE_DATE: todayYmd(),
+					},
+				}, { hint: false });
+			} catch (noteErr) {
+				console.error(noteErr);
+			}
+			return {
+				action: 'update_order',
+				id: order._id || orderId,
+				data: {
+					date: intent.newDate,
+					oldDate,
+					orderId: order._id || orderId,
+					order,
+				},
+				reply: `已把 ${oldDate} 的唯一订单档期改到 ${intent.newDate}：${line}。已同步写入团队小记审查流水。`,
 			};
 		},
 		_loadThreads() {
@@ -866,9 +1127,11 @@ Component({
 		_refreshPageAfterAgentAction(data = {}) {
 			let action = data.action || '';
 			if (action == 'create_note') action = 'add_note';
-			if (!['create_order', 'create_orders', 'join_order', 'create_item', 'create_rest', 'add_note'].includes(action)) return;
+			if (!['create_order', 'create_orders', 'join_order', 'update_order', 'cancel_order', 'create_item', 'create_rest', 'add_note'].includes(action)) return;
 			let day = data.data && data.data.date ? data.data.date : '';
 			if (!day && data.data && Array.isArray(data.data.dates) && data.data.dates.length) day = data.data.dates.slice().sort()[0];
+			if (!day && data.data && data.data.updates && data.data.updates.ORDER_DATE) day = data.data.updates.ORDER_DATE;
+			if (!day && data.data && data.data.order && data.data.order.ORDER_DATE) day = data.data.order.ORDER_DATE;
 			if (day) wx.setStorageSync('WORK_CALENDAR_DAY', day);
 			let pages = getCurrentPages();
 			let page = pages && pages.length ? pages[pages.length - 1] : null;
