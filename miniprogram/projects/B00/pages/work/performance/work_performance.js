@@ -1,6 +1,7 @@
 const cloudHelper = require('../../../../../helper/cloud_helper.js');
 const pageHelper = require('../../../../../helper/page_helper.js');
 const guestHelper = require('../../../../../helper/guest_helper.js');
+const orderHelper = require('../../../../../helper/order_helper.js');
 const ProjectBiz = require('../../../biz/project_biz.js');
 
 Page({
@@ -66,19 +67,10 @@ Page({
 		this.setData({ rankList: list || [] });
 	},
 	_isUndatedOrder(order) {
-		return !order || order.ORDER_DATE === undefined || order.ORDER_DATE === null || order.ORDER_DATE === '';
+		return orderHelper.isUndatedOrder(order);
 	},
 	_formatOrder(order) {
-		order = Object.assign({}, order || {});
-		let amount = Number(order.ORDER_AMOUNT || 0);
-		let paid = Number(order.PAID_AMOUNT !== undefined && order.PAID_AMOUNT !== null ? order.PAID_AMOUNT : (order.ORDER_ACTUAL_AMOUNT || 0));
-		let unpaid = Number(order.UNPAID_AMOUNT !== undefined && order.UNPAID_AMOUNT !== null ? order.UNPAID_AMOUNT : Math.max(0, amount - paid));
-		order.PAID_AMOUNT = paid;
-		order.UNPAID_AMOUNT = unpaid;
-		order.ORDER_DATE_TEXT = this._isUndatedOrder(order) ? '未定档' : order.ORDER_DATE;
-		order.ORDER_PROGRESS_TEXT = order.ORDER_PROGRESS_DESC || (order.ORDER_PROGRESS ? (order.ORDER_PROGRESS + '%') : '未开始');
-		order.ORDER_SETTLE_TEXT = order.ORDER_SETTLE_STATUS_DESC || order.ORDER_SETTLEMENT_STATUS_DESC || order.ORDER_PAY_STATUS_DESC || '未结算';
-		return order;
+		return orderHelper.formatOrder(order);
 	},
 	_buildOrderPreview(list = []) {
 		let month = this.data.month || '';

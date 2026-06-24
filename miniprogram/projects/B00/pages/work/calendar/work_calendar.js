@@ -1,6 +1,7 @@
 const cloudHelper = require('../../../../../helper/cloud_helper.js');
 const pageHelper = require('../../../../../helper/page_helper.js');
 const guestHelper = require('../../../../../helper/guest_helper.js');
+const dateHelper = require('../../../../../helper/date_helper.js');
 const lunarLib = require('../../../../../lib/tools/lunar_lib.js');
 const ProjectBiz = require('../../../biz/project_biz.js');
 
@@ -61,8 +62,7 @@ Page({
 	},
 
 	_today() {
-		let d = new Date();
-		return this._fmtDate(d);
+		return dateHelper.today();
 	},
 
 	_fmtDate(d) {

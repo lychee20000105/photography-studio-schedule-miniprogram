@@ -35,3 +35,19 @@
   7. `miniprogram/version.js` — 更新版本信息
 - **验证结果**: git status clean
 - **状态**: completed
+
+## Batch 4: 代码清理 (v2.01-b4)
+- **时间**: 2026-06-25 00:40 CST
+- **分支**: opt/v2.01-b4
+- **改动文件**:
+  1. `miniprogram/helper/date_helper.js` — 新建，提取 `_today()` 公共函数
+  2. `miniprogram/helper/order_helper.js` — 新建，提取 `_formatOrder()` / `_isUndatedOrder()` 公共函数
+  3. `miniprogram/projects/B00/pages/work/add/work_add.js` — 引用 date_helper + order_helper
+  4. `miniprogram/projects/B00/pages/work/calendar/work_calendar.js` — 引用 date_helper
+  5. `miniprogram/projects/B00/pages/work/order_edit/work_order_edit.js` — 引用 date_helper
+  6. `miniprogram/projects/B00/pages/admin/meet/export/admin_join_export.js` — 引用 date_helper
+  7. `miniprogram/projects/B00/pages/work/performance/work_performance.js` — 引用 order_helper
+  8. `miniprogram/helper/content_check_helper.js` — imgTypeCheck 大小写不敏感 + webp 支持
+  9. `miniprogram/helper/cloud_helper.js` — 添加 callCloudSubmit / callCloudSubmitAsync 别名
+  10. `miniprogram/version.js` — 更新版本信息
+- **状态**: completed

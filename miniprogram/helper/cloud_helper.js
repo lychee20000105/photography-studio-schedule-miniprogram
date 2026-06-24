@@ -516,8 +516,10 @@ module.exports = {
 	dataList,
 	callCloud,
 	callCloudSumbit,
+	callCloudSubmit: callCloudSumbit, // deprecated spelling alias
 	callCloudData,
 	callCloudSumbitAsync,
+	callCloudSubmitAsync: callCloudSumbitAsync,
 	transTempPics,
 	transRichEditorTempPics,
 	transCoverTempPics,
