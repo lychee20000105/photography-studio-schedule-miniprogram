@@ -59,10 +59,69 @@ function fmtOrderStatus(status) {
   return ORDER_STATUS_MAP[status + ''] || '未知';
 }
 
+// Format time: "14:30" or "14:30:00" → "下午2:30"
+function fmtTime(timeStr) {
+  if (!timeStr) return '';
+  var parts = timeStr.split(':');
+  if (parts.length < 2) return timeStr;
+  var h = parseInt(parts[0], 10);
+  var m = parts[1];
+  if (h === 0) return '上午12:' + m;
+  if (h < 12) return '上午' + h + ':' + m;
+  if (h === 12) return '下午12:' + m;
+  return '下午' + (h - 12) + ':' + m;
+}
+
+// Format phone: "13800138000" → "138****8000"
+function fmtPhone(phone) {
+  if (!phone || phone.length < 11) return phone || '';
+  return phone.substring(0, 3) + '****' + phone.substring(7);
+}
+
+// Format percentage: 0.85 → "85%"
+function fmtPercent(val) {
+  if (val === undefined || val === null || val === '') return '0%';
+  var num = parseFloat(val);
+  if (isNaN(num)) return '0%';
+  return Math.round(num * 100) + '%';
+}
+
+// Format status for feedback
+var FEEDBACK_STATUS_MAP = {
+  '0': '待处理',
+  '1': '处理中',
+  '2': '已解决',
+  '3': '已关闭'
+};
+function fmtFeedbackStatus(status) {
+  return FEEDBACK_STATUS_MAP[status + ''] || '未知';
+}
+
+// Truncate text with ellipsis
+function truncate(str, maxLen) {
+  if (!str) return '';
+  if (typeof maxLen !== 'number' || maxLen <= 0) maxLen = 20;
+  if (str.length <= maxLen) return str;
+  return str.substring(0, maxLen) + '...';
+}
+
+// Format date+time together: "2026-06-25", "14:30" → "6月25日 14:30"
+function fmtDateTime(dateStr, timeStr) {
+  var d = fmtDate(dateStr);
+  if (!timeStr) return d;
+  return d + ' ' + timeStr;
+}
+
 module.exports = {
   fmtDate: fmtDate,
   fmtDateShort: fmtDateShort,
   fmtAmount: fmtAmount,
   fmtMoney: fmtMoney,
-  fmtOrderStatus: fmtOrderStatus
+  fmtOrderStatus: fmtOrderStatus,
+  fmtTime: fmtTime,
+  fmtPhone: fmtPhone,
+  fmtPercent: fmtPercent,
+  fmtFeedbackStatus: fmtFeedbackStatus,
+  truncate: truncate,
+  fmtDateTime: fmtDateTime
 };

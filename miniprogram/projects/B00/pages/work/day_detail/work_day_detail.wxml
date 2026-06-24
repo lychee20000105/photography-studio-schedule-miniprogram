@@ -1,3 +1,4 @@
+<wxs src="../../../../../helper/filters.wxs" module="f" />
 <view class="page">
 	<view wx:if="{{!isLoad}}" class="empty">加载中...</view>
 
@@ -18,11 +19,11 @@
 		<view wx:for="{{dayData.orders}}" wx:key="_id" class="order-card" bindtap="bindOrderTap" data-id="{{item._id}}" data-full="{{item.canFull}}">
 			<view class="order-head">
 				<view class="order-type" style="background:{{item.ORDER_TYPE_COLOR}}">{{item.ORDER_TYPE_NAME}}</view>
-				<view class="order-time">{{item.ORDER_TIME || '全天'}}</view>
+				<view class="order-time">{{item.ORDER_TIME ? f.fmtTime(item.ORDER_TIME) : '全天'}}</view>
 			</view>
 			<view class="customer">{{item.canFull ? item.ORDER_CUSTOMER_NAME : item.ORDER_CUSTOMER_SURNAME + '姓客户'}}</view>
 			<view wx:if="{{item.canFull}}" class="money">
-				订单 {{item.ORDER_AMOUNT || 0}} ｜ 实收 {{item.PAID_AMOUNT || item.ORDER_ACTUAL_AMOUNT || 0}} ｜ 未收 {{item.UNPAID_AMOUNT || 0}}
+				订单 {{f.fmtMoney(item.ORDER_AMOUNT || 0)}} ｜ 实收 {{f.fmtMoney(item.PAID_AMOUNT || item.ORDER_ACTUAL_AMOUNT || 0)}} ｜ 未收 {{f.fmtMoney(item.UNPAID_AMOUNT || 0)}}
 			</view>
 			<view class="meta">{{item.ORDER_PROGRESS_DESC}} · {{item.ORDER_SETTLE_STATUS_DESC}}</view>
 		</view>

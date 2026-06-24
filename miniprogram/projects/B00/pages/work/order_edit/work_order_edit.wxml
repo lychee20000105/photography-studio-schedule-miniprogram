@@ -1,10 +1,11 @@
+<wxs src="../../../../../helper/filters.wxs" module="f" />
 <skeleton loading="{{!options}}" />
 <view class="page" wx:if="{{options}}">
 	<view class="block">
 		<view class="row">
 			<text class="label">档期日期</text>
 			<picker mode="date" value="{{order.ORDER_DATE}}" bindchange="bindDateChange">
-				<view class="value">{{order.ORDER_DATE || '未定档'}}</view>
+				<view class="value">{{order.ORDER_DATE ? f.fmtDate(order.ORDER_DATE) : '未定档'}}</view>
 			</picker>
 		</view>
 		<view class="row">
@@ -123,7 +124,7 @@
 				<input wx:if="{{item.calcMode=='manual'}}" class="part-input" type="digit" value="{{item.manualAmount}}" placeholder="提成金额" bindinput="bindPartManualInput" data-idx="{{index}}" />
 				<view wx:else class="part-hint">按员工岗位规则计算</view>
 			</view>
-			<view wx:if="{{item.amount || item.amount==0}}" class="part-amount">我的可见提成：{{item.amount}}</view>
+			<view wx:if="{{item.amount || item.amount==0}}" class="part-amount">我的可见提成：{{f.fmtMoney(item.amount)}}</view>
 		</view>
 		<view wx:if="{{order.ORDER_PARTICIPANTS.length==0}}" class="muted">未添加参与人</view>
 	</view>
