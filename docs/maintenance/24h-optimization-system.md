@@ -30,11 +30,11 @@
 - [x] Batch 5: 维护清理 + v2.01 发布 (v2.01-b5)
 
 ### 后端优化队列 (v2.02)
-- [x] B6: 输入验证加固 — 所有 controller 参数校验 ⏳ 执行中
-- [x] B7: 前端交互优化 — 图片懒加载 + 骨架屏 + setData 精确路径 ⏳ 执行中
-- [x] B8: 框架层 Bug 修复 — 8 个确认 Bug（setup_util 重复、app_other 未定义变量、base_controller 缺失导入、log_util err 方法、data_check null 崩溃+checkId 注释+NaN 注入、export_util this） ⏳ 执行中
-- [ ] B9: 数据库查询优化 — 限制查询数量 + 索引建议
-- [ ] B10: 调试代码清理 — 生产路径中的测试代码
+- [x] B6: 输入验证加固 — 所有 controller 参数校验 ✅
+- [x] B7: 前端交互优化 — 图片懒加载 + 骨架屏 + setData 精确路径 ✅
+- [x] B8: 框架层 Bug 修复 — 8 个确认 Bug ✅
+- [x] B9: 服务层安全修复 — 权限提升 + 数据泄露 + 正则 + 除零 ✅
+- [x] B10: 调试代码清理 — 空 catch 块 + 错误处理统一 ✅
 
 ### 前端交互优化队列 (v2.03+)
 - [ ] B11: AI 聊天气泡 UI 升级 — mp-html 流式渲染 + 虚拟列表
