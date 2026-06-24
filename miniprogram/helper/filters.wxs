@@ -23,13 +23,23 @@ function fmtDateShort(dateStr) {
 }
 
 // Format amount: 12345.6 → "12,345.60"
+// WXS does not support regex, use manual loop for thousand separators
 function fmtAmount(val) {
   if (val === undefined || val === null || val === '') return '0.00';
   var num = parseFloat(val);
   if (isNaN(num)) return '0.00';
-  var parts = num.toFixed(2).split('.');
-  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-  return parts.join('.');
+  var fixed = num.toFixed(2);
+  var dotIdx = fixed.indexOf('.');
+  var intPart = dotIdx >= 0 ? fixed.substring(0, dotIdx) : fixed;
+  var decPart = dotIdx >= 0 ? fixed.substring(dotIdx) : '.00';
+  var result = '';
+  var count = 0;
+  for (var i = intPart.length - 1; i >= 0; i--) {
+    if (count > 0 && count % 3 === 0) result = ',' + result;
+    result = intPart[i] + result;
+    count++;
+  }
+  return result + decPart;
 }
 
 // Format amount with ¥ prefix
