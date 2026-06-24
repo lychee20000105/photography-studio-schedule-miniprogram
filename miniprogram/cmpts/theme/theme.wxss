@@ -1,0 +1,41 @@
+/**
+ * B17: 暗黑模式主题变量
+ * 亮色主题为默认值，暗黑主题通过 page.dark 选择器切换
+ * 未升级基础库的设备会忽略 page.dark 块，自动回退到亮色变量
+ */
+
+/* ===== 亮色主题 (默认) ===== */
+page {
+  --color-bg: #f5efe4;
+  --color-bg-card: #ffffff;
+  --color-bg-input: #f8f6f2;
+  --color-text-primary: #333333;
+  --color-text-secondary: #7e7568;
+  --color-text-hint: #aaaaaa;
+  --color-brand: #537d96;
+  --color-brand-light: rgba(83, 125, 150, 0.1);
+  --color-border: #e8e2d8;
+  --color-divider: #eee;
+  --color-success: #6db389;
+  --color-warning: #e6a23c;
+  --color-danger: #f56c6c;
+  --color-shadow: rgba(0, 0, 0, 0.05);
+}
+
+/* ===== 暗黑主题 ===== */
+page.dark {
+  --color-bg: #1a1a2e;
+  --color-bg-card: #252542;
+  --color-bg-input: #2a2a45;
+  --color-text-primary: #e0e0e0;
+  --color-text-secondary: #a0a0b0;
+  --color-text-hint: #666680;
+  --color-brand: #6fa8c7;
+  --color-brand-light: rgba(111, 168, 199, 0.15);
+  --color-border: #3a3a55;
+  --color-divider: #333350;
+  --color-success: #7ec99a;
+  --color-warning: #f0b050;
+  --color-danger: #f07070;
+  --color-shadow: rgba(0, 0, 0, 0.3);
+}

@@ -374,14 +374,20 @@ page {
 	background: #fafafa;
 }
 
-/* Warm paper overrides */
+/* ===== Warm paper overrides (亮色模式) ===== */
 page {
-	background-color: #f5efe4;
+	background-color: var(--color-bg);
 	background-image:
 		linear-gradient(90deg, rgba(122, 96, 68, .035) 1rpx, transparent 1rpx),
 		linear-gradient(180deg, rgba(255, 253, 247, .56), rgba(216, 207, 190, .22));
 	background-size: 48rpx 48rpx, 100% 100%;
 	color: #2a2622;
+}
+
+/* 暗黑模式下页面文字色 */
+page.dark {
+	color: var(--color-text-primary);
+	background-image: none;
 }
 
 .work-page {
@@ -414,7 +420,7 @@ page {
 .guest-action,
 .today-btn,
 .inline-add {
-	background: #537d96;
+	background: var(--color-brand);
 	color: #fff;
 	box-shadow: 0 8rpx 22rpx rgba(83, 125, 150, .18);
 }
@@ -422,7 +428,7 @@ page {
 .avatar,
 .month-btn {
 	background: #fbf7ee;
-	color: #537d96;
+	color: var(--color-brand);
 	border: 1rpx solid #d8cfbe;
 	box-shadow: 0 8rpx 22rpx rgba(42, 38, 34, .05);
 }
@@ -440,7 +446,7 @@ page {
 
 .seg-item.active,
 .day.today .num {
-	background: #537d96;
+	background: var(--color-brand);
 	color: #fff;
 }
 
@@ -457,7 +463,7 @@ page {
 	position: sticky;
 	top: 0;
 	z-index: 10;
-	background: #f5efe4;
+	background: var(--color-bg);
 }
 
 .week view {
@@ -496,4 +502,121 @@ page {
 
 .rest {
 	background: #f4eadf;
+}
+
+/* ===== B17: 暗黑模式覆盖 ===== */
+page.dark {
+	background-color: var(--color-bg);
+	background-image: none;
+}
+
+page.dark .guest-banner,
+page.dark .calendar,
+page.dark .order-card,
+page.dark .simple-card {
+	background: var(--color-bg-card);
+	border-color: var(--color-border);
+	box-shadow: 0 12rpx 38rpx var(--color-shadow);
+}
+
+page.dark .guest-banner {
+	color: var(--color-text-primary);
+}
+
+page.dark .guest-desc,
+page.dark .lunar,
+page.dark .money,
+page.dark .meta,
+page.dark .simple-desc,
+page.dark .empty {
+	color: var(--color-text-secondary);
+}
+
+page.dark .guest-action,
+page.dark .today-btn,
+page.dark .inline-add {
+	background: var(--color-brand);
+	box-shadow: 0 8rpx 22rpx var(--color-shadow);
+}
+
+page.dark .avatar,
+page.dark .month-btn {
+	background: var(--color-bg-card);
+	color: var(--color-brand);
+	border-color: var(--color-border);
+	box-shadow: 0 8rpx 22rpx var(--color-shadow);
+}
+
+page.dark .seg {
+	background: var(--color-bg-input);
+	border-color: var(--color-border);
+}
+
+page.dark .seg-item {
+	color: var(--color-text-secondary);
+}
+
+page.dark .seg-item.active,
+page.dark .day.today .num {
+	background: var(--color-brand);
+	color: #fff;
+}
+
+page.dark .month-title,
+page.dark .section-title,
+page.dark .num,
+page.dark .order-time,
+page.dark .customer,
+page.dark .simple-title {
+	color: var(--color-text-primary);
+}
+
+page.dark .week {
+	background: var(--color-bg);
+}
+
+page.dark .week view {
+	color: var(--color-text-secondary);
+}
+
+page.dark .week view:first-child,
+page.dark .week view:last-child {
+	color: var(--color-danger);
+}
+
+page.dark .calendar {
+	border-color: var(--color-border);
+}
+
+page.dark .day {
+	border-right-color: var(--color-border);
+	border-bottom-color: var(--color-border);
+	background: var(--color-bg-card);
+}
+
+page.dark .day.muted {
+	background: var(--color-bg-input);
+	color: var(--color-text-hint);
+}
+
+page.dark .day.selected {
+	background: var(--color-brand-light);
+	box-shadow: inset 0 0 0 2rpx rgba(111, 168, 199, .4);
+}
+
+page.dark .tag,
+page.dark .order-type {
+	box-shadow: inset 0 0 0 1rpx rgba(255, 255, 255, .12);
+}
+
+page.dark .rest {
+	background: var(--color-bg-input);
+}
+
+page.dark .marker-order {
+	background: var(--color-brand);
+}
+
+page.dark .marker-appt {
+	background: var(--color-success);
 }

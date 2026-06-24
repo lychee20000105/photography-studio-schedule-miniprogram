@@ -110,6 +110,15 @@ function showVersionNotice() {
 }
 
 App({
+	applyDarkMode(isDark) {
+		this.globalData.isDarkMode = isDark;
+		// 通知所有页面
+		const pages = getCurrentPages();
+		pages.forEach(p => {
+			if (p.onThemeChange) p.onThemeChange(isDark);
+		});
+	},
+
 	onLaunch: function (options) {
 
 		if (!wx.cloud) {
@@ -127,6 +136,15 @@ App({
 		}
 
 		this.globalData = {};
+
+		// B17: 暗黑模式 — 监听系统主题变化
+		const systemInfo = wx.getSystemInfoSync();
+		if (systemInfo.theme === 'dark') {
+			this.applyDarkMode(true);
+		}
+		wx.onThemeChange && wx.onThemeChange((res) => {
+			this.applyDarkMode(res.theme === 'dark');
+		});
 
 		// 用于自定义导航栏
 		wx.getSystemInfo({

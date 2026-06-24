@@ -1,3 +1,5 @@
+/* B17: 暗黑模式主题变量 */
+@import './cmpts/theme/theme.wxss';
 @import "style/base/comm.wxss";
 @import "style/public/project.wxss";
 
@@ -5,9 +7,14 @@ page {
 	min-height: 100vh;
 	display: flex;
 	flex-direction: column;
-	background-color: #f5efe4;
+	background-color: var(--color-bg);
 	color: #2a2622;
 	font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+/* 暗黑模式下页面文字色 */
+page.dark {
+	color: var(--color-text-primary);
 }
 
 view,
@@ -69,15 +76,20 @@ button:active,
 }
 
 .paper-page-bg {
-	background-color: #f5efe4;
+	background-color: var(--color-bg);
 	background-image:
 		linear-gradient(90deg, rgba(122, 96, 68, .035) 1rpx, transparent 1rpx),
 		linear-gradient(180deg, rgba(255, 253, 247, .55), rgba(216, 207, 190, .24));
 	background-size: 48rpx 48rpx, 100% 100%;
 }
 
+/* 暗黑模式下去掉纸纹装饰 */
+page.dark .paper-page-bg {
+	background-image: none;
+}
+
 .paper-card {
-	background: #fbf7ee;
-	border: 1rpx solid #d8cfbe;
-	box-shadow: 0 12rpx 38rpx rgba(42, 38, 34, .06);
+	background: var(--color-bg-card);
+	border: 1rpx solid var(--color-border);
+	box-shadow: 0 12rpx 38rpx var(--color-shadow);
 }

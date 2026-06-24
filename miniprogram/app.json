@@ -1,4 +1,6 @@
 {
+	"darkmode": true,
+	"themeLocation": "theme.json",
 	"pages": [
 		"projects/B00/pages/work/calendar/work_calendar",
 		"projects/B00/pages/work/day_detail/work_day_detail",

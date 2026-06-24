@@ -324,14 +324,20 @@ page {
 	line-height: 1;
 }
 
-/* Warm paper overrides */
+/* ===== Warm paper overrides (亮色模式) ===== */
 page {
-	background-color: #f5efe4;
+	background-color: var(--color-bg);
 	background-image:
 		linear-gradient(90deg, rgba(122, 96, 68, .035) 1rpx, transparent 1rpx),
 		linear-gradient(180deg, rgba(255, 253, 247, .56), rgba(216, 207, 190, .22));
 	background-size: 48rpx 48rpx, 100% 100%;
 	color: #2a2622;
+}
+
+/* 暗黑模式下页面文字色 */
+page.dark {
+	color: var(--color-text-primary);
+	background-image: none;
 }
 
 .page {
@@ -372,19 +378,19 @@ page {
 .primary,
 .guest-btn,
 .pet-actions view {
-	background: #537d96;
+	background: var(--color-brand);
 	color: #fff;
 }
 
 .plain-btn {
 	background: #fbf7ee;
-	color: #537d96;
+	color: var(--color-brand);
 	border: 1rpx solid #d8cfbe;
 }
 
 .avatar {
 	background: #fbf7ee;
-	color: #537d96;
+	color: var(--color-brand);
 	border: 1rpx solid #d8cfbe;
 	box-shadow: 0 8rpx 22rpx rgba(42, 38, 34, .05);
 }
@@ -412,4 +418,81 @@ page {
 .pet-picker {
 	color: #2a2622;
 	border: 1rpx solid rgba(216, 207, 190, .72);
+}
+
+/* ===== B17: 暗黑模式覆盖 ===== */
+page.dark {
+	background-color: var(--color-bg);
+	background-image: none;
+}
+
+page.dark .block,
+page.dark .pet-panel {
+	background: var(--color-bg-card);
+	border-color: var(--color-border);
+	box-shadow: 0 12rpx 38rpx var(--color-shadow);
+}
+
+page.dark .guest {
+	color: var(--color-text-primary);
+}
+
+page.dark .guest-desc,
+page.dark .mobile,
+page.dark .pet-desc,
+page.dark .pet-bar-label,
+page.dark .row,
+page.dark .roles text,
+page.dark .item-left [class*=icon],
+page.dark .arrow {
+	color: var(--color-text-secondary);
+}
+
+page.dark .title,
+page.dark .name,
+page.dark .pet-title,
+page.dark .row input,
+page.dark .item {
+	color: var(--color-text-primary);
+}
+
+page.dark .primary,
+page.dark .guest-btn,
+page.dark .pet-actions view {
+	background: var(--color-brand);
+	color: #fff;
+}
+
+page.dark .plain-btn {
+	background: var(--color-bg-card);
+	color: var(--color-brand);
+	border-color: var(--color-border);
+}
+
+page.dark .avatar {
+	background: var(--color-bg-card);
+	color: var(--color-brand);
+	border-color: var(--color-border);
+	box-shadow: 0 8rpx 22rpx var(--color-shadow);
+}
+
+page.dark .row,
+page.dark .item {
+	border-bottom-color: var(--color-border);
+}
+
+page.dark .roles text,
+page.dark .pet-picker,
+page.dark .pet-bar-track,
+page.dark .version-chip {
+	background: var(--color-bg-input);
+}
+
+page.dark .pet-picker {
+	color: var(--color-text-primary);
+	border-color: var(--color-border);
+}
+
+page.dark .pet-panel {
+	background: var(--color-bg-card);
 }
