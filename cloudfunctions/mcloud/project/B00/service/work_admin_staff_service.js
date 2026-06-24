@@ -19,7 +19,23 @@ class WorkAdminStaffService extends BaseProjectService {
 	}
 
 	async saveStaff(input, adminOpenId) {
+		// B14 H-02: 字段白名单 - 防止客户端注入敏感字段
+		const STAFF_ALLOWED_FIELDS = [
+			'STAFF_NAME', 'STAFF_MOBILE', 'STAFF_BIND_CODE',
+			'STAFF_ROLES', 'STAFF_RULES', 'STAFF_STATUS',
+			'STAFF_IS_ADMIN',
+			'STAFF_TEAM_ID', 'STAFF_TEAM_NAME',
+		];
 		input = input || {};
+		let safeInput = {};
+		for (const key of STAFF_ALLOWED_FIELDS) {
+			if (input[key] !== undefined) safeInput[key] = input[key];
+		}
+		// 保留 _id/id 用于编辑定位
+		if (input._id) safeInput._id = input._id;
+		if (input.id) safeInput.id = input.id;
+		input = safeInput;
+
 		let id = input._id || input.id || '';
 		let isAdminSetting = input.STAFF_IS_ADMIN !== undefined;
 

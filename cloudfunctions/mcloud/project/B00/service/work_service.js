@@ -687,7 +687,8 @@ class WorkService extends BaseProjectService {
 	}
 
 	async saveAdminOrderPayment(orderId, paymentDto = {}, adminStaff = null) {
-		let payment = Object.assign({}, paymentDto || {});
+		// B14 H-02: 对收款 DTO 应用字段白名单
+		let payment = WorkPaymentService.sanitizePaymentDto(paymentDto);
 		if (!payment.PAYMENT_CLIENT_KEY && !payment.clientKey && !payment.key) payment.clientKey = 'admin:' + dataUtil.makeID();
 		let order = await WorkOrderModel.getOne(orderId);
 		if (!order) order = await WorkOrderModel.getOne({ ORDER_ID: orderId });
@@ -1215,7 +1216,30 @@ class WorkService extends BaseProjectService {
 
 	async saveOrder(openId, orderInput) {
 		let staff = await this.getStaffByOpenId(openId);
+
+		// B14 H-02: 字段白名单 - 防止客户端注入敏感字段
+		const ORDER_ALLOWED_FIELDS = [
+			'ORDER_DATE', 'ORDER_TIME', 'ORDER_END_TIME',
+			'ORDER_TYPE_ID', 'ORDER_TYPE_NAME', 'ORDER_TYPE_COLOR',
+			'ORDER_CUSTOMER_NAME', 'ORDER_CUSTOMER_MOBILE',
+			'ORDER_SOURCE', 'ORDER_CONTENT', 'ORDER_PLACE',
+			'ORDER_IS_OLD_CUSTOMER',
+			'ORDER_AMOUNT', 'ORDER_DEPOSIT', 'ORDER_FINAL', 'ORDER_EXTRA',
+			'ORDER_PROGRESS',
+			'ORDER_AMOUNT_CENT', 'ORDER_SHOOT_DUE_CENT', 'ORDER_EXTRA_DUE_CENT',
+			'ORDER_PARTICIPANTS', 'ORDER_ATTACHMENTS',
+			'ORDER_PAYMENTS',
+		];
 		orderInput = orderInput || {};
+		let safeOrderInput = {};
+		for (const key of ORDER_ALLOWED_FIELDS) {
+			if (orderInput[key] !== undefined) safeOrderInput[key] = orderInput[key];
+		}
+		// 保留 _id/id 用于编辑定位
+		if (orderInput._id) safeOrderInput._id = orderInput._id;
+		if (orderInput.id) safeOrderInput.id = orderInput.id;
+		orderInput = safeOrderInput;
+
 		let paymentDtos = Array.isArray(orderInput.ORDER_PAYMENTS) ? orderInput.ORDER_PAYMENTS : (orderInput.ORDER_PAYMENTS ? [orderInput.ORDER_PAYMENTS] : []);
 		paymentDtos = paymentDtos.filter(dto => this._hasOrderPaymentDto(dto));
 		let id = orderInput._id || orderInput.id || '';

@@ -92,6 +92,33 @@ class WorkPaymentService extends BaseProjectService {
 		return andWhere;
 	}
 
+	// B14 H-02: 收款 DTO 字段白名单 - 防止客户端注入敏感字段
+	static sanitizePaymentDto(dto) {
+		if (!dto || typeof dto != 'object') return dto;
+		const PAYMENT_DTO_ALLOWED = [
+			'_id', 'id',
+			'PAYMENT_ID', 'PAYMENT_BIZ_KEY', 'bizKey', 'PAYMENT_CLIENT_KEY', 'clientKey', 'key',
+			'PAYMENT_TYPE', 'type',
+			'PAYMENT_BASE_TYPE', 'baseType',
+			'PAYMENT_DIRECTION', 'direction',
+			'PAYMENT_AMOUNT_CENT', 'amountCent',
+			'PAYMENT_AMOUNT', 'amount', 'paymentAmount',
+			'PAYMENT_DATE', 'PAYMENT_PAY_DATE', 'date', 'payDate',
+			'PAYMENT_MONTH', 'month',
+			'PAYMENT_STAFF_ID', 'PAYMENT_OWNER_STAFF_ID', 'staffId', 'ownerStaffId',
+			'PAYMENT_REF_PAYMENT_ID', 'refPaymentId',
+			'PAYMENT_NOTE', 'PAYMENT_REMARK', 'note', 'remark',
+			'PAYMENT_SOURCE', 'source',
+			'PAYMENT_VERSION', 'version',
+			'IS_DELETE', 'status', 'reason', 'PAYMENT_VOID_REASON',
+		];
+		let safe = {};
+		for (const key of PAYMENT_DTO_ALLOWED) {
+			if (dto[key] !== undefined) safe[key] = dto[key];
+		}
+		return safe;
+	}
+
 	async _getOrder(orderId, must = true) {
 		orderId = this._text(orderId, 120);
 		if (!orderId) {
@@ -653,6 +680,8 @@ class WorkPaymentService extends BaseProjectService {
 	async saveOrderPayments(orderId, paymentDtos = [], operatorStaff = null, options = {}) {
 		let order = await this._getOrder(orderId);
 		if (!Array.isArray(paymentDtos)) paymentDtos = [paymentDtos];
+		// B14 H-02: 对每个 DTO 应用字段白名单
+		paymentDtos = paymentDtos.map(dto => WorkPaymentService.sanitizePaymentDto(dto));
 
 		let saved = [];
 		for (let dto of paymentDtos) {
@@ -670,7 +699,7 @@ class WorkPaymentService extends BaseProjectService {
 
 	async saveAdminPayment(orderId, dto = {}, adminStaff = null, options = {}) {
 		this._assertCommissionHandled(options, '后台新增/修改收款');
-		dto = Object.assign({}, dto || {});
+		dto = WorkPaymentService.sanitizePaymentDto(dto);
 		if (!dto.PAYMENT_CLIENT_KEY && !dto.clientKey && !dto.key) dto.clientKey = 'admin:' + dataUtil.makeID();
 		let ret = await this.saveOrderPayments(orderId, [dto], adminStaff, Object.assign({
 			source: financeConfig.PAYMENT_SOURCE.ADMIN,
