@@ -90,7 +90,7 @@ async function exportDataExcel(key, title, total, data, options = {}) {
 
 	// 把数据保存到excel里
 	let buffer = await xlsx.build([{
-		name: title + timeUtil.timestamp2Time(this._timestamp, 'Y-M-D'),
+		name: title + timeUtil.timestamp2Time(Date.now(), 'Y-M-D'),
 		data,
 		options
 	}]);

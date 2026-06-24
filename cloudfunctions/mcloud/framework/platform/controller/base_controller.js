@@ -8,6 +8,8 @@
  const timeUtil = require('../../utils/time_util.js');
  const util = require('../../utils/util.js');
  const dataCheck = require('../../validate/data_check.js');
+ const AppError = require('../../core/app_error.js');
+ const appCode = require('../../core/app_code.js');
 
  class BaseController {
 

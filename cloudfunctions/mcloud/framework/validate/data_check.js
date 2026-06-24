@@ -186,8 +186,8 @@ function checkId(value, desc = '', min = 1, max = 32) {
 	if (getDataType(value) != String) return desc + '必须为ID字符串格式';
 
 	if (value.length < min || value.length > max) return desc + '必须为ID格式';
-	/*if (!/^\w+$/.test(value))
-		return desc + '必须为ID格式';*/
+	if (!/^[A-Za-z0-9_-]+$/.test(value))
+		return desc + '必须为ID格式';
 }
 
 //  邮箱
@@ -276,11 +276,13 @@ function checkArray(value, desc = '') {
 }
 
 function checkObject(value, desc = '') {
+	if (value === null || value === undefined) return desc + '填写错误obj';
 	if (value.constructor != Object)
 		return desc + '填写错误obj';
 }
 
 function checkBoolean(value, desc = '') {
+	if (value === null || value === undefined) return desc + '填写错误bool';
 	if (value.constructor != Boolean)
 		return desc + '填写错误bool';
 }
@@ -300,6 +302,7 @@ function checkIn(value, ref, desc = '') {
 function checkIds(value, desc) {}
 
 function checkString(value, desc) {
+	if (value === null || value === undefined) return desc + '填写错误';
 	if (value.constructor != String)
 		return desc + '填写错误';
 }
@@ -437,6 +440,7 @@ function check(data, rules, that) {
 				if (result) return _showError(result, formName, that);
 
 				val = Number(val);
+				if (!isFinite(val)) return _showError(desc + '数字格式不正确', formName, that);
 
 				break;
 			}

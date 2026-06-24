@@ -55,27 +55,6 @@ async function get(key) {
 	}
 }
 
-async function get(key) {
-
-	if (!key) return null;
-
-	let where = {
-		SETUP_KEY: key
-	}
-
-	let setup = await SetupModel.getOne(where, 'SETUP_VALUE');
-	if (!setup) return null;
-
-
-	let res = setup.SETUP_VALUE.val;
-
-	if (res === undefined) {
-		return null;
-	} else {
-		return res;
-	}
-}
-
 async function remove(key, fuzzy = false) {
 	if (!key) return;
 
