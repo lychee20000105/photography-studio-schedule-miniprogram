@@ -1,14 +1,25 @@
 ﻿module.exports = {
-	current: '2.18',
-	previous: '2.17',
+	current: '2.19',
+	previous: '2.18',
 	date: '2026-06-25',
-	time: '01:30 CST',
+	time: '01:35 CST',
 	level: 'minor',
-	levelText: 'Token暴力破解防护',
-	name: 'v2.18: 安全加固 — H-03 Token暴力破解防护',
-	summary: 'B27: 管理员登录新增失败计数+锁定机制，连续5次失败锁定15分钟。',
+	levelText: '工资竞态防护',
+	name: 'v2.19: 安全加固 — H-01 工资发放竞态防护',
+	summary: 'B28: payStaffMonth 新增二次 blockingPayroll 复检，关闭 TOCTOU 间隙防止并发重复工资单。',
 	changeLog: '/docs/version-change-diary.md',
 	history: [
+		{
+			version: '2.19',
+			date: '2026-06-25',
+			name: 'v2.19-b28: H-01 工资竞态防护',
+			summary: 'B28: 工资发放 insert 前新增二次复检，关闭并发 TOCTOU 间隙。',
+			items: [
+				'payStaffMonth 在 WorkPayrollModel.insert 前新增二次 blockingPayroll 复检。',
+				'使用相同 lockKey + _payrollBlockingStatuses 条件，仅查询必要字段。',
+				'现有 catch 块已包含 _rollbackPayrollLock + _markPayrollFail 清理逻辑。',
+			],
+		},
 		{
 			version: '2.18',
 			date: '2026-06-25',
