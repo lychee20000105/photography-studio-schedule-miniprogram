@@ -291,6 +291,32 @@ function estimateContextLimit(model) {
 
 class WorkAiService extends WorkPermissionService {
 
+	// Rate limiting: per-user sliding window
+	_rateLimitCheck(openId) {
+		let now = Date.now();
+		let windowMs = 60000; // 1 minute window
+		let maxCalls = 15;    // max 15 calls per minute per user
+		if (!this._rateMap) this._rateMap = {};
+		let entry = this._rateMap[openId];
+		if (!entry) entry = this._rateMap[openId] = { timestamps: [] };
+		entry.timestamps = entry.timestamps.filter(t => now - t < windowMs);
+		if (entry.timestamps.length >= maxCalls) {
+			this.AppError('操作太频繁，请稍后再试');
+		}
+		entry.timestamps.push(now);
+	}
+
+	_sanitizeUserInput(message) {
+		if (!message) return message;
+		// Strip system-role injection patterns
+		message = message.replace(/\b(system|assistant)\s*[:：]\s*/gi, '');
+		// Strip common instruction override attempts
+		message = message.replace(/\b(ignore|forget|disregard)\s+(all\s+)?(previous|above|prior)\s+(instructions?|rules?|prompts?)\b/gi, '');
+		// Strip role-play impersonation
+		message = message.replace(/\byou\s+are\s+now\b/gi, '请');
+		return message.trim();
+	}
+
 	async getAdminConfig() {
 		let config = await this._getConfig();
 		return this._publicConfig(config);
@@ -326,6 +352,7 @@ class WorkAiService extends WorkPermissionService {
 
 	async chat(openId, message, history = [], attachments = [], pageContext = {}) {
 		let staff = await this.assertStaff(openId);
+		this._rateLimitCheck(openId);
 		let config = await this._getConfig();
 
 		if (!config.enabled) this.AppError('AI 小助手暂未启用，请管理员先配置');
@@ -333,6 +360,7 @@ class WorkAiService extends WorkPermissionService {
 
 		message = asText(message, 800);
 		if (!message) this.AppError('请输入要发送的内容');
+		message = this._sanitizeUserInput(message);
 		this._agentUserMessage = message;
 
 		let localRet = await this._tryHandleLocalIntent(openId, staff, message, history, pageContext, config);

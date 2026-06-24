@@ -14,7 +14,7 @@ module.exports = {
 	IS_SUB: false,
 
 	MOBILE_CHECK: false, //手机号码是否真实性校验
-	CLIENT_CHECK_CONTENT: false, //前台上传图片/文字是否启用内容安全校验
+	CLIENT_CHECK_CONTENT: true, //前台上传图片/文字是否启用内容安全校验
 
 
 	//#################

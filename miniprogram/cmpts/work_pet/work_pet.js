@@ -137,7 +137,10 @@ function defaultMessages() {
 }
 
 function genThreadId() {
-	return 't' + Date.now() + Math.floor(Math.random() * 1000);
+	let ts = Date.now().toString(36);
+	let r1 = Math.floor(Math.random() * 0xFFFFFF).toString(36);
+	let r2 = Math.floor(Math.random() * 0xFFFFFF).toString(36);
+	return 't' + ts + r1 + r2;
 }
 
 function makeThread(title) {

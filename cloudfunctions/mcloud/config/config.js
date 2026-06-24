@@ -14,9 +14,9 @@ module.exports = {
 	DATA_EXPORT_PATH: 'export/', //数据导出路径
 
 	// #### 内容安全
-	CLIENT_CHECK_CONTENT: false, //前台图片文字是否校验
-	ADMIN_CHECK_CONTENT: false, //后台图片文字是否校验
+	CLIENT_CHECK_CONTENT: true, //前台图片文字是否校验
+	ADMIN_CHECK_CONTENT: true, //后台图片文字是否校验
 
 	// ### 后台业务相关
-	ADMIN_LOGIN_EXPIRE: 86400, //管理员token过期时间 (秒)
+	ADMIN_LOGIN_EXPIRE: 7200, //管理员token过期时间 (秒) 2小时
 }
