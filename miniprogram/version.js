@@ -1,14 +1,27 @@
 ﻿module.exports = {
-	current: '2.02',
-	previous: '2.01',
+	current: '2.03',
+	previous: '2.02',
 	date: '2026-06-25',
-	time: '03:45 CST',
+	time: '04:15 CST',
 	level: 'minor',
-	levelText: '前端优化',
-	name: 'v2.02-b7: 前端交互优化',
-	summary: '图片懒加载、setData精确路径、骨架屏组件、CSS优化。',
+	levelText: '调试清理',
+	name: 'v2.03-b10: 调试清理+错误处理',
+	summary: '清理调试console.log、统一错误处理模式。',
 	changeLog: '/docs/version-change-diary.md',
 	history: [
+		{
+			version: '2.03',
+			date: '2026-06-25',
+			name: 'v2.03-b10: 调试清理+错误处理',
+			summary: '清理调试console.log、统一错误处理模式。',
+			items: [
+				'B00 服务层全量排查 console.log：确认无纯调试输出，所有 console.error/console.warn 均为有意义的业务日志，予以保留。',
+				'work_ai_service._pickJsonObject 第二次 JSON.parse 空 catch 改为 console.error 输出解析失败信息。',
+				'work_ai_service._cleanPaymentDate 空 catch 改为 console.error 输出日期解析失败上下文。',
+				'admin_work_service.createPayroll 回滚 payroll 状态时空 catch 改为 console.error 输出回滚失败信息。',
+				'_pickJsonObject 第一次 JSON.parse 空 catch 保留注释说明（尝试 bracket 提取兜底，无需额外日志）。',
+			],
+		},
 		{
 			version: '2.02',
 			date: '2026-06-25',
