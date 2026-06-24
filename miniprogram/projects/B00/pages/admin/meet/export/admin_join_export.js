@@ -1,6 +1,7 @@
 const AdminBiz = require('../../../../../../comm/biz/admin_biz.js');
 const cloudHelper = require('../../../../../../helper/cloud_helper.js');
 const pageHelper = require('../../../../../../helper/page_helper.js');
+const dateHelper = require('../../../../../../helper/date_helper.js');
 
 Page({
 	data: {
@@ -89,9 +90,6 @@ Page({
 	},
 
 	_today: function () {
-		let now = new Date();
-		let m = String(now.getMonth() + 1).padStart(2, '0');
-		let d = String(now.getDate()).padStart(2, '0');
-		return now.getFullYear() + '-' + m + '-' + d;
+		return dateHelper.today();
 	},
 });

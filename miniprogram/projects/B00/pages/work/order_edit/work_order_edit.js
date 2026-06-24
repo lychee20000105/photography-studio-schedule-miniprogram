@@ -1,6 +1,7 @@
 const cloudHelper = require('../../../../../helper/cloud_helper.js');
 const pageHelper = require('../../../../../helper/page_helper.js');
 const contentCheckHelper = require('../../../../../helper/content_check_helper.js');
+const dateHelper = require('../../../../../helper/date_helper.js');
 const ProjectBiz = require('../../../biz/project_biz.js');
 
 const PAYMENT_TYPE_OPTIONS = [
@@ -71,11 +72,7 @@ Page({
 	},
 
 	_today() {
-		let d = new Date();
-		let y = d.getFullYear();
-		let m = String(d.getMonth() + 1).padStart(2, '0');
-		let day = String(d.getDate()).padStart(2, '0');
-		return `${y}-${m}-${day}`;
+		return dateHelper.today();
 	},
 
 	_loadOptions: async function () {

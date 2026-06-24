@@ -13,12 +13,9 @@ const setting = require('../setting/setting.js');
  * @param {*} fileName 
  * @param {*} type 
  */
-function imgTypeCheck(path, type = ['jpg', 'jpeg', 'png','JPG','JPEG','PNG']) {
-	let fmt = path.split(".")[(path.split(".")).length - 1];
-	if (type.indexOf(fmt) > -1)
-		return true;
-	else
-		return false;
+function imgTypeCheck(path, type = ['jpg', 'jpeg', 'png', 'webp']) {
+	let fmt = path.split('.').pop().toLowerCase();
+	return type.indexOf(fmt) > -1;
 }
 
 /**
