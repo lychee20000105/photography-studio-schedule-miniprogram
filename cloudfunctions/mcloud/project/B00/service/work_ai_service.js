@@ -121,12 +121,12 @@ function getProviderNameForRequest(config = {}, hasImages = false) {
 
 function getMaxTokensForTask(queryType, configMaxTokens) {
 	switch (queryType) {
-		case 'chat': return Math.max(400, Math.min(configMaxTokens || 600, 500));
-		case 'explain': return Math.max(400, Math.min(configMaxTokens || 600, 500));
-		case 'query': return Math.max(500, Math.min(configMaxTokens || 600, 800));
-		case 'write': return Math.max(800, configMaxTokens || 600);
-		case 'complex': return Math.max(1000, configMaxTokens || 800);
-		default: return configMaxTokens || 600;
+		case 'chat': return Math.max(600, Math.min(configMaxTokens || 800, 800));
+		case 'explain': return Math.max(600, Math.min(configMaxTokens || 800, 800));
+		case 'query': return Math.max(600, Math.min(configMaxTokens || 800, 1000));
+		case 'write': return Math.max(1000, configMaxTokens || 800);
+		case 'complex': return Math.max(1200, configMaxTokens || 1000);
+		default: return configMaxTokens || 800;
 	}
 }
 

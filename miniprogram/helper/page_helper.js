@@ -53,7 +53,8 @@ function fmtURLByPID(url, PID = '') {
 /** 定时器销毁 */
 function clearTimer(that, timerName = 'timer') {
 	if (helper.isDefined(that.data[timerName])) {
-		clearInterval(null);
+		clearInterval(that.data[timerName]);
+		that.setData({ [timerName]: null });
 	}
 }
 

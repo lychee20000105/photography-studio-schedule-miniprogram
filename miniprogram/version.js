@@ -1,14 +1,25 @@
 ﻿module.exports = {
-	current: '2.00',
-	previous: '1.99',
+	current: '2.01',
+	previous: '2.00',
 	date: '2026-06-24',
-	time: '21:46 CST',
+	time: '23:30 CST',
 	level: 'patch',
-	levelText: '小改修复',
-	name: 'MiMo极简参数兜底修复',
-	summary: 'MiMo 测试对话遇到 Param Incorrect 时，后端最终兜底请求只保留 model 和 messages，减少兼容接口参数拒绝。',
+	levelText: '批次修复',
+	name: 'v2.01 Batch1: 紧急Bug修复',
+	summary: '修复 clearTimer 定时器泄漏、提升 AI 聊天 token 上限，为 v2.01 优化系列首批。',
 	changeLog: '/docs/version-change-diary.md',
 	history: [
+		{
+			version: '2.01',
+			date: '2026-06-24',
+			name: 'v2.01 Batch1: 紧急Bug修复',
+			summary: '修复 clearTimer 定时器泄漏、提升 AI 聊天 token 上限。',
+			items: [
+				'修复 clearTimer 函数 clearInterval(null) 导致定时器永远不清除的 bug。',
+				'AI 聊天/解释 token 上限从 500 提升到 800，改善中文回复截断问题。',
+				'默认 token 从 600 提升到 800，write/complex 类型同步提升。',
+			],
+		},
 		{
 			version: '2.00',
 			date: '2026-06-24',
