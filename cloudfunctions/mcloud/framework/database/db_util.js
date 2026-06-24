@@ -380,17 +380,27 @@ async function min(collectionName, where, field) {
 }
 
 /**
- * 清空数据
- * @param {*} collectionName 
- * @param {*} where 
+ * 清空数据 (危险操作)
+ * @param {*} collectionName
+ * @param {boolean} force 必须显式传 true 才执行
  */
-async function clear(collectionName) {
+async function dangerousClearAll(collectionName, force = false) {
+	if (force !== true) {
+		console.warn('[SECURITY] dangerousClearAll called without force=true on collection [' + collectionName + ']. Operation blocked.');
+		return 0;
+	}
+	console.warn('[SECURITY] dangerousClearAll FORCE executing on collection [' + collectionName + ']');
+	let removed = 0;
 	await db.collection(collectionName).where({
 		_id: dbCmd.neq(1)
 	}).remove().then(res => {
-
+		removed = (res && res.stats) ? res.stats.removed : 0;
 	});
+	return removed;
 }
+
+// 向后兼容别名
+const clear = dangerousClearAll;
 
 async function isExistCollection(collectionName) {
 	try {
@@ -946,6 +956,49 @@ function fmtFields(fields) {
 	where.or 可以传{xxx:11,yy:22} -----与条件
 	[{xxx:111},{yy:22}]  ------------ 或条件
  */
+/**
+ * 检查字段名是否安全（防止 NoSQL 注入）
+ * 禁止 $ 开头的 MongoDB 操作符键
+ */
+function _isSafeFieldKey(key) {
+	if (typeof key !== 'string') return false;
+	if (key.startsWith('$')) return false;
+	if (key.includes('.')) return false; // 禁止嵌套路径
+	return true;
+}
+
+/**
+ * 清洗 whereEx 附加查询条件（防御性纵深防护）
+ * 只允许简单键值对（string/number/boolean），禁止操作符和嵌套
+ */
+function sanitizeWhereEx(whereEx) {
+	if (!whereEx || typeof whereEx !== 'object' || Array.isArray(whereEx)) return {};
+
+	let clean = {};
+	let keys = Object.keys(whereEx);
+	for (let i = 0; i < keys.length; i++) {
+		let k = keys[i];
+		let v = whereEx[k];
+
+		// 禁止 $ 开头的 MongoDB 操作符键
+		if (!_isSafeFieldKey(k)) {
+			console.warn('[SECURITY] whereEx: blocked operator/nested key [' + k + ']');
+			continue;
+		}
+
+		// 只允许简单值类型
+		let vType = typeof v;
+		if (vType === 'string' || vType === 'number' || vType === 'boolean') {
+			clean[k] = v;
+		} else if (v === null || v === undefined) {
+			// 跳过 null/undefined
+		} else {
+			console.warn('[SECURITY] whereEx: blocked non-primitive value for key [' + k + '] (type=' + vType + ')');
+		}
+	}
+	return clean;
+}
+
 function fmtWhere(where) {
 	if (util.isDefined(where.and) || util.isDefined(where.or)) {
 		let whereEx = null;
@@ -1080,7 +1133,9 @@ module.exports = {
 
 	isExistCollection,
 	createCollection,
-	clear,
+	clear: clear,
+	dangerousClearAll,
+	sanitizeWhereEx,
 	rand,
 	getOne,
 	getAll,

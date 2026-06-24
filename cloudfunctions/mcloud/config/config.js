@@ -1,4 +1,4 @@
-module.exports = {
+const config = module.exports = {
 
 	//### 环境相关
 	CLOUD_ID: 'yunyukeji-d4g7waei5d5d6cdeb', //你的云环境id
@@ -19,4 +19,16 @@ module.exports = {
 
 	// ### 后台业务相关
 	ADMIN_LOGIN_EXPIRE: 7200, //管理员token过期时间 (秒) 2小时
+}
+
+// 生产安全断言
+if (config.TEST_MODE) {
+	console.error('[SECURITY] TEST_MODE is enabled! This should NEVER happen in production.');
+	// 在非本地环境下直接禁止启动
+	if (process.env.TCB_ENV || process.env.SCF_RUNTIME) {
+		throw new Error('SECURITY: TEST_MODE cannot be enabled in cloud environment');
+	}
+}
+if (config.IS_DEMO) {
+	console.error('[SECURITY] IS_DEMO is enabled!');
 }

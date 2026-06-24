@@ -8,7 +8,6 @@ const AppError = require('../core/app_error.js');
 const appCode = require('../core/app_code.js');
 
 const CHECK_OPEN = true;
-const CHECK_SOURCE = 'admin'; //client/admin
 
 /**
  * 判断变量，参数，对象属性是否定义
@@ -359,8 +358,8 @@ function check(data, rules, that) {
 			}
 		}
 
-		// 校验 
-		let formName = (CHECK_SOURCE == 'admin') ? k : arr[0]; // 表单名  admin/client
+		// 校验
+		let formName = k; // 表单名 (服务端模式)
 
 		// 取值
 		let val = data[formName];
@@ -464,7 +463,7 @@ function check(data, rules, that) {
 
 		returnData[k] = val;
 
-		let fromStep = (CHECK_SOURCE == 'admin') ? 0 : 1; //admin/client
+		let fromStep = 0; // 服务端模式：从第一个规则开始校验
 		for (let i = fromStep; i < arr.length; i++) {
 			let result = '';
 
@@ -553,18 +552,6 @@ function check(data, rules, that) {
 			if (result) {
 				_showError(result, formName, that);
 				return false;
-			} else {
-
-				if (that) {
-					if (CHECK_SOURCE == 'client') {
-						// 删除原有的自动聚焦 //admin/client
-						if (isDefined(that.data[formName + 'Focus'])) {
-							that.setData({ //TODO delete?
-								[formName + 'Focus']: false
-							});
-						}
-					}
-				}
 			}
 
 		}
@@ -572,28 +559,8 @@ function check(data, rules, that) {
 	return returnData;
 }
 
-function _showError(result, formName, that) { //admin/client
-	if (CHECK_SOURCE == 'client') {
-		wx.showModal({
-			title: '温馨提示',
-			content: result,
-			showCancel: false,
-			success(res) {
-				// 自动聚焦
-				if (that) {
-					pageHelper.anchor(formName, that);
-
-					that.setData({
-						[formName + 'Focus']: result,
-					});
-				}
-
-			}
-		});
-	} else {
-		throw new AppError(result, appCode.DATA);
-	}
-
+function _showError(result, formName, that) {
+	throw new AppError(result, appCode.DATA);
 }
 
 module.exports = {
