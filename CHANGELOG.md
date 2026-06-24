@@ -18,11 +18,17 @@
 
 ### 验证
 
-- 待本轮本地校验和开发版上传后回填。
+- `node --check miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.js` 通过。
+- `node --check miniprogram/version.js` 与 `node --check miniprogram/setting/setting.js` 通过。
+- `miniprogram/app.json` 与 `project.config.json` JSON 解析通过。
+- AI 配置页 WXML `view` 与 `button` 标签数量 sanity check 通过。
+- 本轮涉及文件 `git diff --check` 通过，仅有既有 LF/CRLF 提示。
+- 敏感信息扫描未发现用户 API Key 片段。
 
 ### 部署
 
-- 待上传开发版。
+- 小程序开发版已通过微信开发者工具 CLI 上传，版本号 `1.98`，包体 `1.5 MB` / `1,599,214 Byte`。
+- 本次未提交审核、未发布上线。
 
 ## v1.97 - 2026-06-24
 

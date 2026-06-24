@@ -4,47 +4,77 @@ const ProjectBiz = require('../../../biz/project_biz.js');
 
 const PROVIDER_PRESETS = [
 	{
+		id: 'agnes',
 		name: 'Agnes',
 		providerName: 'Agnes APIHub',
+		website: 'https://apihub.agnes-ai.com',
 		apiUrl: 'https://apihub.agnes-ai.com/v1',
 		model: 'gpt-4o-mini',
 		visionApiUrl: '',
 		visionModel: '',
+		remark: '聚合兼容接口',
 	},
 	{
+		id: 'deepseek',
 		name: 'DeepSeek',
 		providerName: 'DeepSeek',
+		website: 'https://platform.deepseek.com',
 		apiUrl: 'https://api.deepseek.com/v1',
 		model: 'deepseek-chat',
 		visionApiUrl: '',
 		visionModel: '',
+		remark: '纯文本模型',
 	},
 	{
+		id: 'openai',
 		name: 'OpenAI',
 		providerName: 'OpenAI兼容接口',
+		website: 'https://platform.openai.com',
 		apiUrl: 'https://api.openai.com/v1',
 		model: 'gpt-4o-mini',
 		visionApiUrl: '',
 		visionModel: 'gpt-4o-mini',
+		remark: '官方兼容接口',
 	},
 	{
+		id: 'mimo',
 		name: 'Mimo',
 		providerName: 'Mimo',
+		website: 'https://api.xiaomimimo.com',
 		apiUrl: 'https://api.xiaomimimo.com/v1',
 		model: 'mimo-v2.5',
 		visionApiUrl: '',
 		visionModel: '',
+		remark: '小米 MiMo',
 	},
 	{
+		id: 'custom',
 		name: '自定义',
 		providerName: '自定义兼容接口',
+		website: '',
 		apiUrl: '',
 		model: '',
 		visionApiUrl: '',
 		visionModel: '',
+		remark: '任意 OpenAI 兼容接口',
 		custom: true,
 	},
 ];
+
+function defaultProviderEditForm() {
+	return {
+		id: '',
+		name: '',
+		providerName: '',
+		website: '',
+		apiUrl: '',
+		model: '',
+		visionApiUrl: '',
+		visionModel: '',
+		remark: '',
+		apiKey: '',
+	};
+}
 
 function defaultForm() {
 	return {
@@ -83,6 +113,11 @@ Page({
 		form: defaultForm(),
 		providerPresets: PROVIDER_PRESETS,
 		providerPresetIndex: 0,
+		providerCards: [],
+		providerEditorOpen: false,
+		providerEditIndex: -1,
+		providerEditForm: defaultProviderEditForm(),
+		providerEditKeyVisible: false,
 		keyInput: '',
 		visionKeyInput: '',
 		clearKey: false,
@@ -127,6 +162,7 @@ Page({
 			isLoad: true,
 			form: cfg,
 			providerPresetIndex: this._buildPresetState(cfg),
+			providerCards: this._buildProviderCards(cfg),
 			keyInput: '',
 			visionKeyInput: '',
 			clearKey: false,
@@ -163,12 +199,207 @@ Page({
 		this.setData(Object.assign({
 			form,
 			providerPresetIndex: index,
+			providerCards: this._buildProviderCards(form),
 		}, {
 			textModelIndex: textModelState.modelIndex,
 			textModelPickerText: textModelState.modelPickerText,
 			visionModelIndex: visionModelState.modelIndex,
 			visionModelPickerText: visionModelState.modelPickerText,
 		}));
+	},
+
+	_providerInitials: function (name) {
+		name = String(name || '').trim();
+		if (!name) return 'AI';
+		let upper = name.replace(/\s+/g, ' ').split(' ').filter(Boolean);
+		if (upper.length >= 2) return (upper[0][0] + upper[1][0]).toUpperCase();
+		return name.slice(0, 2).toUpperCase();
+	},
+
+	_simplifyUrl: function (url) {
+		url = String(url || '').trim();
+		if (!url) return '';
+		return url.replace(/\/v1\/?$/i, '').replace(/\/chat\/completions\/?$/i, '');
+	},
+
+	_isSameProvider: function (a, b) {
+		let au = String(a.apiUrl || '').replace(/\/+$/, '').toLowerCase();
+		let bu = String(b.apiUrl || '').replace(/\/+$/, '').toLowerCase();
+		if (au && bu && au == bu) return true;
+		let an = String(a.providerName || a.name || '').toLowerCase();
+		let bn = String(b.providerName || b.name || '').toLowerCase();
+		return !!(an && bn && an == bn);
+	},
+
+	_buildProviderCard: function (item, cfg, index) {
+		let active = this._isSameProvider(item, cfg);
+		let name = item.name || item.providerName || '自定义';
+		return {
+			id: item.id || ('custom_' + index),
+			name,
+			providerName: item.providerName || name,
+			initials: this._providerInitials(name),
+			website: item.website || this._simplifyUrl(item.apiUrl),
+			apiUrl: item.apiUrl || '',
+			model: item.model || '',
+			visionApiUrl: item.visionApiUrl || '',
+			visionModel: item.visionModel || '',
+			remark: item.remark || '',
+			active,
+			modelText: item.model || '未填写模型',
+			keyText: active && cfg.hasApiKey ? (cfg.apiKeyMasked || '已保存 Key') : '未保存 Key',
+			keyReady: !!(active && cfg.hasApiKey),
+			custom: !!item.custom,
+		};
+	},
+
+	_buildProviderCards: function (cfg) {
+		cfg = cfg || {};
+		let cards = [];
+		for (let i = 0; i < PROVIDER_PRESETS.length; i++) {
+			let item = PROVIDER_PRESETS[i];
+			if (item.custom) continue;
+			cards.push(this._buildProviderCard(item, cfg, i));
+		}
+		let hasCurrent = cards.some(card => this._isSameProvider(card, cfg));
+		if (!hasCurrent && (cfg.apiUrl || cfg.providerName || cfg.model)) {
+			cards.push(this._buildProviderCard({
+				id: 'current_custom',
+				name: cfg.providerName || '自定义',
+				providerName: cfg.providerName || '自定义兼容接口',
+				website: this._simplifyUrl(cfg.apiUrl),
+				apiUrl: cfg.apiUrl || '',
+				model: cfg.model || '',
+				visionApiUrl: cfg.visionApiUrl || '',
+				visionModel: cfg.visionModel || '',
+				remark: '当前正在使用',
+				custom: true,
+			}, cfg, cards.length));
+		}
+		return cards;
+	},
+
+	_applyProviderToForm: function (provider) {
+		let form = Object.assign({}, this.data.form);
+		form.providerName = provider.providerName || provider.name || form.providerName;
+		form.apiUrl = provider.apiUrl || form.apiUrl;
+		form.model = provider.model || form.model;
+		form.visionApiUrl = provider.visionApiUrl || '';
+		form.visionModel = provider.visionModel || '';
+		form.contextLimit = this._guessContextLimit(form.model);
+		form.visionContextLimit = this._guessContextLimit(form.visionModel || form.model);
+		let textModelState = this._buildModelPickerState(this.data.textModelOptions, form.model, '从已获取列表选择');
+		let visionModelState = this._buildModelPickerState(this.data.visionModelOptions, form.visionModel, '从已获取列表选择');
+		this.setData({
+			form,
+			providerPresetIndex: this._buildPresetState(form),
+			providerCards: this._buildProviderCards(form),
+			textModelIndex: textModelState.modelIndex,
+			textModelPickerText: textModelState.modelPickerText,
+			visionModelIndex: visionModelState.modelIndex,
+			visionModelPickerText: visionModelState.modelPickerText,
+			clearKey: false,
+			clearVisionKey: false,
+		});
+	},
+
+	bindProviderUseTap: function (e) {
+		let index = Number(e.currentTarget.dataset.index || 0);
+		let provider = this.data.providerCards[index];
+		if (!provider) return;
+		this._applyProviderToForm(provider);
+		pageHelper.showSuccToast('已切换，保存后生效');
+	},
+
+	bindProviderEditTap: function (e) {
+		let index = Number(e.currentTarget.dataset.index);
+		let provider = index >= 0 ? this.data.providerCards[index] : null;
+		let form = provider ? Object.assign(defaultProviderEditForm(), provider) : defaultProviderEditForm();
+		if (!form.name && this.data.form.providerName) form.name = this.data.form.providerName;
+		if (!form.providerName && form.name) form.providerName = form.name;
+		this.setData({
+			providerEditorOpen: true,
+			providerEditIndex: provider ? index : -1,
+			providerEditForm: form,
+			providerEditKeyVisible: false,
+		});
+	},
+
+	bindProviderAddTap: function () {
+		this.setData({
+			providerEditorOpen: true,
+			providerEditIndex: -1,
+			providerEditForm: defaultProviderEditForm(),
+			providerEditKeyVisible: false,
+		});
+	},
+
+	bindProviderEditorCancelTap: function () {
+		this.setData({
+			providerEditorOpen: false,
+			providerEditIndex: -1,
+			providerEditForm: defaultProviderEditForm(),
+			providerEditKeyVisible: false,
+		});
+	},
+
+	bindProviderEditInput: function (e) {
+		let field = e.currentTarget.dataset.field;
+		this.setData({ ['providerEditForm.' + field]: e.detail.value });
+	},
+
+	bindProviderEditorToggleKeyTap: function () {
+		this.setData({ providerEditKeyVisible: !this.data.providerEditKeyVisible });
+	},
+
+	bindProviderEditorPasteKeyTap: async function () {
+		try {
+			let value = await this._getClipboardSecret();
+			if (!value) return pageHelper.showModal('剪贴板里没有可粘贴的 API Key');
+			this.setData({ 'providerEditForm.apiKey': value });
+			pageHelper.showSuccToast('已粘贴');
+		} catch (err) {
+			console.error(err);
+			pageHelper.showModal('读取剪贴板失败，请确认微信已允许小程序访问剪贴板');
+		}
+	},
+
+	bindProviderEditorClearKeyTap: function () {
+		this.setData({ 'providerEditForm.apiKey': '' });
+	},
+
+	bindProviderEditorApplyTap: function () {
+		let edit = Object.assign({}, this.data.providerEditForm);
+		edit.name = String(edit.name || edit.providerName || '').trim();
+		edit.providerName = String(edit.providerName || edit.name || '').trim();
+		edit.website = String(edit.website || '').trim();
+		edit.apiUrl = String(edit.apiUrl || '').trim();
+		edit.model = String(edit.model || '').trim();
+		edit.visionApiUrl = String(edit.visionApiUrl || '').trim();
+		edit.visionModel = String(edit.visionModel || '').trim();
+		edit.remark = String(edit.remark || '').trim();
+		edit.apiKey = this._cleanSecretText(edit.apiKey);
+		if (!edit.name) return pageHelper.showModal('请填写供应商名称');
+		if (!edit.apiUrl || !/^https:\/\//.test(edit.apiUrl)) return pageHelper.showModal('API 请求地址必须以 https:// 开头');
+		if (!edit.model) return pageHelper.showModal('请填写文本模型 ID');
+
+		let cards = (this.data.providerCards || []).slice();
+		let nextCard = this._buildProviderCard(Object.assign({}, edit, {
+			id: edit.id || ('custom_' + Date.now()),
+			custom: this.data.providerEditIndex < 0,
+		}), edit, cards.length);
+		if (this.data.providerEditIndex >= 0) cards[this.data.providerEditIndex] = nextCard;
+		else cards.push(nextCard);
+		this.setData({
+			providerCards: cards,
+			keyInput: edit.apiKey || this.data.keyInput,
+			providerEditorOpen: false,
+			providerEditIndex: -1,
+			providerEditForm: defaultProviderEditForm(),
+			providerEditKeyVisible: false,
+		});
+		this._applyProviderToForm(nextCard);
+		pageHelper.showSuccToast('已应用，点保存生效');
 	},
 
 	bindInput: function (e) {
@@ -476,6 +707,7 @@ Page({
 			this.setData({
 				form: cfg,
 				providerPresetIndex: this._buildPresetState(cfg),
+				providerCards: this._buildProviderCards(cfg),
 				keyInput: '',
 				visionKeyInput: '',
 				clearKey: false,

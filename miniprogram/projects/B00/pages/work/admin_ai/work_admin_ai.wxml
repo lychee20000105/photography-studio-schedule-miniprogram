@@ -13,32 +13,96 @@
 		</view>
 
 		<view class="block">
-			<view class="section-title">服务商</view>
-			<view class="preset-grid">
-				<button wx:for="{{providerPresets}}" wx:key="name" class="preset {{providerPresetIndex==index?'active':''}}" data-index="{{index}}" bindtap="bindPresetTap">{{item.name}}</button>
+			<view class="section-head">
+				<view>
+					<view class="section-title">供应商</view>
+					<view class="desc compact">选择一套接口作为当前小猫默认配置，点编辑可改 Base URL、模型和 Key。</view>
+				</view>
+				<button class="icon-btn add-btn" bindtap="bindProviderAddTap">＋</button>
 			</view>
-			<view class="form-group">
-				<view class="label">服务名称</view>
-				<input value="{{form.providerName}}" data-field="providerName" bindinput="bindInput" placeholder="例如 Agnes APIHub / DeepSeek / Mimo" />
-			</view>
-			<view class="form-group">
-				<view class="label">接口地址 / Base URL</view>
-				<textarea value="{{form.apiUrl}}" data-field="apiUrl" bindinput="bindInput" maxlength="400" auto-height="{{true}}" placeholder="https://apihub.agnes-ai.com/v1"></textarea>
-			</view>
-			<view class="form-group">
-				<view class="label">API Key</view>
-				<view class="key-editor">
-					<input class="key-input" password="{{!showKeyInput}}" value="{{keyInput}}" bindinput="bindKeyInput" maxlength="400" confirm-type="done" adjust-position="{{true}}" cursor-spacing="96" placeholder="{{keyPlaceholder}}" />
-					<view class="key-actions">
-						<button class="key-action primary" bindtap="bindPasteKeyTap">粘贴</button>
-						<button class="key-action" bindtap="bindToggleKeyVisibleTap">{{showKeyInput?'隐藏':'显示'}}</button>
-						<button class="key-action" bindtap="bindClearKeyInputTap">清空</button>
+
+			<view class="provider-list">
+				<view wx:for="{{providerCards}}" wx:key="id" class="provider-card {{item.active?'active':''}}">
+					<view class="drag-dot">⋮⋮</view>
+					<view class="provider-avatar">{{item.initials}}</view>
+					<view class="provider-main">
+						<view class="provider-top">
+							<view class="provider-name">{{item.name}}</view>
+							<text wx:if="{{item.active}}" class="provider-tag active">当前默认</text>
+							<text wx:if="{{!item.keyReady}}" class="provider-tag">待保存 Key</text>
+						</view>
+						<view class="provider-url">{{item.apiUrl}}</view>
+						<view class="provider-meta">
+							<text>{{item.modelText}}</text>
+							<text>{{item.keyText}}</text>
+						</view>
+					</view>
+					<view class="provider-actions">
+						<button class="provider-action" data-index="{{index}}" bindtap="bindProviderEditTap">编辑</button>
+						<button class="provider-action primary" data-index="{{index}}" bindtap="bindProviderUseTap">启用</button>
 					</view>
 				</view>
-				<view wx:if="{{hasApiKey}}" class="key-state">当前已保存：{{apiKeyMasked}}</view>
-				<view wx:if="{{hasApiKey}}" class="clear-line">
-					<text>清空已保存 Key</text>
-					<switch checked="{{clearKey}}" color="#537d96" bindchange="bindClearKeyChange" />
+			</view>
+
+			<view wx:if="{{providerEditorOpen}}" class="provider-editor">
+				<view class="editor-head">
+					<view class="editor-title">{{providerEditIndex>=0?'编辑供应商':'新增供应商'}}</view>
+					<button class="editor-close" bindtap="bindProviderEditorCancelTap">×</button>
+				</view>
+				<view class="editor-grid">
+					<view class="form-group">
+						<view class="label">供应商名称</view>
+						<input value="{{providerEditForm.name}}" data-field="name" bindinput="bindProviderEditInput" placeholder="例如 Mimo / DeepSeek / blueroy.site" />
+					</view>
+					<view class="form-group">
+						<view class="label">备注</view>
+						<input value="{{providerEditForm.remark}}" data-field="remark" bindinput="bindProviderEditInput" placeholder="例如：公司专用账号" />
+					</view>
+				</view>
+				<view class="form-group">
+					<view class="label">官网链接</view>
+					<input value="{{providerEditForm.website}}" data-field="website" bindinput="bindProviderEditInput" placeholder="https://platform.example.com" />
+				</view>
+				<view class="form-group">
+					<view class="label-line">
+						<view class="label">API 请求地址</view>
+						<text class="inline-hint">OpenAI 兼容 /v1 地址</text>
+					</view>
+					<textarea value="{{providerEditForm.apiUrl}}" data-field="apiUrl" bindinput="bindProviderEditInput" maxlength="400" auto-height="{{true}}" placeholder="https://api.example.com/v1"></textarea>
+				</view>
+				<view class="form-group">
+					<view class="label">API Key</view>
+					<view class="key-editor">
+						<input class="key-input" password="{{!providerEditKeyVisible}}" value="{{providerEditForm.apiKey}}" data-field="apiKey" bindinput="bindProviderEditInput" maxlength="400" confirm-type="done" adjust-position="{{true}}" cursor-spacing="96" placeholder="{{keyPlaceholder}}" />
+						<view class="key-actions">
+							<button class="key-action primary" bindtap="bindProviderEditorPasteKeyTap">粘贴</button>
+							<button class="key-action" bindtap="bindProviderEditorToggleKeyTap">{{providerEditKeyVisible?'隐藏':'显示'}}</button>
+							<button class="key-action" bindtap="bindProviderEditorClearKeyTap">清空</button>
+						</view>
+					</view>
+					<view class="key-state">留空则不修改当前已保存 Key；填写后点“应用到当前配置”，再点页面底部“保存配置”。</view>
+					<view wx:if="{{hasApiKey}}" class="clear-line">
+						<text>清空当前已保存主 Key</text>
+						<switch checked="{{clearKey}}" color="#537d96" bindchange="bindClearKeyChange" />
+					</view>
+				</view>
+				<view class="editor-grid">
+					<view class="form-group">
+						<view class="label">文本模型 ID</view>
+						<input value="{{providerEditForm.model}}" data-field="model" bindinput="bindProviderEditInput" placeholder="mimo-v2.5 / deepseek-chat" />
+					</view>
+					<view class="form-group">
+						<view class="label">视觉模型 ID（可选）</view>
+						<input value="{{providerEditForm.visionModel}}" data-field="visionModel" bindinput="bindProviderEditInput" placeholder="留空沿用文本模型" />
+					</view>
+				</view>
+				<view class="form-group">
+					<view class="label">视觉接口地址（可选）</view>
+					<input value="{{providerEditForm.visionApiUrl}}" data-field="visionApiUrl" bindinput="bindProviderEditInput" placeholder="留空沿用主 API 请求地址" />
+				</view>
+				<view class="editor-actions">
+					<button class="editor-action" bindtap="bindProviderEditorCancelTap">取消</button>
+					<button class="editor-action primary" bindtap="bindProviderEditorApplyTap">应用到当前配置</button>
 				</view>
 			</view>
 		</view>
