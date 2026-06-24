@@ -37,8 +37,7 @@
 		this._timestamp = timeUtil.time();
 		let time = timeUtil.time('Y-M-D h:m:s');
 
-		console.log('------------------------');
-		console.log(`【${time}】【Request -- ↘↘↘】\n【↘Route = ${this._route}】`);
+		console.log(`[CTRL] ${time} Route=${this._route}`);
 
 	}
 

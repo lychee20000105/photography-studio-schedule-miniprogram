@@ -51,7 +51,7 @@ async function getTempFileURL(tempFileList, isValid = false) {
 	let result = await cloud.getTempFileURL({
 		fileList: tempFileList,
 	})
-	console.log(result);
+	console.log('[getTempFileURL] count:', result && result.fileList && result.fileList.length);
 
 	let list = result.fileList;
 	let outList = [];
@@ -132,7 +132,7 @@ async function handlerCloudFiles(oldFiles, newFiles) {
 			let result = await cloud.deleteFile({
 				fileList: [oldFiles[i]],
 			});
-			console.log(result);
+			console.log('[deleteOldFiles] result:', result && result.fileList && result.fileList[0] && result.fileList[0].status);
 		}
 
 	}
