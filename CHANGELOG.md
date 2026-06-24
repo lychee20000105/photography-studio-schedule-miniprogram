@@ -1,5 +1,42 @@
 # Changelog
 
+## v2.01 - 2026-06-25
+
+Bug修复、安全加固、性能优化、代码清理全系列。5个批次依次落地：紧急 Bug 修复、安全加固、性能优化、代码清理、维护文件清理。
+
+### Bug 修复 (Batch 1)
+
+- 修复 `clearTimer` 中 `clearInterval(null)` 导致定时器永远不清除的 bug，改为传入实际 timer ID 并置 null。
+- AI 聊天/解释 token 上限从 500 提升到 800，改善中文回复截断问题。
+- 默认 token 从 600 提升到 800，write/complex 类型同步提升。
+
+### 安全加固 (Batch 2)
+
+- AI 聊天接口新增服务端限流：每用户每分钟最多 15 次调用。
+- 用户消息增加 prompt injection 过滤，清除常见注入模式。
+- 前台和后台内容安全校验默认开启（CLIENT_CHECK_CONTENT / ADMIN_CHECK_CONTENT）。
+- 管理员 Token 过期时间统一为 2 小时（前后端一致）。
+- Thread ID 生成使用 base36 时间戳 + 双段随机数，替代原来弱随机。
+
+### 性能优化 (Batch 3)
+
+- 后端 calendar 返回中携带 participantIds，客户端 joined scope 过滤改为本地判断，消除 N+1 云函数调用。
+- calendarCache 限制为最近 5 个月，超出自动淘汰旧月份。
+- typewriter 每 3 个字符才 setData 一次（原逐字符），滚动频率降至每 15 字符。
+- work_performance 和 my_index 的 onShow 增加 30s 缓存 TTL。
+- wx.chooseImage 迁移到 wx.chooseMedia（2 处）。
+
+### 代码清理 (Batch 4)
+
+- `_today()` 提取到 helper/date_helper.js，4 个页面复用。
+- `_formatOrder()` / `_isUndatedOrder()` 提取到 helper/order_helper.js，2 个页面复用。
+- imgTypeCheck 改为大小写不敏感，新增 webp 支持。
+- cloud_helper.js 添加 callCloudSubmit / callCloudSubmitAsync 拼写别名。
+
+### 维护清理 (Batch 5)
+
+- 删除 docs/maintenance/ 下过期进程文件（longrun-status.json、longrun-heartbeat.md、longrun-progress.md、token-budget-summary.json 等）。
+
 ## v2.02 - 2026-06-24
 
 小猫助手内置小游戏 MVP。新增养成游戏入口、game_helper 数据管理模块、三款小游戏骨架。

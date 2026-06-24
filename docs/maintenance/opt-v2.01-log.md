@@ -51,3 +51,17 @@
   9. `miniprogram/helper/cloud_helper.js` — 添加 callCloudSubmit / callCloudSubmitAsync 别名
   10. `miniprogram/version.js` — 更新版本信息
 - **状态**: completed
+
+## Batch 5: 维护清理 (v2.01-b5)
+- **时间**: 2026-06-25 01:00 CST
+- **分支**: v2.01-b5
+- **清理内容**:
+  1. `docs/maintenance/agent-upgrade-claude-worker-20260620-033624/longrun-status.json` — 删除（进程已终止，状态过期）
+  2. `docs/maintenance/agent-upgrade-claude-worker-20260620-033624/longrun-heartbeat.md` — 删除（UTF-16 编码损坏）
+  3. `docs/maintenance/agent-upgrade-claude-worker-20260620-033624/longrun-progress.md` — 删除（进度过期）
+  4. `docs/maintenance/agent-upgrade-claude-worker-20260620-033624/token-budget-summary.json` — 删除（token 预算过期）
+  5. `docs/maintenance/agent-upgrade-claude-worker-20260620-033624/` 目录保留（仍有 bug-hunt-1000-counter.json、final-summary.md、unified-plan.md 三个有效文件）
+  6. `miniprogram/version.js` — 顶层元数据升级为 v2.01 正式版，history 首条合并为 v2.01 正式版总摘要
+  7. `CHANGELOG.md` — 顶部插入 v2.01 完整条目（5 个批次摘要）
+- **备注**: supervisor.pid、resume-prompt.md、agent-upgrade-resume-objective-20260620-0424.txt、watchdog.pid、空 longrun-20260620 目录在本次扫描中未找到，可能已在之前步骤中清理
+- **状态**: completed
