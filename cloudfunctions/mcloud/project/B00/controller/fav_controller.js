@@ -15,9 +15,9 @@ class FavController extends BaseProjectController {
 		// 数据校验
 		let rules = {
 			oid: 'id|must',
-			title: 'string|must',
-			type: 'string|must',
-			path: 'string|must',
+			title: 'string|must|max:100',
+			type: 'string|must|max:20',
+			path: 'string|must|max:200',
 		};
 
 		// 取得数据

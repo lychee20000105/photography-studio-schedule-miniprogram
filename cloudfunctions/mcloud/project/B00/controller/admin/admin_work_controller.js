@@ -26,7 +26,7 @@ class AdminWorkController extends BaseProjectAdminController {
 		await this.isAdmin();
 		let input = this.validateData({
 			id: 'must|id|name=员工ID',
-			status: 'must|int|name=状态',
+			status: 'must|int|in:0,1|name=状态',
 		});
 		let service = new AdminWorkService();
 		return await service.stopStaff(input.id, input.status);
@@ -102,7 +102,7 @@ class AdminWorkController extends BaseProjectAdminController {
 		let input = this.validateData({
 			staffId: 'must|id|name=员工ID',
 			month: 'must|yearmonth|name=月份',
-			actualAmount: 'digit|name=实发金额',
+			actualAmount: 'digit|min:0|max:9999999|name=实发金额',
 			note: 'string|max:200|name=备注',
 		});
 		let service = new AdminWorkService();

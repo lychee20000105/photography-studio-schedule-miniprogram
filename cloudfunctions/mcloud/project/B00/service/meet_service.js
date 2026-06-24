@@ -616,7 +616,6 @@ class MeetService extends BaseProjectService {
 
 		let where = {};
 		if (typeId && typeId !== '0') where.MEET_TYPE_ID = typeId;
-		console.log(typeId)
 		where.MEET_STATUS = ['in', [MeetModel.STATUS.COMM, MeetModel.STATUS.OVER]]; // 状态  
 
 		let safeSearch = dbUtil.fmtRegexKeyword(search);

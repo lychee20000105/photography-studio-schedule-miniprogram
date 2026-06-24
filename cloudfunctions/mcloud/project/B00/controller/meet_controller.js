@@ -205,7 +205,7 @@ class MeetController extends BaseProjectController {
 
 		// 数据校验
 		let rules = {
-			timeMark: 'must|string',
+			timeMark: 'must|string|max:50',
 		};
 
 		// 取得数据
@@ -220,8 +220,8 @@ class MeetController extends BaseProjectController {
 	async detailForJoin() {
 		// 数据校验
 		let rules = {
-			meetId: 'must|meetId',
-			timeMark: 'must|string',
+			meetId: 'must|id',
+			timeMark: 'must|string|max:50',
 		};
 
 		// 取得数据
@@ -262,7 +262,7 @@ class MeetController extends BaseProjectController {
 		// 数据校验
 		let rules = {
 			meetId: 'must|id',
-			timeMark: 'must|string',
+			timeMark: 'must|string|max:50',
 		};
 
 		// 取得数据
@@ -277,7 +277,7 @@ class MeetController extends BaseProjectController {
 		// 数据校验
 		let rules = {
 			meetId: 'must|id',
-			timeMark: 'must|string',
+			timeMark: 'must|string|max:50',
 			forms: 'must|array',
 		};
 

@@ -1129,7 +1129,9 @@ class WorkAiService extends WorkPermissionService {
 			try {
 				let day = this._cleanDate(raw, false);
 				if (day) found[day] = true;
-			} catch (err) {}
+			} catch (err) {
+				console.error('_extractSingleTextDate: skip unparseable date:', raw);
+			}
 		};
 
 		let full = /(\d{4})[年./-](\d{1,2})[月./-](\d{1,2})(?:日|号)?(?!\d)/g;

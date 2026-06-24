@@ -16,8 +16,8 @@ class CheckController extends BaseProjectController {
 
 		// 数据校验
 		let rules = {
-			img: 'name=img',
-			mine: 'must|default=jpg',
+			img: 'must|string|max:200|name=图片',
+			mine: 'must|default=jpg|name=类型',
 		};
 
 		// 取得数据

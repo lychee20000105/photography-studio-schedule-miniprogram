@@ -124,8 +124,8 @@ class WorkAdminController extends BaseProjectController {
 			month: 'string|name=月份',
 			staffId: 'string|name=员工',
 			teamId: 'string|name=团队',
-			type: 'string|name=收款类型',
-			direction: 'string|name=方向',
+			type: 'string|in:income,refund,adjust|name=收款类型',
+			direction: 'string|in:in,out|name=方向',
 			orderId: 'string|name=订单',
 			status: 'int|name=状态',
 			keyword: 'string|max:64|name=关键词',
@@ -152,7 +152,7 @@ class WorkAdminController extends BaseProjectController {
 
 	async savePayment() {
 		let input = this.validateData({
-			orderId: 'string|name=订单ID',
+			orderId: 'string|max:50|name=订单ID',
 			payment: 'must|object|name=收款',
 		});
 		let staff = await this._assertMiniAdmin();
@@ -177,7 +177,7 @@ class WorkAdminController extends BaseProjectController {
 		let input = this.validateData({
 			month: 'string|name=月份',
 			staffId: 'string|name=员工',
-			kind: 'string|name=提成类型',
+			kind: 'string|in:advance,frozen,release,deduct|name=提成类型',
 			status: 'int|name=状态',
 			orderId: 'string|name=订单',
 			paymentId: 'string|name=收款',
@@ -284,7 +284,7 @@ class WorkAdminController extends BaseProjectController {
 	async getAgentAuditList() {
 		let input = this.validateData({
 			action: 'string|max:40|name=AI动作',
-			riskLevel: 'string|max:40|name=风险等级',
+			riskLevel: 'string|in:low,medium,high,critical|max:40|name=风险等级',
 			staffId: 'string|max:80|name=员工ID',
 			staffName: 'string|max:80|name=员工姓名',
 			keyword: 'string|max:80|name=关键词',
