@@ -1,4 +1,4 @@
-<wxs src="../../../../helper/filters.wxs" module="f" />
+<wxs src="../../../../../helper/filters.wxs" module="f" />
 <view class="page">
 	<view class="filters">
 		<picker mode="date" fields="month" value="{{month}}" bindchange="bindMonthChange"><view>{{month}}</view></picker>

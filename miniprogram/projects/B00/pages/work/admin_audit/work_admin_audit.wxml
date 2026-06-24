@@ -1,4 +1,4 @@
-<wxs src="../../../../helper/filters.wxs" module="f" />
+<wxs src="../../../../../helper/filters.wxs" module="f" />
 <view class="page">
 	<view class="section">订单完成审核</view>
 	<view wx:if="{{orders.length==0}}" class="empty">暂无待审核订单</view>
