@@ -11,16 +11,25 @@ class WorkAdminStaffService extends BaseProjectService {
 	async getStaffList() {
 		let list = await WorkStaffModel.getAll({
 			_pid: util.getProjectId(),
-		}, '*', {
+		}, '_id,STAFF_ID,STAFF_NAME,STAFF_ROLES,STAFF_IS_ADMIN,STAFF_STATUS,STAFF_TEAM_ID,STAFF_TEAM_NAME', {
 			STAFF_STATUS: 'desc',
 			STAFF_NAME: 'asc',
 		}, 1000);
 		return list || [];
 	}
 
-	async saveStaff(input) {
+	async saveStaff(input, adminOpenId) {
 		input = input || {};
 		let id = input._id || input.id || '';
+		let isAdminSetting = input.STAFF_IS_ADMIN !== undefined;
+
+		// Fix 1: 权限提升防护——修改 STAFF_IS_ADMIN 必须由管理员操作
+		if (isAdminSetting) {
+			if (!adminOpenId) this.AppError('无权修改管理员权限');
+			let caller = await WorkStaffModel.getOne({ STAFF_OPENID: adminOpenId, _pid: util.getProjectId() }, 'STAFF_IS_ADMIN');
+			if (!caller || !caller.STAFF_IS_ADMIN) this.AppError('仅管理员可修改管理员权限');
+		}
+
 		let name = String(input.STAFF_NAME || '').trim();
 		let mobile = String(input.STAFF_MOBILE || '').trim();
 		let bindCode = String(input.STAFF_BIND_CODE || '').trim();

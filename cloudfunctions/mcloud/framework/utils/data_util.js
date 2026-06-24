@@ -183,7 +183,7 @@ function getTitleByForm(arr) {
 // 根据数据库自定义表单提取数据
 function getValByForm(arr, mark, title) {
 	for (let k in arr) {
-		if (arr.type == 'image' || arr.type == 'content') continue;
+		if (arr[k].type == 'image' || arr[k].type == 'content') continue;
 
 		if (arr[k].mark == mark) return arr[k].val;
 		if (arr[k].title == title) return arr[k].val;
@@ -269,7 +269,7 @@ function str2Arr(str, sp = ',') {
  * @returns bool
  */
 function isNumber(val) {
-	var reg = /^[0-9]+.?[0-9]*$/;
+	var reg = /^\d+(\.\d+)?$/;
 	if (reg.test(val)) {
 		return true;
 	} else {
@@ -375,8 +375,8 @@ function fmtMoney(s, dot = ',', prefix = '¥') {
 	s = parseFloat((s + "").replace(/[^\d\.-]/g, "")).toFixed(2) + "";
 	var l = s.split(".")[0].split("").reverse(),
 		r = s.split(".")[1];
-	t = "";
-	for (i = 0; i < l.length; i++) {
+	let t = "";
+	for (let i = 0; i < l.length; i++) {
 		t += l[i] + ((i + 1) % 3 == 0 && (i + 1) != l.length ? dot : "");
 	}
 	return prefix + t.split("").reverse().join("") + "." + r;
