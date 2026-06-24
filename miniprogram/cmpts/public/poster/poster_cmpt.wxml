@@ -8,7 +8,7 @@
 			<view class="action plan-text text-l" bindtap="bindCloseTap">关闭</view>
 		</view>
 		<view class="poster-img">
-			<image bindtap="url" data-type="img" data-url="{{img}}" wx:if="{{isLoad}}" mode="widthFix" src="{{img}}"
+			<image lazy-load bindtap="url" data-type="img" data-url="{{img}}" wx:if="{{isLoad}}" mode="widthFix" src="{{img}}"
 				class="shadow loading"></image>
 
 			<view wx:else class="load loading text-l"></view>
@@ -17,14 +17,14 @@
 		<view class="poster-share">
 			<button class="item item-share clearbtn" open-type="share" data-img="{{img}}">
 				<view class="pic">
-					<image src="images/wechat.png" />
+					<image lazy-load src="images/wechat.png" />
 				</view>
 				<text>分享给朋友</text>
 			</button>
 
 			<view class="item" bindtap="bindSaveTap">
 				<view class="pic">
-					<image class='friend' src="images/friend.png" />
+					<image lazy-load class='friend' src="images/friend.png" />
 				</view>
 				<text>保存后发朋友圈</text>
 			</view>

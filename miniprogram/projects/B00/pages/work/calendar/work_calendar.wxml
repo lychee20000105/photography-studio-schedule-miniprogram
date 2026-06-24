@@ -1,4 +1,5 @@
 <view wx:if="{{!isLoad}}" class="margin-top load loading text-l text-project"></view>
+<skeleton loading="{{!isLoad}}" rows="{{skeletonRows}}" />
 
 <view class="work-page" wx:if="{{isLoad}}">
 	<view wx:if="{{isGuest}}" class="guest-banner">

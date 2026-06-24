@@ -1,0 +1,24 @@
+<!-- 骨架屏组件：加载中灰色矩形 + shimmer 动画 -->
+<view class="skeleton" wx:if="{{loading}}">
+	<view class="skeleton-row">
+		<view class="skeleton-avatar"></view>
+		<view class="skeleton-lines">
+			<view class="skeleton-line"></view>
+			<view class="skeleton-line short"></view>
+		</view>
+	</view>
+	<view class="skeleton-row">
+		<view class="skeleton-avatar"></view>
+		<view class="skeleton-lines">
+			<view class="skeleton-line"></view>
+			<view class="skeleton-line short"></view>
+		</view>
+	</view>
+	<view class="skeleton-row">
+		<view class="skeleton-avatar"></view>
+		<view class="skeleton-lines">
+			<view class="skeleton-line"></view>
+			<view class="skeleton-line short"></view>
+		</view>
+	</view>
+</view>

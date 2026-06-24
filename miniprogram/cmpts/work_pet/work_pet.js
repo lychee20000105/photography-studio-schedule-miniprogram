@@ -1083,7 +1083,11 @@ Component({
 				let updated = trimMessages(messages.concat([{ role: 'assistant', content: text }]));
 				let stillSame = !this.data.activeChatId || this.data.activeChatId === threadId;
 				if (stillSame) {
-					this.setData({ chatMessages: updated, chatLoading: false });
+					let lastIdx = updated.length - 1;
+					this.setData({
+						chatMessages: updated,
+						chatLoading: false
+					});
 					this._scrollChatToBottom();
 				} else {
 					this.setData({ chatLoading: false });
@@ -1098,6 +1102,7 @@ Component({
 			let speed = typewriterSpeed(text);
 			let self = this;
 			let _capturedThreadId = threadId;
+			let _assistantIdx = placeholder.length - 1;
 			function tick() {
 				// Fix #6: stop if component destroyed
 				if (self._destroyed) { self._typewriterTimer = null; return; }
@@ -1105,7 +1110,10 @@ Component({
 					let final = trimMessages(messages.concat([{ role: 'assistant', content: text }]));
 					let same = !self.data.activeChatId || self.data.activeChatId === _capturedThreadId;
 					if (same) {
-						self.setData({ chatMessages: final, chatLoading: false });
+						self.setData({
+							[`chatMessages[${_assistantIdx}].content`]: text,
+							chatLoading: false
+						});
 						self._scrollChatToBottom();
 					} else {
 						self.setData({ chatLoading: false });
@@ -1120,8 +1128,7 @@ Component({
 				let same = !self.data.activeChatId || self.data.activeChatId === _capturedThreadId;
 				if (same && (idx % 3 === 0 || idx >= text.length)) {
 					let partial = text.slice(0, idx) + '▌';
-					let msgs = trimMessages(messages.concat([{ role: 'assistant', content: partial }]));
-					self.setData({ chatMessages: msgs });
+					self.setData({ [`chatMessages[${_assistantIdx}].content`]: partial });
 					if (idx % 15 === 0) self._scrollChatToBottom();
 				}
 				self._typewriterTimer = setTimeout(tick, nextDelay);

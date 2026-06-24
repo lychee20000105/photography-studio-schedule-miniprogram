@@ -11,7 +11,7 @@
 				</view>
 			</view>
 			<view class="avatar">
-				<image mode="aspectFit" src="../../../images/tabbar/my_cur.png" />
+				<image lazy-load mode="aspectFit" src="../../../images/tabbar/my_cur.png" />
 			</view>
 		</view>
 	</view>

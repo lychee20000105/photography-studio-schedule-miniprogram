@@ -1,4 +1,7 @@
 {
 	"navigationBarTitleText": "云屿摄影-订单档期",
-	"enablePullDownRefresh": false
+	"enablePullDownRefresh": false,
+	"usingComponents": {
+		"skeleton": "/cmpts/skeleton/skeleton"
+	}
 }

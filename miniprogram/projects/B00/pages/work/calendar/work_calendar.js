@@ -27,6 +27,12 @@ Page({
 		touchMoved: false,
 		isDragging: false,
 		isAnimating: false,
+		skeletonRows: [
+			{ avatar: true },
+			{ avatar: true },
+			{ avatar: true },
+			{ avatar: true },
+		],
 	},
 
 	onLoad: async function (options = {}) {

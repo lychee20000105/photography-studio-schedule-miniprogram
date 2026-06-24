@@ -19,7 +19,7 @@
 					2. 用户在预约当天扫码有效，不可提前核销
 					3. 在预约结束时间未到情况下，用户可自行扫码完成核销
 					4. 若结束时间已到，需要管理员进行人工扫码核销或者在后台核销</text></view>
-			<image bindtap="url" data-type="img" data-url="{{qrUrl}}" mode="aspectFill" class="loading" show-menu-by-longpress="true" src="{{qrUrl}}"></image>
+			<image lazy-load bindtap="url" data-type="img" data-url="{{qrUrl}}" mode="aspectFill" class="loading" show-menu-by-longpress="true" src="{{qrUrl}}"></image>
 			<view class="oprt">长按图片保存小程序码</view>
 		</view>
 
