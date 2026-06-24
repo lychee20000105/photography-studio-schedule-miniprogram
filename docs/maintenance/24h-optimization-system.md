@@ -50,7 +50,7 @@
 - [x] B17: 暗黑模式支持 — CSS 变量主题切换 ✅
 - [ ] B18: 性能监控体系 — 首屏时间 + setData 耗时 + 云函数延迟
 - [ ] B19: AI 聊天流式渲染 — wx.request enableChunked + 缓冲节流 ⏳ 执行中
-- [ ] B20: recycle-view 虚拟列表 — 触底加载 + 分页 ⏳ 执行中
+- [x] B20: 长列表优化 — 触底加载 + 分页 ✅
 - [ ] B19: AI 聊天流式渲染 — wx.request enableChunked + 缓冲节流
 - [ ] B20: recycle-view 虚拟列表 — 聊天和工单长列表优化
 
