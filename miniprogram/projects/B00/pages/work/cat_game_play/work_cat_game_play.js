@@ -1,6 +1,9 @@
+/**
+ * 三款成熟小游戏：猫咪快抓(打地鼠) | 记忆翻牌(配对) | 合成2048
+ * v2.07 全面重写，参考 GitHub 热门开源小游戏玩法
+ */
 const gameHelper = require('../../../../../helper/game_helper.js');
 
-// 三种小游戏统一框架：photo(接单快拍) | retouch(修图挑战) | post(小红书爆款)
 Page({
   data: {
     gameId: '',
@@ -14,141 +17,133 @@ Page({
     countdownAnim: false,
     screenShake: false,
     flashShow: false,
-    particles: [],
-    _particleId: 0,
-    combo: 0,
-    comboShow: false,
-    comboText: '',
     hitFeedback: '',
     hitFeedbackShow: false,
-    // 修图挑战专用
-    retouchChallenge: null,   // {targetFilter, options[], photoArea}
-    retouchRound: 0,
-    // 小红书爆款专用
-    postChallenge: null,      // {titles[], covers[], bestCombo}
-    postRound: 0,
+    combo: 0,
+    // 记忆翻牌
+    memCards: [],
+    attempts: 0,
+    // 合成2048
+    tBgCells: [],
+    tTiles: [],
+    tBestScore: 0,
   },
 
   _timer: null,
   _timers: [],
   _gameEnded: false,
+  // Canvas
   _canvas: null,
   _ctx: null,
   _canvasW: 0,
   _canvasH: 0,
   _animId: null,
   _lastTime: 0,
-  // photo game
-  _targets: [],
-  _targetTimer: null,
+  // 打地鼠
+  _moles: [],
+  _spawnTimer: null,
   _spawnInterval: 1200,
-  // retouch game
-  _retouchOptions: [],
-  // post game
-  _postOptions: [],
+  // 记忆翻牌
+  _memLock: false,
+  _memFirst: -1,
+  _memMatched: 0,
+  _memTotal: 8,
+  // 2048
+  _tGrid: null,
+  _tMoved: false,
+  _tTouchStart: null,
 
-  _EXPRESSIONS: {
-    photo: ['😊', '😍', '🤩', '😄', '🥰'],
-    retouch: ['🎨', '✨', '🖌️', '💎', '🌈'],
-    post: ['📱', '❤️', '🔥', '🌟', '👍'],
-  },
+  // ===== 配置 =====
+  _MOLE_EMOJIS: ['😊', '😍', '🤩', '😄', '🥰', '😎', '🌟', '📸'],
+  _MOLE_GOLDEN_CHANCE: 0.15,
+  _MOLE_CAT_CHANCE: 0.1,
+  _MEM_EMOJIS: ['📸', '📷', '🎞️', '💡', '🎨', '🖌️', '⭐', '🌸'],
 
-  // ===== 滤镜库 =====
-  _FILTERS: [
-    { id: 'warm', name: '暖阳', emoji: '☀️', color: '#ff9800', desc: '温暖色调' },
-    { id: 'cool', name: '清冷', emoji: '❄️', color: '#42a5f5', desc: '冷色调' },
-    { id: 'vintage', name: '复古', emoji: '📷', color: '#8d6e63', desc: '复古胶片' },
-    { id: 'bright', name: '明亮', emoji: '💡', color: '#ffee58', desc: '提亮曝光' },
-    { id: 'bw', name: '黑白', emoji: '🖤', color: '#616161', desc: '黑白经典' },
-    { id: 'pink', name: '粉嫩', emoji: '🌸', color: '#f48fb1', desc: '少女粉调' },
-    { id: 'fresh', name: '清新', emoji: '🌿', color: '#81c784', desc: '清新自然' },
-    { id: 'dramatic', name: '戏剧', emoji: '🎭', color: '#7e57c2', desc: '高对比度' },
+  _POS: [
+    { col: 0, row: 0 }, { col: 1, row: 0 }, { col: 2, row: 0 },
+    { col: 0, row: 1 }, { col: 1, row: 1 }, { col: 2, row: 1 },
+    { col: 0, row: 2 }, { col: 1, row: 2 }, { col: 2, row: 2 },
   ],
 
-  // ===== 小红书标题库 =====
-  _POST_TITLES: [
-    { text: '姐妹们！这套写真绝了！🔥', score: 3 },
-    { text: '今天是仙女本仙✨', score: 2 },
-    { text: '拍照姿势分享', score: 1 },
-    { text: '一整个爱住！这个光线太美了', score: 3 },
-    { text: '年度最佳写真📸', score: 2 },
-    { text: '分享一下我的拍摄花絮', score: 1 },
-    { text: '氛围感拉满的室内写真', score: 3 },
-    { text: '客片分享 每一张都是故事', score: 2 },
-    { text: '周末约拍', score: 1 },
-    { text: '这个角度拍显脸小！必收藏', score: 3 },
-    { text: '发朋友圈被问爆的拍照地', score: 2 },
-    { text: '日系清新人像摄影', score: 1 },
-  ],
-  _POST_COVERS: [
-    { emoji: '🌅', name: '逆光剪影', score: 3 },
-    { emoji: '💐', name: '花丛特写', score: 2 },
-    { emoji: '🏙️', name: '城市街拍', score: 2 },
-    { emoji: '🌊', name: '海边漫步', score: 3 },
-    { emoji: '☕', name: '咖啡馆', score: 1 },
-    { emoji: '🌳', name: '公园草地', score: 1 },
-    { emoji: '✨', name: '光影斑驳', score: 3 },
-    { emoji: '🎀', name: '室内布景', score: 2 },
-  ],
-
+  // =================================================================
+  // Lifecycle
+  // =================================================================
   onLoad(options) {
     const gameId = options.id || 'photo';
-    const gameTypes = gameHelper.GAME_TYPES;
-    const gameInfo = gameTypes.find(g => g.id === gameId) || gameTypes[0];
-    this.setData({ gameId, gameInfo });
+    const info = gameHelper.GAME_TYPES.find(g => g.id === gameId) || gameHelper.GAME_TYPES[0];
+    const best = wx.getStorageSync('T2048_BEST') || 0;
+    this.setData({ gameId, gameInfo: info, tBestScore: best });
   },
 
-  onReady() { this._initCanvas(); },
+  onReady() {
+    if (this.data.gameId === 'photo') this._initCanvas();
+  },
+
   onUnload() { this._cleanup(); },
   onHide() {
     if (this.data.playing) { this._cleanup(); this._endGame(); }
   },
 
+  // =================================================================
+  // Canvas init (打地鼠专用)
+  // =================================================================
   _initCanvas() {
-    const query = wx.createSelectorQuery();
-    query.select('#gameCanvas').fields({ node: true, size: true }).exec((res) => {
+    const q = wx.createSelectorQuery();
+    q.select('#gameCanvas').fields({ node: true, size: true }).exec(res => {
       if (!res || !res[0]) return;
-      const canvas = res[0].node;
-      const ctx = canvas.getContext('2d');
+      const c = res[0].node;
+      const ctx = c.getContext('2d');
       const dpr = wx.getWindowInfo().pixelRatio || 2;
-      const w = res[0].width;
-      const h = res[0].height;
-      canvas.width = w * dpr;
-      canvas.height = h * dpr;
+      const w = res[0].width, h = res[0].height;
+      c.width = w * dpr;
+      c.height = h * dpr;
       ctx.scale(dpr, dpr);
-      this._canvas = canvas;
+      this._canvas = c;
       this._ctx = ctx;
       this._canvasW = w;
       this._canvasH = h;
-      this._drawIdle();
+      this._drawIdleCanvas();
     });
   },
 
-  _drawIdle() {
+  _drawIdleCanvas() {
     const ctx = this._ctx;
     if (!ctx) return;
     const w = this._canvasW, h = this._canvasH;
     ctx.clearRect(0, 0, w, h);
-    const grad = ctx.createLinearGradient(0, 0, 0, h);
-    grad.addColorStop(0, '#e8f4f8');
-    grad.addColorStop(1, '#d4ecf0');
-    ctx.fillStyle = grad;
+    const g = ctx.createLinearGradient(0, 0, 0, h);
+    g.addColorStop(0, '#e8f4f8');
+    g.addColorStop(1, '#d4ecf0');
+    ctx.fillStyle = g;
     ctx.fillRect(0, 0, w, h);
-    ctx.fillStyle = '#c8b896';
-    ctx.fillRect(0, h * 0.78, w, h * 0.22);
-    ctx.fillStyle = '#b8a886';
-    ctx.fillRect(0, h * 0.78, w, 2);
-    ctx.fillStyle = '#999';
-    ctx.font = '14px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('准备开始...', w / 2, h / 2);
+    this._drawHoles(ctx, w, h);
   },
 
-  // ===== 通用定时器 =====
+  _drawHoles(ctx, w, h) {
+    const cellW = w / 3, cellH = h / 3;
+    for (let r = 0; r < 3; r++) {
+      for (let c = 0; c < 3; c++) {
+        const cx = cellW * c + cellW / 2;
+        const cy = cellH * r + cellH * 2 / 3;
+        const rx = cellW * 0.35, ry = cellH * 0.18;
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+        ctx.fillStyle = '#8B7355';
+        ctx.fill();
+        ctx.strokeStyle = '#6B5335';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      }
+    }
+  },
+
+  // =================================================================
+  // Timer helpers
+  // =================================================================
   _setTimer(fn, delay) {
     const id = setTimeout(() => {
-      const idx = this._timers.indexOf(id);
-      if (idx >= 0) this._timers.splice(idx, 1);
+      const i = this._timers.indexOf(id);
+      if (i >= 0) this._timers.splice(i, 1);
       fn();
     }, delay);
     this._timers.push(id);
@@ -157,7 +152,7 @@ Page({
 
   _clearAllTimers() {
     if (this._timer) { clearInterval(this._timer); this._timer = null; }
-    if (this._targetTimer) { clearInterval(this._targetTimer); this._targetTimer = null; }
+    if (this._spawnTimer) { clearInterval(this._spawnTimer); this._spawnTimer = null; }
     this._timers.forEach(id => clearTimeout(id));
     this._timers = [];
   },
@@ -168,10 +163,12 @@ Page({
       this._canvas.cancelAnimationFrame(this._animId);
       this._animId = null;
     }
-    this._targets = [];
+    this._moles = [];
   },
 
-  // ===== 游戏开始 =====
+  // =================================================================
+  // Game start flow
+  // =================================================================
   onStartTap() {
     try { wx.vibrateShort({ type: 'light' }); } catch (e) {}
     this._startCountdown();
@@ -180,11 +177,11 @@ Page({
   _startCountdown() {
     this._gameEnded = false;
     this._clearAllTimers();
-    this.setData({ countdown: 3, countdownAnim: true, combo: 0 });
+    this.setData({ countdown: 3, countdownAnim: true, combo: 0, score: 0, timeLeft: 180 });
     try { wx.vibrateShort({ type: 'heavy' }); } catch (e) {}
     const tick = (n) => {
       if (n <= 0) {
-        this.setData({ countdown: 0, countdownAnim: false, playing: true, score: 0, timeLeft: 180, result: null });
+        this.setData({ countdown: 0, countdownAnim: false, playing: true, result: null });
         this._startGame();
         return;
       }
@@ -199,432 +196,500 @@ Page({
   _startGame() {
     this._lastTime = Date.now();
     this._startTimer();
-    const gameId = this.data.gameId;
-    if (gameId === 'photo') {
-      this._startPhotoGame();
-    } else if (gameId === 'retouch') {
-      this._startRetouchGame();
-    } else if (gameId === 'post') {
-      this._startPostGame();
-    }
+    const id = this.data.gameId;
+    if (id === 'photo') this._startWhackGame();
+    else if (id === 'retouch') this._startMemoryGame();
+    else if (id === 'post') this._start2048Game();
   },
 
   _startTimer() {
-    if (this._timer) { clearInterval(this._timer); }
+    if (this._timer) clearInterval(this._timer);
     this.setData({ timeDisplay: '3:00' });
     this._timer = setInterval(() => {
-      let timeLeft = this.data.timeLeft - 1;
-      if (timeLeft <= 0) {
+      let t = this.data.timeLeft - 1;
+      if (t <= 0) {
         this._clearAllTimers();
         this._endGame();
         return;
       }
-      const m = Math.floor(timeLeft / 60);
-      const s = timeLeft % 60;
-      this.setData({ timeLeft, timeDisplay: m + ':' + (s < 10 ? '0' : '') + s });
+      const m = Math.floor(t / 60), s = t % 60;
+      this.setData({ timeLeft: t, timeDisplay: m + ':' + (s < 10 ? '0' : '') + s });
     }, 1000);
   },
 
   // =================================================================
-  // 接单快拍 (photo) - Canvas 2D 目标下落
+  // 1) 猫咪快抓 (打地鼠)
   // =================================================================
-  _startPhotoGame() {
-    this._targets = [];
+  _startWhackGame() {
+    this._moles = [];
     this._spawnInterval = 1200;
-    this._spawnPhotoTarget();
-    this._targetTimer = setInterval(() => this._spawnPhotoTarget(), this._spawnInterval);
-    this._photoLoop();
+    // 确保 canvas 已就绪
+    if (!this._ctx) {
+      this._initCanvas();
+      this._setTimer(() => {
+        if (!this._ctx) return;
+        this._beginWhackSpawn();
+      }, 300);
+      return;
+    }
+    this._beginWhackSpawn();
   },
 
-  _spawnPhotoTarget() {
-    const w = this._canvasW || 350;
-    const h = this._canvasH || 300;
-    const expressions = this._EXPRESSIONS.photo;
-    const emoji = expressions[Math.floor(Math.random() * expressions.length)];
-    const radius = 22 + Math.random() * 14;
-    const x = radius + 10 + Math.random() * (w - radius * 2 - 20);
-    const y = -radius;
-    const speed = 0.25 + Math.random() * 0.35 + (180 - this.data.timeLeft) * 0.002;
-    const lifeMs = 2200 + Math.random() * 1200;
-    this._targets.push({
-      x, y, radius, emoji, speed,
-      born: Date.now(), lifeMs,
-      bestStart: lifeMs * 0.25, bestEnd: lifeMs * 0.65,
-      phase: 'normal', opacity: 1, scale: 0.3, hit: false,
+  _beginWhackSpawn() {
+    this._spawnMole();
+    this._spawnTimer = setInterval(() => this._spawnMole(), this._spawnInterval);
+    this._whackLoop();
+  },
+
+  _spawnMole() {
+    const now = Date.now();
+    // 找空洞
+    const occupied = {};
+    this._moles.forEach(m => { if (now - m.born < m.duration) occupied[m.hole] = true; });
+    const free = [];
+    for (let i = 0; i < 9; i++) if (!occupied[i]) free.push(i);
+    if (free.length === 0) return;
+    const hole = free[Math.floor(Math.random() * free.length)];
+
+    let emoji, isGolden = false, isCat = false;
+    const r = Math.random();
+    if (r < this._MOLE_CAT_CHANCE) {
+      emoji = '🐱';
+      isCat = true;
+    } else if (r < this._MOLE_CAT_CHANCE + this._MOLE_GOLDEN_CHANCE) {
+      emoji = '🌟';
+      isGolden = true;
+    } else {
+      emoji = this._MOLE_EMOJIS[Math.floor(Math.random() * this._MOLE_EMOJIS.length)];
+    }
+
+    const elapsed = 180 - this.data.timeLeft;
+    const duration = Math.max(600, 1800 - elapsed * 3);
+
+    this._moles.push({
+      hole, emoji, isGolden, isCat,
+      born: now, duration, hit: false, hitTime: 0,
     });
+
+    // 难度递增
+    this._spawnInterval = Math.max(500, 1200 - elapsed * 2.5);
+    if (this._spawnTimer) {
+      clearInterval(this._spawnTimer);
+      this._spawnTimer = setInterval(() => this._spawnMole(), this._spawnInterval);
+    }
   },
 
-  _photoLoop() {
+  _whackLoop() {
     if (!this.data.playing || this.data.gameId !== 'photo') return;
     const now = Date.now();
-    const dt = now - this._lastTime;
-    this._lastTime = now;
-    this._updatePhotoTargets(dt, now);
-    this._renderPhoto();
-    this._animId = this._canvas.requestAnimationFrame(() => this._photoLoop());
+    this._renderWhack(now);
+    this._animId = this._canvas.requestAnimationFrame(() => this._whackLoop());
   },
 
-  _updatePhotoTargets(dt, now) {
-    const h = this._canvasH || 300;
-    this._targets = this._targets.filter(t => {
-      if (t.hit) return false;
-      t.y += t.speed * (dt / 16);
-      const age = now - t.born;
-      if (age < t.bestStart) {
-        t.phase = 'normal';
-        t.scale = Math.min(1, 0.3 + (age / t.bestStart) * 0.7);
-      } else if (age < t.bestEnd) {
-        t.phase = 'best';
-        t.scale = 1 + Math.sin(age * 0.008) * 0.12;
-      } else if (age < t.lifeMs) {
-        t.phase = 'fading';
-        t.opacity = Math.max(0, 1 - (age - t.bestEnd) / (t.lifeMs - t.bestEnd));
-        t.scale = 1 - (1 - t.opacity) * 0.3;
-      } else { return false; }
-      return t.y <= h + t.radius;
-    });
-  },
-
-  _renderPhoto() {
+  _renderWhack(now) {
     const ctx = this._ctx;
     if (!ctx) return;
     const w = this._canvasW, h = this._canvasH;
-    ctx.clearRect(0, 0, w, h);
-    const grad = ctx.createLinearGradient(0, 0, 0, h);
-    grad.addColorStop(0, '#e8f4f8');
-    grad.addColorStop(1, '#d4ecf0');
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, w, h);
-    ctx.fillStyle = '#c8b896';
-    ctx.fillRect(0, h * 0.78, w, h * 0.22);
-    ctx.fillStyle = '#b8a886';
-    ctx.fillRect(0, h * 0.78, w, 2);
+    const cellW = w / 3, cellH = h / 3;
 
-    this._targets.forEach(t => {
+    ctx.clearRect(0, 0, w, h);
+    const g = ctx.createLinearGradient(0, 0, 0, h);
+    g.addColorStop(0, '#e8f4f8');
+    g.addColorStop(1, '#d4ecf0');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, w, h);
+
+    this._drawHoles(ctx, w, h);
+
+    this._moles.forEach(m => {
+      const age = now - m.born;
+      if (age > m.duration && !m.hit) return;
+      const pos = this._POS[m.hole];
+      const cx = cellW * pos.col + cellW / 2;
+      const cy = cellH * pos.row + cellH / 2;
+
+      let alpha = 1, scale = 1;
+      if (m.hit) {
+        const ha = now - m.hitTime;
+        alpha = Math.max(0, 1 - ha / 300);
+        scale = 1 - ha / 600;
+        if (alpha <= 0) return;
+      } else {
+        if (age < 150) scale = age / 150;
+        else if (age > m.duration - 200) scale = (m.duration - age) / 200;
+      }
+
       ctx.save();
-      ctx.globalAlpha = t.opacity;
-      ctx.translate(t.x, t.y);
-      ctx.scale(t.scale, t.scale);
-      if (t.phase === 'best') {
+      ctx.globalAlpha = alpha;
+      ctx.translate(cx, cy);
+      ctx.scale(Math.max(0.1, scale), Math.max(0.1, scale));
+
+      if (m.isGolden && !m.hit) {
         ctx.beginPath();
-        ctx.arc(0, 0, t.radius + 8, 0, Math.PI * 2);
+        ctx.arc(0, 0, cellW * 0.28, 0, Math.PI * 2);
         ctx.fillStyle = 'rgba(255, 215, 0, 0.25)';
         ctx.fill();
-        ctx.strokeStyle = 'rgba(255, 180, 0, 0.7)';
+        ctx.strokeStyle = 'rgba(255, 180, 0, 0.6)';
         ctx.lineWidth = 2;
         ctx.stroke();
       }
-      ctx.beginPath();
-      ctx.arc(0, 0, t.radius, 0, Math.PI * 2);
-      ctx.fillStyle = t.phase === 'best' ? '#fff8e1' : '#fff';
-      ctx.fill();
-      ctx.strokeStyle = t.phase === 'best' ? '#ffb300' : '#ddd';
-      ctx.lineWidth = t.phase === 'best' ? 2.5 : 1.5;
-      ctx.stroke();
-      ctx.font = (t.radius * 1.1) + 'px sans-serif';
+
+      ctx.font = cellW * 0.35 + 'px sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(t.emoji, 0, 1);
-      if (t.phase === 'best') {
-        ctx.font = 'bold 10px sans-serif';
-        ctx.fillStyle = '#ff8f00';
-        ctx.fillText('📸快拍!', 0, t.radius + 14);
+      ctx.fillText(m.emoji, 0, 0);
+
+      if (m.hit) {
+        const pts = m.isCat ? '-5s' : (m.isGolden ? '+5' : '+1');
+        ctx.font = 'bold 14px sans-serif';
+        ctx.fillStyle = m.isCat ? '#e53e3e' : (m.isGolden ? '#ff8f00' : '#ff6b6b');
+        ctx.fillText(pts, 0, -cellW * 0.3);
       }
+
       ctx.restore();
     });
   },
 
-  // =================================================================
-  // 修图挑战 (retouch) - 点选滤镜匹配目标
-  // =================================================================
-  _startRetouchGame() {
-    this._spawnRetouchRound();
-  },
-
-  _spawnRetouchRound() {
-    const filters = this._FILTERS;
-    const target = filters[Math.floor(Math.random() * filters.length)];
-    // 生成4个选项（含正确答案）
-    let options = [target];
-    while (options.length < 4) {
-      const f = filters[Math.floor(Math.random() * filters.length)];
-      if (!options.find(o => o.id === f.id)) options.push(f);
-    }
-    // 洗牌
-    for (let i = options.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [options[i], options[j]] = [options[j], options[i]];
-    }
-    this.setData({
-      retouchChallenge: { target, options },
-      retouchRound: this.data.retouchRound + 1,
-    });
-    this._renderRetouch(target);
-  },
-
-  _renderRetouch(target) {
-    const ctx = this._ctx;
-    if (!ctx) return;
-    const w = this._canvasW, h = this._canvasH;
-    ctx.clearRect(0, 0, w, h);
-    // 背景
-    const grad = ctx.createLinearGradient(0, 0, 0, h);
-    grad.addColorStop(0, '#f5f0e8');
-    grad.addColorStop(1, '#e8e0d0');
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, w, h);
-    // 模拟照片区域
-    ctx.fillStyle = '#ddd';
-    ctx.fillRect(w * 0.1, 20, w * 0.8, h * 0.45);
-    ctx.strokeStyle = '#ccc';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(w * 0.1, 20, w * 0.8, h * 0.45);
-    // 照片emoji
-    ctx.font = '40px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('📸', w / 2, 20 + h * 0.225);
-    // 目标区域高亮
-    ctx.fillStyle = target.color + '33';
-    ctx.fillRect(w * 0.1, 20, w * 0.8, h * 0.45);
-    ctx.strokeStyle = target.color;
-    ctx.lineWidth = 3;
-    ctx.strokeRect(w * 0.1, 20, w * 0.8, h * 0.45);
-    // 提示文字
-    ctx.fillStyle = target.color;
-    ctx.font = 'bold 16px sans-serif';
-    ctx.fillText('需要：' + target.name + '滤镜 ' + target.emoji, w / 2, 20 + h * 0.5);
-  },
-
-  onRetouchOptionTap(e) {
-    if (!this.data.playing || this.data.gameId !== 'retouch') return;
-    const idx = e.currentTarget.dataset.idx;
-    const challenge = this.data.retouchChallenge;
-    if (!challenge) return;
-    const option = challenge.options[idx];
-    const isCorrect = option.id === challenge.target.id;
-
-    if (isCorrect) {
-      let combo = this.data.combo + 1;
-      let points = 2 + (combo >= 3 ? Math.min(combo, 10) : 0);
-      this.setData({
-        score: this.data.score + points,
-        combo,
-        comboShow: combo >= 3,
-        comboText: combo >= 3 ? ('🔥 ' + combo + '连击!') : '',
-        hitFeedback: '完美修图! +' + points,
-        hitFeedbackShow: true,
-      });
-      try { wx.vibrateShort({ type: 'medium' }); } catch (e) {}
-      this.setData({ flashShow: true });
-      this._setTimer(() => this.setData({ flashShow: false, hitFeedbackShow: false }), 500);
-      // 下一轮
-      this._setTimer(() => this._spawnRetouchRound(), 400);
-    } else {
-      this.setData({
-        combo: 0,
-        comboShow: false,
-        hitFeedback: '滤镜不对哦~',
-        hitFeedbackShow: true,
-        screenShake: true,
-      });
-      try { wx.vibrateShort({ type: 'heavy' }); } catch (e) {}
-      // 扣3秒
-      let newTime = Math.max(0, this.data.timeLeft - 3);
-      const m = Math.floor(newTime / 60);
-      const s = newTime % 60;
-      this.setData({ timeLeft: newTime, timeDisplay: m + ':' + (s < 10 ? '0' : '') + s });
-      if (newTime <= 0) {
-        this._clearAllTimers();
-        this._endGame();
-        return;
-      }
-      this._setTimer(() => this.setData({ hitFeedbackShow: false, screenShake: false }), 600);
-    }
-  },
-
-  // =================================================================
-  // 小红书爆款 (post) - 选择标题+封面最佳组合
-  // =================================================================
-  _startPostGame() {
-    this._spawnPostRound();
-  },
-
-  _spawnPostRound() {
-    const titles = this._POST_TITLES;
-    const covers = this._POST_COVERS;
-    // 随机选3个标题和3个封面
-    const shuffledTitles = titles.slice().sort(() => Math.random() - 0.5).slice(0, 3);
-    const shuffledCovers = covers.slice().sort(() => Math.random() - 0.5).slice(0, 3);
-    this.setData({
-      postChallenge: { titles: shuffledTitles, covers: shuffledCovers, selectedTitle: -1, selectedCover: -1 },
-      postRound: this.data.postRound + 1,
-    });
-    this._renderPost(shuffledTitles, shuffledCovers);
-  },
-
-  _renderPost(titles, covers) {
-    const ctx = this._ctx;
-    if (!ctx) return;
-    const w = this._canvasW, h = this._canvasH;
-    ctx.clearRect(0, 0, w, h);
-    const grad = ctx.createLinearGradient(0, 0, 0, h);
-    grad.addColorStop(0, '#fff0f5');
-    grad.addColorStop(1, '#ffe4ec');
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, w, h);
-    // 标题
-    ctx.fillStyle = '#333';
-    ctx.font = 'bold 14px sans-serif';
-    ctx.textAlign = 'left';
-    ctx.fillText('📰 选择爆款标题:', 15, 25);
-    // 封面
-    ctx.fillText('🖼️ 选择封面:', 15, h * 0.45);
-    ctx.fillStyle = '#999';
-    ctx.font = '12px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('先点标题，再点封面，组合得分!', w / 2, h - 10);
-  },
-
-  onPostTitleTap(e) {
-    if (!this.data.playing || this.data.gameId !== 'post') return;
-    const idx = e.currentTarget.dataset.idx;
-    const challenge = this.data.postChallenge;
-    if (!challenge) return;
-    challenge.selectedTitle = idx;
-    this.setData({ postChallenge: challenge });
-    try { wx.vibrateShort({ type: 'light' }); } catch (e) {}
-    // 如果封面也选了，结算
-    if (challenge.selectedCover >= 0) {
-      this._settlePostRound();
-    }
-  },
-
-  onPostCoverTap(e) {
-    if (!this.data.playing || this.data.gameId !== 'post') return;
-    const idx = e.currentTarget.dataset.idx;
-    const challenge = this.data.postChallenge;
-    if (!challenge) return;
-    challenge.selectedCover = idx;
-    this.setData({ postChallenge: challenge });
-    try { wx.vibrateShort({ type: 'light' }); } catch (e) {}
-    if (challenge.selectedTitle >= 0) {
-      this._settlePostRound();
-    }
-  },
-
-  _settlePostRound() {
-    const challenge = this.data.postChallenge;
-    if (!challenge) return;
-    const title = challenge.titles[challenge.selectedTitle];
-    const cover = challenge.covers[challenge.selectedCover];
-    const totalScore = title.score + cover.score; // 2-6分
-    let combo = this.data.combo;
-    if (totalScore >= 5) {
-      combo++;
-    } else {
-      combo = 0;
-    }
-    let bonus = combo >= 3 ? Math.min(combo, 10) : 0;
-    let points = totalScore + bonus;
-
-    this.setData({
-      score: this.data.score + points,
-      combo,
-      comboShow: combo >= 3,
-      comboText: combo >= 3 ? ('🔥 ' + combo + '连爆!') : '',
-      hitFeedback: totalScore >= 5 ? '爆款! +' + points : (totalScore >= 3 ? '还不错 +' + points : '一般般 +' + points),
-      hitFeedbackShow: true,
-      flashShow: totalScore >= 5,
-    });
-    if (totalScore >= 5) {
-      try { wx.vibrateShort({ type: 'medium' }); } catch (e) {}
-    }
-    this._setTimer(() => this.setData({ flashShow: false, hitFeedbackShow: false }), 600);
-    this._setTimer(() => this._spawnPostRound(), 500);
-  },
-
-  // =================================================================
-  // Canvas 点击（接单快拍）
-  // =================================================================
   onCanvasTap(e) {
-    if (!this.data.playing) return;
-    if (this.data.gameId === 'photo') {
-      this._onPhotoCanvasTap(e);
-    }
-  },
-
-  _onPhotoCanvasTap(e) {
+    if (!this.data.playing || this.data.gameId !== 'photo') return;
     try { wx.vibrateShort({ type: 'light' }); } catch (err) {}
     const touch = e.touches ? e.touches[0] : e.detail;
     if (!touch) return;
-    const query = wx.createSelectorQuery();
-    query.select('#gameCanvas').boundingClientRect().exec((res) => {
+    const q = wx.createSelectorQuery();
+    q.select('#gameCanvas').boundingClientRect().exec(res => {
       if (!res || !res[0]) return;
-      const rect = res[0];
-      const tx = touch.clientX - rect.left;
-      const ty = touch.clientY - rect.top;
-      this._handlePhotoTap(tx, ty);
+      const r = res[0];
+      const tx = touch.clientX - r.left;
+      const ty = touch.clientY - r.top;
+      this._handleWhackTap(tx, ty);
     });
   },
 
-  _handlePhotoTap(tx, ty) {
-    let hitTarget = null, hitIdx = -1;
-    for (let i = this._targets.length - 1; i >= 0; i--) {
-      const t = this._targets[i];
-      if (t.hit) continue;
-      const dx = tx - t.x, dy = ty - t.y;
-      if (Math.sqrt(dx * dx + dy * dy) <= t.radius * 1.6) {
-        if (t.phase === 'best') { hitTarget = t; hitIdx = i; break; }
-        if (!hitTarget) { hitTarget = t; hitIdx = i; }
+  _handleWhackTap(tx, ty) {
+    const w = this._canvasW, h = this._canvasH;
+    const cellW = w / 3, cellH = h / 3;
+    const now = Date.now();
+
+    for (let i = this._moles.length - 1; i >= 0; i--) {
+      const m = this._moles[i];
+      if (m.hit) continue;
+      if (now - m.born > m.duration) continue;
+      const pos = this._POS[m.hole];
+      const cx = cellW * pos.col + cellW / 2;
+      const cy = cellH * pos.row + cellH / 2;
+      const r = cellW * 0.28;
+      if (Math.abs(tx - cx) > r || Math.abs(ty - cy) > r) continue;
+
+      m.hit = true;
+      m.hitTime = now;
+
+      if (m.isCat) {
+        let t = Math.max(0, this.data.timeLeft - 5);
+        const mm = Math.floor(t / 60), ss = t % 60;
+        this.setData({
+          timeLeft: t, timeDisplay: mm + ':' + (ss < 10 ? '0' : '') + ss,
+          combo: 0, hitFeedback: '猫咪不能打! -5秒',
+          hitFeedbackShow: true, screenShake: true,
+        });
+        try { wx.vibrateShort({ type: 'heavy' }); } catch (e) {}
+        this._setTimer(() => this.setData({ hitFeedbackShow: false, screenShake: false }), 600);
+        if (t <= 0) { this._clearAllTimers(); this._endGame(); }
+        return;
       }
-    }
-    if (!hitTarget) {
-      this.setData({ flashShow: true });
-      this._setTimer(() => this.setData({ flashShow: false }), 80);
+
+      let pts = m.isGolden ? 5 : 1;
+      let c = this.data.combo + 1;
+      let bonus = c >= 3 ? Math.min(c, 10) : 0;
+      pts += bonus;
+
+      this.setData({
+        score: this.data.score + pts,
+        combo: c,
+        hitFeedback: (m.isGolden ? '金色! +' : '+') + pts + (bonus ? ' 连击x' + c : ''),
+        hitFeedbackShow: true,
+      });
+      if (m.isGolden) {
+        this.setData({ flashShow: true });
+        this._setTimer(() => this.setData({ flashShow: false }), 100);
+      }
+      try { wx.vibrateShort({ type: 'medium' }); } catch (e) {}
+      this._setTimer(() => this.setData({ hitFeedbackShow: false }), 500);
       return;
     }
-    hitTarget.hit = true;
-    let points = hitTarget.phase === 'best' ? 3 : hitTarget.phase === 'fading' ? 1 : 2;
-    let combo = this.data.combo;
-    if (hitTarget.phase === 'best') combo++; else combo = 0;
-    let comboBonus = combo >= 3 ? Math.min(combo, 10) : 0;
-    if (comboBonus) points += comboBonus;
-
-    const scoreText = hitTarget.phase === 'best' ? '完美! +3' : hitTarget.phase === 'fading' ? '+1' : '不错! +2';
-    this.setData({
-      score: this.data.score + points,
-      combo,
-      comboShow: combo >= 3,
-      comboText: combo >= 3 ? ('🔥 ' + combo + '连击! +' + comboBonus) : '',
-      hitFeedback: scoreText + (comboBonus ? ' (连击+' + comboBonus + ')' : ''),
-      hitFeedbackShow: true,
-    });
-    this._setTimer(() => this.setData({ hitFeedbackShow: false }), 600);
-    this._spawnParticles(hitTarget.x, hitTarget.y, hitTarget.phase === 'best' ? '#ffb300' : '#ff6b6b');
-    this.setData({ flashShow: true, screenShake: true });
-    this._setTimer(() => this.setData({ flashShow: false, screenShake: false }), 120);
-    this._targets.splice(hitIdx, 1);
-  },
-
-  _spawnParticles(x, y, color) {
-    const particles = [];
-    for (let i = 0; i < 8; i++) {
-      const angle = (Math.PI * 2 * i) / 8;
-      const dist = 30 + Math.random() * 50;
-      particles.push({
-        id: this.data._particleId + i,
-        x: x + Math.cos(angle) * dist,
-        y: y + Math.sin(angle) * dist,
-        color,
-      });
-    }
-    this.setData({ _particleId: this.data._particleId + 8, particles });
-    this._setTimer(() => this.setData({ particles: [] }), 600);
   },
 
   // =================================================================
-  // 游戏结束
+  // 2) 记忆翻牌
+  // =================================================================
+  _startMemoryGame() {
+    const emojis = this._MEM_EMOJIS.slice(0, this._memTotal);
+    const pairs = [...emojis, ...emojis];
+    // Fisher-Yates 洗牌
+    for (let i = pairs.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [pairs[i], pairs[j]] = [pairs[j], pairs[i]];
+    }
+    const cards = pairs.map((emoji, idx) => ({
+      id: idx, emoji, flipped: false, matched: false,
+    }));
+    this._memLock = false;
+    this._memFirst = -1;
+    this._memMatched = 0;
+    this.setData({ memCards: cards, attempts: 0 });
+  },
+
+  onMemCardTap(e) {
+    if (!this.data.playing || this.data.gameId !== 'retouch') return;
+    if (this._memLock) return;
+    const idx = e.currentTarget.dataset.idx;
+    const cards = this.data.memCards;
+    const card = cards[idx];
+    if (!card || card.flipped || card.matched) return;
+
+    try { wx.vibrateShort({ type: 'light' }); } catch (err) {}
+
+    cards[idx].flipped = true;
+    this.setData({ memCards: cards });
+
+    if (this._memFirst < 0) {
+      this._memFirst = idx;
+      return;
+    }
+
+    // 第二张牌
+    const firstIdx = this._memFirst;
+    this._memFirst = -1;
+    this._memLock = true;
+
+    const first = cards[firstIdx];
+    const second = cards[idx];
+    this.setData({ attempts: this.data.attempts + 1 });
+
+    if (first.emoji === second.emoji) {
+      // 配对成功
+      cards[firstIdx].matched = true;
+      cards[idx].matched = true;
+      this._memMatched++;
+      this._memLock = false;
+      this.setData({
+        memCards: cards,
+        hitFeedback: '配对成功!',
+        hitFeedbackShow: true,
+      });
+      try { wx.vibrateShort({ type: 'medium' }); } catch (e) {}
+      this._setTimer(() => this.setData({ hitFeedbackShow: false }), 500);
+
+      // 全部配对完成
+      if (this._memMatched >= this._memTotal) {
+        this._setTimer(() => {
+          this._clearAllTimers();
+          this._endGame();
+        }, 800);
+      }
+    } else {
+      // 配对失败
+      this.setData({
+        hitFeedback: '再试试!',
+        hitFeedbackShow: true,
+      });
+      this._setTimer(() => {
+        cards[firstIdx].flipped = false;
+        cards[idx].flipped = false;
+        this._memLock = false;
+        this.setData({ memCards: cards, hitFeedbackShow: false });
+      }, 800);
+    }
+  },
+
+  // =================================================================
+  // 3) 合成2048
+  // =================================================================
+  _start2048Game() {
+    this._tGrid = Array.from({ length: 4 }, () => [0, 0, 0, 0]);
+    this._tMoved = false;
+    this._tAddTile();
+    this._tAddTile();
+    this._tSyncToData();
+  },
+
+  _tAddTile() {
+    const empty = [];
+    for (let r = 0; r < 4; r++)
+      for (let c = 0; c < 4; c++)
+        if (this._tGrid[r][c] === 0) empty.push({ r, c });
+    if (empty.length === 0) return;
+    const { r, c } = empty[Math.floor(Math.random() * empty.length)];
+    this._tGrid[r][c] = Math.random() < 0.9 ? 2 : 4;
+  },
+
+  _tSyncToData() {
+    const cells = [];
+    for (let i = 0; i < 16; i++) cells.push({ id: 'bg' + i });
+    const tiles = [];
+    const TILE_SIZE = 120, GAP = 16, PAD = 12;
+    for (let r = 0; r < 4; r++) {
+      for (let c = 0; c < 4; c++) {
+        const v = this._tGrid[r][c];
+        if (v === 0) continue;
+        tiles.push({
+          id: 't' + r + c + '_' + v + '_' + Date.now(),
+          value: v,
+          x: PAD + c * (TILE_SIZE + GAP),
+          y: PAD + r * (TILE_SIZE + GAP),
+          isNew: false,
+          merged: false,
+        });
+      }
+    }
+    this.setData({ tBgCells: cells, tTiles: tiles });
+  },
+
+  on2048TouchStart(e) {
+    if (!this.data.playing || this.data.gameId !== 'post') return;
+    this._tTouchStart = e.touches[0];
+  },
+
+  on2048TouchEnd(e) {
+    if (!this.data.playing || this.data.gameId !== 'post' || !this._tTouchStart) return;
+    const end = e.changedTouches[0];
+    const dx = end.clientX - this._tTouchStart.clientX;
+    const dy = end.clientY - this._tTouchStart.clientY;
+    this._tTouchStart = null;
+    const absDx = Math.abs(dx), absDy = Math.abs(dy);
+    if (Math.max(absDx, absDy) < 20) return;
+
+    let moved = false;
+    if (absDx > absDy) {
+      moved = dx > 0 ? this._tMoveRight() : this._tMoveLeft();
+    } else {
+      moved = dy > 0 ? this._tMoveDown() : this._tMoveUp();
+    }
+
+    if (moved) {
+      try { wx.vibrateShort({ type: 'light' }); } catch (e) {}
+      this._tAddTile();
+      this._tSyncToData();
+      // 检查游戏结束
+      if (this._tCheckGameOver()) {
+        this._setTimer(() => { this._clearAllTimers(); this._endGame(); }, 800);
+      }
+    }
+  },
+
+  _tMoveLeft() {
+    let moved = false;
+    for (let r = 0; r < 4; r++) {
+      const row = this._tGrid[r].filter(v => v !== 0);
+      const merged = [];
+      let i = 0;
+      while (i < row.length) {
+        if (i + 1 < row.length && row[i] === row[i + 1]) {
+          merged.push(row[i] * 2);
+          this.setData({ score: this.data.score + row[i] * 2 });
+          i += 2;
+        } else {
+          merged.push(row[i]);
+          i++;
+        }
+      }
+      while (merged.length < 4) merged.push(0);
+      for (let c = 0; c < 4; c++) {
+        if (this._tGrid[r][c] !== merged[c]) moved = true;
+        this._tGrid[r][c] = merged[c];
+      }
+    }
+    return moved;
+  },
+
+  _tMoveRight() {
+    let moved = false;
+    for (let r = 0; r < 4; r++) {
+      const row = this._tGrid[r].filter(v => v !== 0);
+      const merged = [];
+      let i = row.length - 1;
+      while (i >= 0) {
+        if (i - 1 >= 0 && row[i] === row[i - 1]) {
+          merged.unshift(row[i] * 2);
+          this.setData({ score: this.data.score + row[i] * 2 });
+          i -= 2;
+        } else {
+          merged.unshift(row[i]);
+          i--;
+        }
+      }
+      while (merged.length < 4) merged.unshift(0);
+      for (let c = 0; c < 4; c++) {
+        if (this._tGrid[r][c] !== merged[c]) moved = true;
+        this._tGrid[r][c] = merged[c];
+      }
+    }
+    return moved;
+  },
+
+  _tMoveUp() {
+    let moved = false;
+    for (let c = 0; c < 4; c++) {
+      const col = [];
+      for (let r = 0; r < 4; r++) if (this._tGrid[r][c] !== 0) col.push(this._tGrid[r][c]);
+      const merged = [];
+      let i = 0;
+      while (i < col.length) {
+        if (i + 1 < col.length && col[i] === col[i + 1]) {
+          merged.push(col[i] * 2);
+          this.setData({ score: this.data.score + col[i] * 2 });
+          i += 2;
+        } else {
+          merged.push(col[i]);
+          i++;
+        }
+      }
+      while (merged.length < 4) merged.push(0);
+      for (let r = 0; r < 4; r++) {
+        if (this._tGrid[r][c] !== merged[r]) moved = true;
+        this._tGrid[r][c] = merged[r];
+      }
+    }
+    return moved;
+  },
+
+  _tMoveDown() {
+    let moved = false;
+    for (let c = 0; c < 4; c++) {
+      const col = [];
+      for (let r = 0; r < 4; r++) if (this._tGrid[r][c] !== 0) col.push(this._tGrid[r][c]);
+      const merged = [];
+      let i = col.length - 1;
+      while (i >= 0) {
+        if (i - 1 >= 0 && col[i] === col[i - 1]) {
+          merged.unshift(col[i] * 2);
+          this.setData({ score: this.data.score + col[i] * 2 });
+          i -= 2;
+        } else {
+          merged.unshift(col[i]);
+          i--;
+        }
+      }
+      while (merged.length < 4) merged.unshift(0);
+      for (let r = 0; r < 4; r++) {
+        if (this._tGrid[r][c] !== merged[r]) moved = true;
+        this._tGrid[r][c] = merged[r];
+      }
+    }
+    return moved;
+  },
+
+  _tCheckGameOver() {
+    for (let r = 0; r < 4; r++)
+      for (let c = 0; c < 4; c++) {
+        if (this._tGrid[r][c] === 0) return false;
+        if (c < 3 && this._tGrid[r][c] === this._tGrid[r][c + 1]) return false;
+        if (r < 3 && this._tGrid[r][c] === this._tGrid[r + 1][c]) return false;
+      }
+    return true;
+  },
+
+  // =================================================================
+  // Game end
   // =================================================================
   _endGame() {
     if (this._gameEnded) return;
@@ -634,12 +699,23 @@ Page({
     const score = this.data.score;
     const gameId = this.data.gameId;
     let coins = 0, materials = 0, inspiration = 0, exp = 0;
+
     if (gameId === 'photo') {
-      coins = Math.floor(score * 2); exp = Math.floor(score * 0.5);
+      coins = Math.floor(score * 2);
+      exp = Math.floor(score * 0.5);
     } else if (gameId === 'retouch') {
-      materials = Math.floor(score * 1.5); exp = Math.floor(score * 0.4);
+      // 配对完成奖励：剩余时间越多奖励越高
+      const timeBonus = this._memMatched >= this._memTotal ? Math.floor(this.data.timeLeft / 10) : 0;
+      materials = 10 + timeBonus;
+      exp = 8 + Math.floor(timeBonus / 2);
     } else if (gameId === 'post') {
-      inspiration = Math.floor(score * 1.2); exp = Math.floor(score * 0.3);
+      inspiration = Math.floor(score * 0.8);
+      exp = Math.floor(score * 0.4);
+      // 保存2048最高分
+      if (score > this.data.tBestScore) {
+        wx.setStorageSync('T2048_BEST', score);
+        this.setData({ tBestScore: score });
+      }
     }
 
     const state = gameHelper.getState();
@@ -652,10 +728,13 @@ Page({
     gameHelper.addPlayLog(gameId, score, { coins, materials, inspiration, exp });
     gameHelper.recordGameResult(state, score, this.data.combo);
 
+    const win = (gameId === 'retouch' && this._memMatched >= this._memTotal) ||
+                (gameId === 'post' && score >= 1000);
+
     try { wx.vibrateShort({ type: 'heavy' }); } catch (e) {}
     this.setData({
       playing: false,
-      result: { coins, materials, inspiration, exp, score },
+      result: { win, coins, materials, inspiration, exp, score },
     });
   },
 

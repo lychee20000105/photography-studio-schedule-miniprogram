@@ -17,10 +17,26 @@ const PHASES = {
 };
 
 const GAME_TYPES = [
-  { id: 'photo',   name: '接单快拍', desc: '限时3分钟，点击拍照赚金币', reward: 'coins', icon: 'camera' },
-  { id: 'retouch', name: '修图挑战', desc: '拖动贴纸完成修图赚素材', reward: 'materials', icon: 'edit' },
-  { id: 'post',    name: '小红书爆款', desc: '选标题封面模拟发帖赚灵感', reward: 'inspiration', icon: 'star' },
+  { id: 'photo',   name: '猫咪快抓', desc: '打地鼠！快速点击冒出来的角色', reward: 'coins', icon: 'camera' },
+  { id: 'retouch', name: '记忆翻牌', desc: '翻牌配对！找出相同的装备', reward: 'materials', icon: 'edit' },
+  { id: 'post',    name: '合成2048', desc: '滑动合成！合并相同摄影装备', reward: 'inspiration', icon: 'star' },
 ];
+
+// 2048 颜色配置
+const TILE_COLORS = {
+  0:    { bg: '#cdc1b4', text: '#776e65' },
+  2:    { bg: '#eee4da', text: '#776e65' },
+  4:    { bg: '#ede0c8', text: '#776e65' },
+  8:    { bg: '#f2b179', text: '#f9f6f2' },
+  16:   { bg: '#f59563', text: '#f9f6f2' },
+  32:   { bg: '#f67c5f', text: '#f9f6f2' },
+  64:   { bg: '#f65e3b', text: '#f9f6f2' },
+  128:  { bg: '#edcf72', text: '#f9f6f2' },
+  256:  { bg: '#edcc61', text: '#f9f6f2' },
+  512:  { bg: '#edc850', text: '#f9f6f2' },
+  1024: { bg: '#edc53f', text: '#f9f6f2' },
+  2048: { bg: '#edc22e', text: '#f9f6f2' },
+};
 
 function defaultState() {
   return {
@@ -261,6 +277,7 @@ function syncFromPetState() {
 module.exports = {
   PHASES,
   GAME_TYPES,
+  TILE_COLORS,
   GAME_STATE_KEY,
   GAME_PLAY_LOG_KEY,
   GAME_GUIDE_KEY,
