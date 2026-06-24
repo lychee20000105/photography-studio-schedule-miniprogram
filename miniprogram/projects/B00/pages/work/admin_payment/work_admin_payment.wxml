@@ -1,3 +1,4 @@
+<wxs src="../../../../helper/filters.wxs" module="f" />
 <view class="page">
 	<view class="filters">
 		<picker mode="date" fields="month" value="{{month}}" bindchange="bindMonthChange"><view>{{month}}</view></picker>
@@ -8,7 +9,7 @@
 	<view class="block">
 		<view class="h">新增收款/退款/冲减</view>
 		<view class="row"><text>搜订单</text><input value="{{orderKeyword}}" data-field="orderKeyword" bindinput="bindInput" placeholder="客户/订单号" /><button bindtap="bindSearchOrder">搜</button></view>
-		<view wx:for="{{orders}}" wx:key="_id" class="order" data-idx="{{index}}" bindtap="bindChooseOrder">{{item.ORDER_DATE}} {{item.ORDER_CUSTOMER_NAME}} {{item.ORDER_TYPE_NAME}}</view>
+		<view wx:for="{{orders}}" wx:key="_id" class="order" data-idx="{{index}}" bindtap="bindChooseOrder">{{f.fmtDate(item.ORDER_DATE)}} {{item.ORDER_CUSTOMER_NAME}} {{item.ORDER_TYPE_NAME}}</view>
 		<view wx:if="{{order}}" class="chosen">已选：{{order.ORDER_CUSTOMER_NAME}} {{order.ORDER_TYPE_NAME}}</view>
 		<view class="row"><text>类型</text><picker range="{{typeOptions}}" range-key="label" value="{{typeIndex}}" bindchange="bindTypeChange"><view>{{typeLabel}}</view></picker></view>
 		<view class="row"><text>方向</text><view>{{directionLabel}}</view></view>
@@ -23,8 +24,8 @@
 	<view wx:if="{{list.length==0}}" class="empty">暂无</view>
 	<view wx:for="{{list}}" wx:key="_id" class="card">
 		<view class="title">{{item.PAYMENT_CUSTOMER_NAME}}{{item.PAYMENT_CUSTOMER_SURNAME}}｜{{item.PAYMENT_TYPE}}</view>
-		<view class="meta">{{item.PAYMENT_DATE}} · {{item.PAYMENT_DIRECTION}} · {{item.PAYMENT_STAFF_NAME}}</view>
-		<view class="amount {{item.PAYMENT_AMOUNT_CENT<0?'danger':''}}">¥{{item.PAYMENT_AMOUNT}}</view>
+		<view class="meta">{{f.fmtDate(item.PAYMENT_DATE)}} · {{item.PAYMENT_DIRECTION}} · {{item.PAYMENT_STAFF_NAME}}</view>
+		<view class="amount {{item.PAYMENT_AMOUNT_CENT<0?'danger':''}}">{{f.fmtMoney(item.PAYMENT_AMOUNT)}}</view>
 		<view wx:if="{{item.PAYMENT_IS_LOCKED==1}}" class="meta">已进工资/锁定，如需处理请新增退款或冲减</view>
 		<button wx:if="{{item.PAYMENT_STATUS==10 && item.PAYMENT_IS_LOCKED!=1}}" class="void" data-id="{{item._id}}" bindtap="bindVoidTap">作废</button>
 	</view>
