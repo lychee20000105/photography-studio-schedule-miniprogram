@@ -1,6 +1,62 @@
 ﻿# 版本修改日记
 
 
+## v1.93 - 2026-06-24 20:02 CST
+
+### 改动级别
+
+小改修复，v1.92 -> v1.93。
+
+### 本次目标
+
+继续补齐小猫 Agent 的审计闭环：管理员不只要能看到每条 AI 写入流水，还要能先看到当前筛选下的风险分布、最高频动作和最高频员工，方便复盘小猫是否在被正常使用、是否出现高风险集中操作。
+
+### 主要修改
+
+- `work_agent_audit_service.js` 随审计列表返回 `stats` 摘要，统计当前筛选条件下的总数、高风险、财务相关和普通记录。
+- 审计统计基于最近 `500` 条匹配记录生成动作 Top 和员工 Top，避免一次性扫描过多历史数据。
+- `work_admin_agent_audit.js` 新增 `stats` 格式化逻辑，复用动作和风险文案。
+- `work_admin_agent_audit.wxml` 新增统计面板，展示筛选总数、高风险、财务相关、普通、最近操作、最多动作和最多员工。
+- `work_admin_agent_audit.wxss` 补齐统计卡片和摘要行样式，保持管理后台纸质卡片风格。
+- 重新生成 `work_admin_controller_live_patch.js`，确保云端 mcloud 使用最新审计服务。
+- `miniprogram/version.js`、`miniprogram/setting/setting.js`、`CHANGELOG.md`、`README.md` 和本文档同步升级到 v1.93。
+
+### 涉及文件
+
+- `cloudfunctions/mcloud/project/B00/service/work_agent_audit_service.js`
+- `cloudfunctions/mcloud/project/B00/controller/work_admin_controller.js`
+- `cloudfunctions/mcloud/work_admin_controller_live_patch.js`
+- `miniprogram/projects/B00/pages/work/admin_agent_audit/work_admin_agent_audit.js`
+- `miniprogram/projects/B00/pages/work/admin_agent_audit/work_admin_agent_audit.wxml`
+- `miniprogram/projects/B00/pages/work/admin_agent_audit/work_admin_agent_audit.wxss`
+- `miniprogram/version.js`
+- `miniprogram/setting/setting.js`
+- `CHANGELOG.md`
+- `README.md`
+- `docs/version-change-diary.md`
+
+### 验证结果
+
+- `node --check cloudfunctions/mcloud/project/B00/service/work_agent_audit_service.js` 通过。
+- `node --check cloudfunctions/mcloud/project/B00/controller/work_admin_controller.js` 通过。
+- `node --check cloudfunctions/mcloud/work_admin_controller_live_patch.js` 通过。
+- `node --check miniprogram/projects/B00/pages/work/admin_agent_audit/work_admin_agent_audit.js` 通过。
+- `node --check miniprogram/version.js` 与 `node --check miniprogram/setting/setting.js` 通过。
+- `work_admin_controller_live_patch.js` 解压后与 `work_agent_audit_service.js`、`work_agent_audit_model.js`、`work_admin_controller.js` 源码一致。
+- `work_admin_agent_audit.json`、`miniprogram/app.json` 和 `project.config.json` JSON 解析通过。
+- 本轮涉及文件 `git diff --check` 通过；全仓检查仍受既有无关脏文件 trailing whitespace 影响。
+- 敏感信息扫描未发现新增 API Key、Token 或 Secret。
+
+### 部署状态
+
+- `work_admin_controller_live_patch.js` 已通过微信开发者工具 CLI 增量部署到 `mcloud`，包体 `5.6 KB`；首次部署命令超时无结果，重试成功。
+- 小程序开发版已通过微信开发者工具 CLI 上传，版本号 `1.93`，包体 `1.5 MB` / `1,558,739 Byte`。
+- 本次未提交审核、未发布上线。
+
+### 未完成风险
+
+- 统计摘要基于当前筛选下最近 `500` 条匹配审计记录生成动作和员工 Top；当历史记录超过该范围时，Top 是近期运营视角，不等于全量历史排名。
+
 ## v1.92 - 2026-06-24 19:43 CST
 
 ### 改动级别

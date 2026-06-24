@@ -44,10 +44,28 @@ function riskLabel(risk) {
 	return item ? item.name : (risk || '普通');
 }
 
+function formatStats(stats) {
+	stats = stats || {};
+	let topAction = stats.topAction || {};
+	let topStaff = stats.topStaff || {};
+	return {
+		total: Number(stats.total || 0),
+		sampleCount: Number(stats.sampleCount || 0),
+		isSampled: !!stats.isSampled,
+		highRiskCount: Number(stats.highRiskCount || 0),
+		financeRiskCount: Number(stats.financeRiskCount || 0),
+		normalRiskCount: Number(stats.normalRiskCount || 0),
+		latestTimeText: formatTime(stats.latestTime || 0) || '暂无',
+		topActionText: topAction.action ? (actionLabel(topAction.action) + ' · ' + topAction.count + '次') : '暂无',
+		topStaffText: topStaff.staffName ? (topStaff.staffName + ' · ' + topStaff.count + '次') : '暂无',
+	};
+}
+
 Page({
 	data: {
 		isLoad: false,
 		list: [],
+		stats: formatStats({}),
 		page: 1,
 		size: 20,
 		total: 0,
@@ -137,6 +155,7 @@ Page({
 		this.setData({
 			isLoad: true,
 			list,
+			stats: formatStats(ret.stats),
 			page: ret.page || nextPage,
 			total: ret.total || this.data.total || 0,
 			oldTotal: ret.total || this.data.oldTotal || 0,

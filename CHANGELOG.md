@@ -1,6 +1,36 @@
 # Changelog
 
 
+## v1.93 - 2026-06-24
+
+AI审计统计摘要版本。本次按小改修复 `+0.01` 从 v1.92 升级为 v1.93，让 AI 审计流水页从“只能翻列表”升级为“先看统计再追记录”，方便管理员快速发现高风险、财务相关和高频使用动作。
+
+### 新增
+
+- `work_agent_audit_service.js` 随审计列表返回 `stats` 摘要，统计当前筛选条件下的总数、高风险、财务相关和普通记录。
+- 审计统计基于最近 `500` 条匹配记录生成动作 Top 和员工 Top，避免一次性扫描过多历史数据。
+- AI 审计流水页新增统计面板，展示筛选总数、高风险、财务相关、普通、最近操作、最多动作和最多员工。
+- 统计面板只读展示，不修改订单、收款、工资或审计流水。
+
+### 验证
+
+- `node --check cloudfunctions/mcloud/project/B00/service/work_agent_audit_service.js` 通过。
+- `node --check cloudfunctions/mcloud/project/B00/controller/work_admin_controller.js` 通过。
+- `node --check cloudfunctions/mcloud/work_admin_controller_live_patch.js` 通过。
+- `node --check miniprogram/projects/B00/pages/work/admin_agent_audit/work_admin_agent_audit.js` 通过。
+- `node --check miniprogram/version.js` 与 `node --check miniprogram/setting/setting.js` 通过。
+- `work_admin_controller_live_patch.js` 解压后与 `work_agent_audit_service.js`、`work_agent_audit_model.js`、`work_admin_controller.js` 源码一致。
+- `work_admin_agent_audit.json`、`miniprogram/app.json` 和 `project.config.json` JSON 解析通过。
+- 本轮涉及文件 `git diff --check` 通过；全仓检查仍受既有无关脏文件 trailing whitespace 影响。
+- 敏感信息扫描未发现新增 API Key、Token 或 Secret。
+
+### 部署
+
+- `work_admin_controller_live_patch.js` 已通过微信开发者工具 CLI 增量部署到 `mcloud`，包体 `5.6 KB`；首次部署命令超时无结果，重试成功。
+- 小程序开发版已通过微信开发者工具 CLI 上传，版本号 `1.93`，包体 `1.5 MB` / `1,558,739 Byte`。
+- 本次未提交审核、未发布上线。
+
+
 ## v1.92 - 2026-06-24
 
 小猫Agent能力目录后端闭环版本。本次按小改修复 `+0.01` 从 v1.91 升级为 v1.92，把 AI 配置页已有的“Agent 能力边界”展示接到后端技能注册表，让管理员看到的技能、动作、写入数量和高风险数量来自真实注册表，而不是前端空壳。

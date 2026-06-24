@@ -15,6 +15,33 @@
 		</view>
 	</view>
 
+	<view wx:if="{{isLoad}}" class="stats-panel">
+		<view class="stat-grid">
+			<view class="stat-card">
+				<view class="stat-num">{{stats.total}}</view>
+				<view class="stat-label">筛选总数</view>
+			</view>
+			<view class="stat-card high">
+				<view class="stat-num">{{stats.highRiskCount}}</view>
+				<view class="stat-label">高风险</view>
+			</view>
+			<view class="stat-card finance">
+				<view class="stat-num">{{stats.financeRiskCount}}</view>
+				<view class="stat-label">财务相关</view>
+			</view>
+			<view class="stat-card">
+				<view class="stat-num">{{stats.normalRiskCount}}</view>
+				<view class="stat-label">普通</view>
+			</view>
+		</view>
+		<view class="stat-lines">
+			<view>最近操作：{{stats.latestTimeText}}</view>
+			<view>最多动作：{{stats.topActionText}}</view>
+			<view>最多员工：{{stats.topStaffText}}</view>
+			<view wx:if="{{stats.isSampled}}">摘要基于最近 {{stats.sampleCount}} 条生成</view>
+		</view>
+	</view>
+
 	<view wx:if="{{!isLoad}}" class="empty">加载中...</view>
 	<view wx:if="{{isLoad && list.length==0}}" class="empty">暂无 AI 审计流水</view>
 
