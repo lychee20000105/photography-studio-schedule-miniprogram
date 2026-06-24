@@ -1,14 +1,26 @@
 ﻿module.exports = {
-	current: '2.17',
-	previous: '2.16',
+	current: '2.18',
+	previous: '2.17',
 	date: '2026-06-25',
-	time: '01:25 CST',
+	time: '01:30 CST',
 	level: 'minor',
-	levelText: 'WXS视图层格式化',
-	name: 'v2.17: WXS过滤器 — 日期/金额格式化移到视图层',
-	summary: 'B26: 新增共享WXS格式化模块，admin_audit和admin_payment列表日期金额改用视图层渲染。',
+	levelText: 'Token暴力破解防护',
+	name: 'v2.18: 安全加固 — H-03 Token暴力破解防护',
+	summary: 'B27: 管理员登录新增失败计数+锁定机制，连续5次失败锁定15分钟。',
 	changeLog: '/docs/version-change-diary.md',
 	history: [
+		{
+			version: '2.18',
+			date: '2026-06-25',
+			name: 'v2.18-b27: H-03 Token暴力破解防护',
+			summary: 'B27: adminLogin 新增 ADMIN_FAIL_CNT/ADMIN_FAIL_TIME 暴力破解防护。',
+			items: [
+				'adminLogin 新增失败计数 ADMIN_FAIL_CNT 和时间戳 ADMIN_FAIL_TIME。',
+				'连续 5 次失败后锁定 15 分钟，返回剩余等待时间。',
+				'成功登录自动清除失败计数，锁定过期自动重置。',
+				'admin_model.js 新增字段定义供维护参考。',
+			],
+		},
 		{
 			version: '2.17',
 			date: '2026-06-25',
