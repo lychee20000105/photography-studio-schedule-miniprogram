@@ -420,7 +420,6 @@ const helper = {
 					imgPath,
 					imgInfo
 				}) => {
-					console.log();
 					// 根据画布的宽高计算出图片绘制的大小，这里会保证图片绘制不变形
 					let sx;
 					let sy;

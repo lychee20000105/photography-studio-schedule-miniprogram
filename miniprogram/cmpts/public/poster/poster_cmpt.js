@@ -120,7 +120,6 @@ Component({
 			if (!helper.isDefined(config['debug']))
 				config.debug = posterConfig.debug;
 
-			//Object.assign(posterConfig, this.data.config); // TODO有问题
 
 			this.setData({
 				posterConfig: config
@@ -131,7 +130,7 @@ Component({
 		},
 
 		onPosterFail: function (e) {
-			console.log(e)
+			console.error('[poster] onPosterFail:', e)
 		},
 
 		bindPosterSuccessCmpt(e) {
@@ -148,7 +147,7 @@ Component({
 		},
 
 		bindPosterFailCmpt(e) {
-			console.log(e);
+			console.error('[poster] bindPosterFailCmpt:', e);
 		},
 
 		bindSaveTap: function (e) {

@@ -87,7 +87,6 @@ Component({
 				sizeType: ['compressed'],
 				sourceType: ['album', 'camera'],
 				async success(res) {
-					console.log(res)
 					let addNodes = [];
 					wx.showLoading({
 						title: '图片校验中',
@@ -96,7 +95,6 @@ Component({
 					for (let k = 0; k < res.tempFiles.length; k++) {
 						let path = res.tempFiles[k].tempFilePath;
 						let size = res.tempFiles[k].size;
-						console.log(path)
 
 				 
 						if (!contentCheckHelper.imgTypeCheck(path)) {
@@ -106,7 +104,6 @@ Component({
 
 						let maxSize = 20; //TODO setting
 						let imageMaxSize = 1024 * 1000 * maxSize;
-						console.log('IMGX SIZE=' + size + 'Byte,' + size / 1024 + 'K');
 						if (!contentCheckHelper.imgSizeCheck(size, imageMaxSize)) {
 							wx.hideLoading();
 							return pageHelper.showModal('图片大小不能超过 ' + maxSize + '兆');
@@ -133,7 +130,6 @@ Component({
 					that.setData({
 						nodeList
 					});
-					//that.setGlow(idx + 1);
 				}
 			})
 		},

@@ -15,7 +15,6 @@
  			value: [],
  			observer: function (newVal, oldVal) {
  				if (JSON.stringify(newVal) != JSON.stringify(oldVal)) {
- 					console.log('checkbox observer');
  					this._fixDefaultVal();
  				}
  			}
