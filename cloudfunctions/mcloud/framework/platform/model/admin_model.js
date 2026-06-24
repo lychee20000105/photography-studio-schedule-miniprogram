@@ -30,6 +30,9 @@ AdminModel.DB_STRUCTURE = {
 	ADMIN_TOKEN: 'string|false|comment=当前登录token',
 	ADMIN_TOKEN_TIME: 'int|true|default=0|comment=当前登录token time',
 
+	ADMIN_FAIL_CNT: 'int|true|default=0|comment=连续登录失败次数（H-03 暴力破解防护）',
+	ADMIN_FAIL_TIME: 'int|true|default=0|comment=最近一次登录失败时间戳（H-03 暴力破解防护）',
+
 	ADMIN_ADD_TIME: 'int|true',
 	ADMIN_EDIT_TIME: 'int|true',
 	ADMIN_ADD_IP: 'string|false',

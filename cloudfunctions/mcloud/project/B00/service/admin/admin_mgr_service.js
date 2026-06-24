@@ -16,15 +16,58 @@ class AdminMgrService extends BaseProjectAdminService {
 	//**管理员登录  */
 	async adminLogin(name, password) {
 
-		// 判断是否存在
+		// H-03: 暴力破解防护 — 常量
+		const LOCK_THRESHOLD = 5;           // 连续失败次数上限
+		const LOCK_DURATION = 15 * 60;      // 锁定时长（秒），15 分钟
+
+		// H-03: 先查锁定状态
+		let lockWhere = {
+			ADMIN_STATUS: 1,
+			ADMIN_NAME: name
+		};
+		let lockFields = '_id,ADMIN_FAIL_CNT,ADMIN_FAIL_TIME';
+		let lockAdmin = await AdminModel.getOne(lockWhere, lockFields);
+
+		if (lockAdmin && (lockAdmin.ADMIN_FAIL_CNT || 0) >= LOCK_THRESHOLD) {
+			let failTime = lockAdmin.ADMIN_FAIL_TIME || 0;
+			let now = timeUtil.time();
+			if (now - failTime < LOCK_DURATION) {
+				let remainMin = Math.ceil((LOCK_DURATION - (now - failTime)) / 60);
+				this.AppError('登录失败次数过多，请 ' + remainMin + ' 分钟后再试');
+			} else {
+				// 锁定已过期，重置计数
+				await AdminModel.edit(lockAdmin._id, {
+					ADMIN_FAIL_CNT: 0,
+					ADMIN_FAIL_TIME: 0
+				});
+			}
+		}
+
+		// 正常登录查询
 		let where = {
 			ADMIN_STATUS: 1,
 			ADMIN_NAME: name
 		}
 		let fields = '_id,ADMIN_ID,ADMIN_NAME,ADMIN_PASSWORD,ADMIN_DESC,ADMIN_TYPE,ADMIN_LOGIN_TIME,ADMIN_LOGIN_CNT';
 		let admin = await AdminModel.getOne(where, fields);
-		if (!admin || !dataUtil.verifyPassword(password, admin.ADMIN_PASSWORD))
+		if (!admin || !dataUtil.verifyPassword(password, admin.ADMIN_PASSWORD)) {
+			// H-03: 登录失败 — 累加失败计数
+			if (lockAdmin && lockAdmin._id) {
+				await AdminModel.edit(lockAdmin._id, {
+					ADMIN_FAIL_CNT: (lockAdmin.ADMIN_FAIL_CNT || 0) + 1,
+					ADMIN_FAIL_TIME: timeUtil.time()
+				});
+			}
 			this.AppError('管理员不存在或者已停用');
+		}
+
+		// H-03: 登录成功 — 清除失败计数
+		if (lockAdmin && (lockAdmin.ADMIN_FAIL_CNT || 0) > 0) {
+			await AdminModel.edit(lockAdmin._id, {
+				ADMIN_FAIL_CNT: 0,
+				ADMIN_FAIL_TIME: 0
+			});
+		}
 
 		let cnt = admin.ADMIN_LOGIN_CNT || 0;
 
