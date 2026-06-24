@@ -221,6 +221,14 @@ const WRITE_ACTIONS = {
 	audit_order: true,
 };
 
+const HIGH_RISK_ACTIONS = {
+	cancel_order: true,
+	save_payment: true,
+	void_payment: true,
+	pay_payroll: true,
+	audit_order: true,
+};
+
 function unique(list) {
 	let seen = {};
 	let out = [];
@@ -317,6 +325,50 @@ function buildWriteActionPrompt(skills = [], queryType = '') {
 	return lines.join('\n');
 }
 
+function getPublicCatalog() {
+	let actionList = Object.keys(ACTIONS).map(key => {
+		let action = ACTIONS[key] || {};
+		let isWrite = !!WRITE_ACTIONS[key];
+		let riskLevel = HIGH_RISK_ACTIONS[key] ? 'high' : (isWrite ? 'medium' : 'low');
+		return {
+			key,
+			title: action.title || key,
+			desc: action.desc || '',
+			isWrite,
+			riskLevel,
+		};
+	});
+
+	let actionMap = {};
+	for (let action of actionList) actionMap[action.key] = action;
+
+	let skillList = SKILLS.map(skill => {
+		let actions = (skill.actions || []).filter(action => ACTIONS[action]);
+		return {
+			key: skill.key,
+			title: skill.title,
+			queryTypes: skill.queryTypes || [],
+			image: !!skill.image,
+			actions,
+			actionTitles: actions.map(action => actionMap[action] ? actionMap[action].title : action),
+			actionTitleText: actions.map(action => actionMap[action] ? actionMap[action].title : action).join('、'),
+			writeCount: actions.filter(action => actionMap[action] && actionMap[action].isWrite).length,
+			highRiskCount: actions.filter(action => actionMap[action] && actionMap[action].riskLevel == 'high').length,
+		};
+	});
+
+	return {
+		skills: skillList,
+		actions: actionList,
+		stats: {
+			skillCount: skillList.length,
+			actionCount: actionList.length,
+			writeActionCount: actionList.filter(action => action.isWrite).length,
+			highRiskActionCount: actionList.filter(action => action.riskLevel == 'high').length,
+		},
+	};
+}
+
 module.exports = {
 	ACTIONS,
 	SKILLS,
@@ -327,4 +379,5 @@ module.exports = {
 	buildSkillPrompt,
 	buildToolPrompt,
 	buildWriteActionPrompt,
+	getPublicCatalog,
 };

@@ -457,6 +457,7 @@ class WorkAiService extends WorkPermissionService {
 			visionApiKeyMasked: this._maskKey(config.visionApiKey || ''),
 			contextLimit: estimateContextLimit(config.model),
 			visionContextLimit: estimateContextLimit(config.visionModel || config.model),
+			agentCatalog: agentRegistry.getPublicCatalog(),
 		};
 	}
 

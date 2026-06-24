@@ -1,7 +1,60 @@
 ﻿# 版本修改日记
 
 
-## v1.91 - 2026-06-24 19:17 CST
+## v1.92 - 2026-06-24 19:43 CST
+
+### 改动级别
+
+小改修复，v1.91 -> v1.92。
+
+### 本次目标
+
+把 AI 配置页已有的“Agent 能力边界”展示接到小猫后端技能注册表，让管理员看到的技能、动作、写入数量和高风险数量来自真实注册表；继续保持能力目录只读，不开放运行时随意改工具，避免绕过权限和审计。
+
+### 主要修改
+
+- `work_ai_agent_registry.js` 新增脱敏能力目录导出，按技能、动作、写入动作和高风险动作生成只读摘要。
+- `work_ai_service.js` 在管理员 AI 配置接口返回 `agentCatalog`，不包含触发正则、内部提示词、Key 或会话内容。
+- `work_admin_ai.js` 默认表单补齐 `agentCatalog` 空结构，避免旧接口或弱网情况下页面读取能力目录时报错。
+- `work_ai_service_live_patch.js` 重新生成，确保云端 mcloud 使用最新 AI 服务和技能注册表。
+- `miniprogram/version.js`、`miniprogram/setting/setting.js`、`CHANGELOG.md`、`README.md` 和本文档同步升级到 v1.92。
+
+### 涉及文件
+
+- `cloudfunctions/mcloud/project/B00/service/work_ai_agent_registry.js`
+- `cloudfunctions/mcloud/project/B00/service/work_ai_service.js`
+- `cloudfunctions/mcloud/work_ai_service_live_patch.js`
+- `miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.js`
+- `miniprogram/version.js`
+- `miniprogram/setting/setting.js`
+- `CHANGELOG.md`
+- `README.md`
+- `docs/version-change-diary.md`
+
+### 验证结果
+
+- `node --check cloudfunctions/mcloud/project/B00/service/work_ai_agent_registry.js` 通过。
+- `node --check cloudfunctions/mcloud/project/B00/service/work_ai_service.js` 通过。
+- `node --check cloudfunctions/mcloud/work_ai_service_live_patch.js` 通过。
+- `node --check miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.js` 通过。
+- `node --check miniprogram/version.js` 与 `node --check miniprogram/setting/setting.js` 通过。
+- `miniprogram/app.json`、`work_admin_ai.json` 和 `project.config.json` JSON 解析通过。
+- Agent 能力目录导出检查通过：当前展示 `10` 个技能、`17` 个动作、`12` 个写入动作和 `5` 个高风险动作。
+- `work_ai_service_live_patch.js` 解压后与 `work_ai_service.js`、`work_ai_agent_registry.js`、`work_ai_agent_memory.js`、`work_agent_audit_model.js` 源码一致。
+- 本轮涉及文件 `git diff --check` 通过；全仓检查仍受既有无关脏文件 trailing whitespace 影响。
+- 敏感信息扫描未发现新增 API Key、Token 或 Secret。
+
+### 部署状态
+
+- `work_ai_service_live_patch.js` 已通过微信开发者工具 CLI 增量部署到 `mcloud`，包体 `40.3 KB`；首次部署遇到一次 `ECONNRESET`，重试成功。
+- 小程序开发版已通过微信开发者工具 CLI 上传，版本号 `1.92`，包体 `1.5 MB` / `1,555,760 Byte`。
+- 本次未提交审核、未发布上线。
+
+### 未完成风险
+
+- 能力目录目前是只读可视化，不提供运行时开关；后续若要做管理员开关，需要同步设计权限校验、审计和高风险确认，不建议只在前端隐藏按钮。
+
+## v1.91 - 2026-06-24 19:32 CST
 
 ### 改动级别
 
@@ -36,15 +89,20 @@
 
 ### 验证结果
 
+- `node --check cloudfunctions/mcloud/project/B00/service/work_ai_agent_registry.js` 通过。
+- `node --check cloudfunctions/mcloud/project/B00/service/work_ai_service.js` 通过。
+- `node --check cloudfunctions/mcloud/work_ai_service_live_patch.js` 通过。
 - `node --check miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.js` 通过。
-- `node --check miniprogram/version.js` 通过。
-- `node --check miniprogram/setting/setting.js` 通过。
-- `miniprogram/app.json` 与 `project.config.json` JSON 解析通过。
-- 敏感信息片段扫描通过，用户提供的 Key 未写入仓库文件。
-- 本轮相关文件 `git diff --check` 通过；全仓库检查仍受既有无关脏文件 trailing whitespace 影响。
+- `node --check miniprogram/version.js` 与 `node --check miniprogram/setting/setting.js` 通过。
+- `miniprogram/app.json`、`work_admin_ai.json` 和 `project.config.json` JSON 解析通过。
+- Agent 能力目录导出检查通过：当前展示 `10` 个技能、`17` 个动作、`12` 个写入动作和 `5` 个高风险动作。
+- `work_ai_service_live_patch.js` 解压后与 `work_ai_service.js`、`work_ai_agent_registry.js`、`work_ai_agent_memory.js`、`work_agent_audit_model.js` 源码一致。
+- 本轮涉及文件 `git diff --check` 通过；全仓库检查仍受既有无关脏文件 trailing whitespace 影响。
+- 敏感信息扫描未发现新增 API Key、Token 或 Secret。
 
 ### 部署状态
 
+- `work_ai_service_live_patch.js` 已通过微信开发者工具 CLI 增量部署到 `mcloud`，包体 `40.3 KB`；首次部署遇到一次 `ECONNRESET`，重试成功。
 - 小程序开发版已通过微信开发者工具 CLI 上传，版本号 `1.91`，包体 `1.5 MB` / `1,555,366 Byte`。
 - 本次未提交审核、未发布上线。
 

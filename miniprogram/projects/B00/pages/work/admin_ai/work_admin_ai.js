@@ -69,6 +69,11 @@ function defaultForm() {
 		visionContextLimit: 128000,
 		memoryEnabled: false,
 		memoryText: '',
+		agentCatalog: {
+			skills: [],
+			actions: [],
+			stats: {},
+		},
 	};
 }
 
