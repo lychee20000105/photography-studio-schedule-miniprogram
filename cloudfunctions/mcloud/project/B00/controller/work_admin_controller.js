@@ -355,11 +355,11 @@ class WorkAdminController extends BaseProjectController {
 			pass: 'must|bool|name=审核结果',
 			reason: 'string|max:200|name=审核说明',
 			participants: 'array|name=提成明细',
-			orderEditTime: 'int|name=订单更新时间',
 		});
 		let staff = await this._assertMiniAdmin();
 		let service = new AdminWorkService();
-		return await service.auditOrder(this._buildAdminLike(staff), input.id, input.pass, input.reason || '', input.participants || null, input.orderEditTime || 0);
+		// M-02: 不再接受客户端传入的 orderEditTime，由服务层自行校验
+		return await service.auditOrder(this._buildAdminLike(staff), input.id, input.pass, input.reason || '', input.participants || null);
 	}
 
 	async cancelOrder() {

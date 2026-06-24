@@ -17,13 +17,18 @@ class CheckController extends BaseProjectController {
 		// 数据校验
 		let rules = {
 			img: 'must|string|max:200|name=图片',
-			mine: 'must|default=jpg|name=类型',
+			mine: 'default=jpg|name=类型',
 		};
 
 		// 取得数据
 		let input = this.validateData(rules);
 
-		return await contentCheck.checkImg(input.img, 'jpg');
+		// 使用客户端传入的 mime 参数，但加白名单校验
+		const ALLOWED_MIME = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+		let mime = (input.mine || 'jpg').toLowerCase();
+		if (!ALLOWED_MIME.includes(mime)) mime = 'jpg';
+
+		return await contentCheck.checkImg(input.img, mime);
 
 	}
 
