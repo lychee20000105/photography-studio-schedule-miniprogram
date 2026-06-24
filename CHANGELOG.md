@@ -1,6 +1,56 @@
 # Changelog
 
 
+## v1.90 - 2026-06-24
+
+Mimo默认模型配置版本。本次按小改修复 `+0.01` 从 v1.89 升级为 v1.90，将小猫助手默认服务商切换到小米 MiMo OpenAI 兼容接口，默认模型使用 `mimo-v2.5`。默认值只作为新配置和快捷预设，不限制管理员继续修改 Base URL、模型或 Key。
+
+### 修复
+
+- AI 配置页默认服务商改为 `Mimo`，默认 Base URL 改为小米 MiMo OpenAI 兼容地址。
+- `Mimo` 预设从空白自定义项改为快捷填充 `mimo-v2.5`，点击后仍可手动修改。
+- 云函数默认 AI 配置同步切换为 `Mimo + mimo-v2.5`，新环境或空配置时优先使用该组合。
+- 本地已用用户提供的 Key 验证 `mimo-v2.5` 文本接口返回 200 和中文回复；Key 未写入源码、日志或提交。
+
+### 验证
+
+- `node --check cloudfunctions/mcloud/project/B00/service/work_ai_service.js` 通过。
+- `node --check cloudfunctions/mcloud/work_ai_service_live_patch.js` 通过。
+- `node --check miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.js` 通过。
+- `node --check miniprogram/cmpts/work_pet/work_pet.js` 通过。
+- `node --check miniprogram/version.js` 与 `node --check miniprogram/setting/setting.js` 通过。
+- `miniprogram/app.json` 与 `project.config.json` JSON 解析通过。
+- `work_ai_service_live_patch.js` 解压后与 `work_ai_service.js`、Agent 注册表、轻量记忆和审计模型源码一致。
+- 敏感信息扫描通过，用户提供的 Key 未写入仓库文件。
+- 本地直连小米 MiMo 接口验证 `mimo-v2.5` 返回 200 和中文回复。
+- live patch 加载检查通过；仅出现项目既有 `ws` 依赖提示，不影响本次 patch 注入。
+- `git diff --check` 通过，仅有 Windows 换行提示。
+
+### 部署
+
+- `work_ai_service_live_patch.js` 已通过微信开发者工具 CLI 增量部署到 `mcloud`，包体 `40.1 KB`。
+- 小程序开发版已通过微信开发者工具 CLI 上传，版本号 `1.90`，包体 `1.5 MB` / `1,550,460 Byte`。
+- 本次未提交审核、未发布上线。
+
+## v1.89 - 2026-06-24
+
+小猫 Agent 管理员长期记忆版本。本次按小改修复 `+0.01` 从 v1.88 升级为 v1.89，重点补齐 Hanako 迁移方案里的“记忆层”：先做管理员手动维护、可开关、不会自动污染生产数据的长期记忆片段。
+
+### 新增
+
+- AI 配置页新增“长期记忆”开关和记忆文本，管理员可维护店内稳定规则、报价口径、团队默认习惯和客户跟进原则。
+- `work_ai_service.js` 保存 `memoryEnabled` 与 `memoryText`，并在构建小猫提示词时按开关注入管理员维护的长期记忆。
+- 长期记忆注入时追加安全边界：只作为回答和追问参考，不等于数据库事实；订单、金额、收款、工资、审核仍以后台校验为准。
+- 小猫 Agent 信息弹层更新为 `0.4.0 管理员长期记忆`。
+
+### 验证
+
+- 已随 v1.90 本地校验一并通过：后端 AI 服务、AI 配置页、小猫组件、版本源、设置文件、JSON 配置和 live patch 一致性均通过。
+
+### 部署
+
+- 已随 v1.90 开发版和 `work_ai_service_live_patch.js` 增量部署一并上传；未单独上传 v1.89 开发版。
+
 ## v1.88 - 2026-06-24
 
 小猫 Agent 审计流水后台版本。本次按小改修复 `+0.01` 从 v1.87 升级为 v1.88，重点补齐 v1.86 已写入的 Agent 审计记录在管理中心可查看、可筛选、可追溯的闭环。

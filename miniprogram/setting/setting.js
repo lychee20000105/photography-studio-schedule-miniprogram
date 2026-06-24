@@ -3,10 +3,10 @@ module.exports = {
 	CLOUD_ID: 'yunyukeji-d4g7waei5d5d6cdeb', //云服务id ,本地测试环境
 
 	// #### 版本信息
-	VER: 'v1.88',
-	APP_VERSION: '1.88',
+	VER: 'v1.90',
+	APP_VERSION: '1.90',
 	APP_VERSION_DATE: '2026-06-24',
-	APP_VERSION_NAME: '小猫 Agent 审计流水后台',
+	APP_VERSION_NAME: 'Mimo默认模型配置',
 	COMPANY: '云屿摄影｜技术由云屿科技支持',
 
 	// #### 系统参数

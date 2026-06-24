@@ -28,14 +28,16 @@ const LEGACY_OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
 
 const DEFAULT_CONFIG = {
 	enabled: false,
-	providerName: 'Agnes APIHub',
-	apiUrl: 'https://apihub.agnes-ai.com/v1',
-	model: 'gpt-4o-mini',
+	providerName: 'Mimo',
+	apiUrl: 'https://api.xiaomimimo.com/v1',
+	model: 'mimo-v2.5',
 	visionApiUrl: '',
 	visionModel: '',
 	visionApiKey: '',
 	apiKey: '',
 	personality: 'ops_cat',
+	memoryEnabled: false,
+	memoryText: '',
 	systemPrompt: '你是云屿摄影小程序里的小猫 AI 助手，语气简洁、友好、务实。你主要帮助摄影工作室员工记录订单、梳理档期、整理客户跟进事项、处理收款/提成/工资/审核等管理动作、解释小程序功能。不要编造系统里真实存在的数据；能通过工具查询的数据要主动查询，能通过当前登录账号权限执行的动作要交给工具和后台校验。',
 	temperature: 0.7,
 	maxTokens: 600,
@@ -280,6 +282,8 @@ class WorkAiService extends WorkPermissionService {
 			visionApiKey: options.clearVisionKey ? '' : (asText(input.visionApiKey, 400) || current.visionApiKey || ''),
 			apiKey: options.clearKey ? '' : (apiKey || current.apiKey || ''),
 			personality: PERSONALITY_MAP[input.personality] ? input.personality : DEFAULT_CONFIG.personality,
+			memoryEnabled: !!input.memoryEnabled,
+			memoryText: asText(input.memoryText, 2000),
 			systemPrompt: asText(input.systemPrompt, 3000) || DEFAULT_CONFIG.systemPrompt,
 			temperature: asNumber(input.temperature, DEFAULT_CONFIG.temperature, 0, 2),
 			maxTokens: Math.round(asNumber(input.maxTokens, DEFAULT_CONFIG.maxTokens, 128, 4000)),
@@ -442,6 +446,8 @@ class WorkAiService extends WorkPermissionService {
 			personality: PERSONALITY_MAP[config.personality] ? config.personality : DEFAULT_CONFIG.personality,
 			personalityName: (PERSONALITY_MAP[config.personality] || PERSONALITY_MAP[DEFAULT_CONFIG.personality]).name,
 			personalities: Object.keys(PERSONALITY_MAP).map(key => ({ key, name: PERSONALITY_MAP[key].name })),
+			memoryEnabled: !!config.memoryEnabled,
+			memoryText: asText(config.memoryText, 2000),
 			systemPrompt: config.systemPrompt || DEFAULT_CONFIG.systemPrompt,
 			temperature: asNumber(config.temperature, DEFAULT_CONFIG.temperature, 0, 2),
 			maxTokens: Math.round(asNumber(config.maxTokens, DEFAULT_CONFIG.maxTokens, 128, 4000)),
@@ -571,6 +577,11 @@ class WorkAiService extends WorkPermissionService {
 			skills: selectedSkills,
 		});
 		if (memoryPrompt) parts.push(memoryPrompt);
+
+		if (config.memoryEnabled && config.memoryText) {
+			parts.push('管理员维护的长期记忆/店内规则：' + asText(config.memoryText, 2000));
+			parts.push('长期记忆只作为回答和追问参考，不等于数据库事实；涉及订单、金额、收款、工资、审核等写入前仍必须依赖当前字段、页面上下文和后台校验。');
+		}
 
 		// Add knowledge base for non-trivial queries
 		if (queryType !== 'chat') {

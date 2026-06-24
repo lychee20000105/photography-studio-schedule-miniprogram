@@ -30,11 +30,10 @@ const PROVIDER_PRESETS = [
 	{
 		name: 'Mimo',
 		providerName: 'Mimo',
-		apiUrl: '',
-		model: '',
+		apiUrl: 'https://api.xiaomimimo.com/v1',
+		model: 'mimo-v2.5',
 		visionApiUrl: '',
 		visionModel: '',
-		custom: true,
 	},
 	{
 		name: '自定义',
@@ -50,9 +49,9 @@ const PROVIDER_PRESETS = [
 function defaultForm() {
 	return {
 		enabled: false,
-		providerName: 'Agnes APIHub',
-		apiUrl: 'https://apihub.agnes-ai.com/v1',
-		model: 'gpt-4o-mini',
+		providerName: 'Mimo',
+		apiUrl: 'https://api.xiaomimimo.com/v1',
+		model: 'mimo-v2.5',
 		visionApiUrl: '',
 		visionModel: 'gpt-4o-mini',
 		personality: 'ops_cat',
@@ -68,6 +67,8 @@ function defaultForm() {
 		maxTokens: 600,
 		contextLimit: 128000,
 		visionContextLimit: 128000,
+		memoryEnabled: false,
+		memoryText: '',
 	};
 }
 
@@ -415,6 +416,10 @@ Page({
 		this.setData({ 'form.enabled': !!e.detail.value });
 	},
 
+	bindMemoryEnabledChange: function (e) {
+		this.setData({ 'form.memoryEnabled': !!e.detail.value });
+	},
+
 	bindClearKeyChange: function (e) {
 		let checked = !!e.detail.value;
 		this.setData({ clearKey: checked, keyInput: checked ? '' : this.data.keyInput });
@@ -432,6 +437,7 @@ Page({
 		form.model = (form.model || '').trim();
 		form.visionApiUrl = (form.visionApiUrl || '').trim();
 		form.visionModel = (form.visionModel || '').trim();
+		form.memoryText = (form.memoryText || '').trim();
 		form.apiKey = this._cleanSecretText(this.data.keyInput);
 		form.visionApiKey = this._cleanSecretText(this.data.visionKeyInput);
 		form.temperature = Number(form.temperature || 0.7);

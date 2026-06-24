@@ -1,6 +1,116 @@
 ﻿# 版本修改日记
 
 
+## v1.90 - 2026-06-24 18:57 CST
+
+### 改动级别
+
+小改修复，v1.89 -> v1.90。
+
+### 本次目标
+
+按小李指定，将小猫助手默认服务商改成小米 MiMo，默认接口使用小米 MiMo OpenAI 兼容地址，默认模型使用 `mimo-v2.5`，同时保留管理页可自由修改 Base URL、模型和 Key 的能力。
+
+### 和 AI 讨论后的需求结论
+
+- 小李提供的 Key 属于敏感信息，不能写入源码、版本日志、提交信息或公开文档。
+- “默认”只代表新配置和快捷预设的初始值，不应锁死管理员修改。
+- 用户口头说的 `mimov2.5` 实际可用模型 ID 是 `mimo-v2.5`；无连字符写法会触发 `Param Incorrect`。
+- 本地已用该 Key 验证 `mimo-v2.5` 文本接口可返回 200 和中文回复。
+
+### 主要修改
+
+- `work_admin_ai.js` 将默认表单改为 `Mimo + https://api.xiaomimimo.com/v1 + mimo-v2.5`。
+- `work_admin_ai.js` 将 Mimo 预设从空白自定义改为快捷填充 Mimo 地址和模型，但保留管理员手动修改能力。
+- `work_ai_service.js` 将云函数默认 AI 配置同步切换为 Mimo 和 `mimo-v2.5`。
+- 更新 `miniprogram/version.js`、`miniprogram/setting/setting.js`、`CHANGELOG.md`、`README.md` 和本文档到 v1.90。
+
+### 涉及文件
+
+- `miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.js`
+- `cloudfunctions/mcloud/project/B00/service/work_ai_service.js`
+- `cloudfunctions/mcloud/work_ai_service_live_patch.js`
+- `miniprogram/version.js`
+- `miniprogram/setting/setting.js`
+- `CHANGELOG.md`
+- `README.md`
+- `docs/version-change-diary.md`
+
+### 验证结果
+
+- `node --check cloudfunctions/mcloud/project/B00/service/work_ai_service.js` 通过。
+- `node --check cloudfunctions/mcloud/work_ai_service_live_patch.js` 通过。
+- `node --check miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.js` 通过。
+- `node --check miniprogram/cmpts/work_pet/work_pet.js` 通过。
+- `node --check miniprogram/version.js` 通过。
+- `node --check miniprogram/setting/setting.js` 通过。
+- `miniprogram/app.json` 与 `project.config.json` JSON 解析通过。
+- `work_ai_service_live_patch.js` 解压后与 `work_ai_service.js`、`work_ai_agent_registry.js`、`work_ai_agent_memory.js`、`work_agent_audit_model.js` 一致。
+- live patch 加载检查通过；仅出现项目既有 `ws` 依赖提示，不影响本次 patch 注入。
+- `git diff --check` 通过，仅有 Windows 换行提示。
+
+### 部署状态
+
+- `work_ai_service_live_patch.js` 已通过微信开发者工具 CLI 增量部署到 `mcloud`，包体 `40.1 KB`。
+- 小程序开发版已通过微信开发者工具 CLI 上传，版本号 `1.90`，包体 `1.5 MB` / `1,550,460 Byte`。
+- 本次未提交审核、未发布上线。
+
+### 未完成风险
+
+- 当前本机没有腾讯云 `secretId/secretKey`，不能直接用本地 Node SDK 写入云数据库 `WORK_AI_CHAT_CONFIG`；运行态是否立即覆盖已有旧配置，仍以管理页保存后的云端配置为准。
+
+## v1.89 - 2026-06-24 18:58 CST
+
+### 改动级别
+
+小改修复，v1.88 -> v1.89。
+
+### 本次目标
+
+继续参考 HanakoAgent 的“记忆层”思路，给小猫补一个安全可控的长期记忆入口。先不做自动学习、不从聊天里自动沉淀，避免把一次性客户信息或错误理解写进长期上下文；本轮只允许管理员在 AI 配置页手动维护稳定规则。
+
+### 和 AI 讨论后的需求结论
+
+- 小程序里的长期记忆必须比桌面 Agent 更保守：不能自动写客户隐私、手机号、密钥或一次性聊天内容。
+- 记忆内容应该是店内长期有效的规则，例如报价口径、团队默认习惯、客户跟进原则、常用服务解释。
+- 记忆注入不能替代数据库事实；涉及订单、金额、收款、工资、审核等动作仍必须走后台校验和真实数据。
+- 先把管理员可控的记忆片段做通，再考虑后续的分角色知识库、可见范围和记忆管理页。
+
+### 主要修改
+
+- `work_ai_service.js` 配置新增 `memoryEnabled` 和 `memoryText`，保存时做长度裁剪并随公开配置返回前端。
+- `work_ai_service.js` 构建小猫提示词时，按开关注入“管理员维护的长期记忆/店内规则”，并追加“只作参考、不等于数据库事实”的边界说明。
+- `work_admin_ai.js` 默认表单和保存流程支持长期记忆字段。
+- `work_admin_ai.wxml` 在“小猫行为”区域新增长期记忆开关、文本框和安全说明。
+- `work_pet.js` 将小猫 Agent 信息更新为 `0.4.0 管理员长期记忆`。
+- 更新 `miniprogram/version.js`、`miniprogram/setting/setting.js`、`CHANGELOG.md`、`README.md` 和本文档到 v1.89。
+
+### 涉及文件
+
+- `cloudfunctions/mcloud/project/B00/service/work_ai_service.js`
+- `cloudfunctions/mcloud/work_ai_service_live_patch.js`
+- `miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.js`
+- `miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.wxml`
+- `miniprogram/cmpts/work_pet/work_pet.js`
+- `miniprogram/version.js`
+- `miniprogram/setting/setting.js`
+- `README.md`
+- `CHANGELOG.md`
+- `docs/version-change-diary.md`
+
+### 验证结果
+
+- 已随 v1.90 本地校验一并通过：后端 AI 服务、AI 配置页、小猫组件、版本源、设置文件、JSON 配置和 live patch 一致性均通过。
+
+### 部署状态
+
+- 已随 v1.90 开发版和 `work_ai_service_live_patch.js` 增量部署一并上传；未单独上传 v1.89 开发版。
+
+### 未完成风险
+
+- 本轮只是管理员手动维护的一段长期记忆，还不是完整的多条记忆库、分角色可见范围、审批式记忆写入或记忆检索后台。
+- 记忆文本如果管理员手动写入客户隐私或临时信息，仍可能进入提示词；页面文案已提醒不要写密钥、手机号、客户隐私或一次性聊天内容。
+
 ## v1.88 - 2026-06-24 18:36 CST
 
 ### 改动级别
