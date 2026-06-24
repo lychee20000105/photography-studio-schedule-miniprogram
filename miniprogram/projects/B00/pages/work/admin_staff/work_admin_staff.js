@@ -1,5 +1,6 @@
 const cloudHelper = require('../../../../../helper/cloud_helper.js');
 const pageHelper = require('../../../../../helper/page_helper.js');
+const perf = require('../../../../../helper/perf_helper.js');
 const ProjectBiz = require('../../../biz/project_biz.js');
 
 Page({
@@ -13,6 +14,7 @@ Page({
 		form: { STAFF_NAME: '', STAFF_MOBILE: '', STAFF_BIND_CODE: '', STAFF_ROLES: [], STAFF_RULES: [], STAFF_STATUS: 1, STAFF_IS_ADMIN: 0 },
 	},
 	onLoad: async function () {
+		this._perfTimer = perf.startTimer('admin_staff:onLoad');
 		ProjectBiz.initPage(this, { isLoadSkin: true });
 		this._syncRoleNodes();
 		await this._loadList();
@@ -22,7 +24,8 @@ Page({
 		wx.stopPullDownRefresh();
 	},
 	_loadList: async function () {
-		let list = await cloudHelper.callCloudData('work/admin_staff_list', {}, { title: this.data.isLoad ? 'bar' : '加载中' });
+		let list = await perf.trackQuery('admin_staff:_loadList', () => cloudHelper.callCloudData('work/admin_staff_list', {}, { title: this.data.isLoad ? 'bar' : '加载中' }));
+		if (this._perfTimer) { perf.endTimer(this._perfTimer); this._perfTimer = null; }
 		list = (list || []).map(item => {
 			item.ROLE_TEXT = (item.STAFF_ROLES || []).join('、') || '未设置岗位';
 			item.BIND_TEXT = item.STAFF_OPENID ? '已绑定' : '未绑定';

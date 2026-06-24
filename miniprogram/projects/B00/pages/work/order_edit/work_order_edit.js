@@ -2,6 +2,7 @@ const cloudHelper = require('../../../../../helper/cloud_helper.js');
 const pageHelper = require('../../../../../helper/page_helper.js');
 const contentCheckHelper = require('../../../../../helper/content_check_helper.js');
 const dateHelper = require('../../../../../helper/date_helper.js');
+const perf = require('../../../../../helper/perf_helper.js');
 const ProjectBiz = require('../../../biz/project_biz.js');
 
 const PAYMENT_TYPE_OPTIONS = [
@@ -62,6 +63,7 @@ Page({
 	},
 
 	onLoad: async function (options) {
+		this._perfTimer = perf.startTimer('order_edit:onLoad');
 		ProjectBiz.initPage(this, { isLoadSkin: true });
 		let id = options.id || '';
 		this.setData({ id });
@@ -75,6 +77,7 @@ Page({
 			};
 			if (day) data['order.ORDER_DATE'] = day;
 			this.setData(data);
+			perf.endTimer(this._perfTimer); this._perfTimer = null;
 		}
 	},
 
@@ -88,7 +91,8 @@ Page({
 	},
 
 	_loadDetail: async function () {
-		let order = await cloudHelper.callCloudData('work/order_detail', { id: this.data.id }, { title: '加载中' });
+		let order = await perf.trackQuery('order_edit:_loadDetail', () => cloudHelper.callCloudData('work/order_detail', { id: this.data.id }, { title: '加载中' }));
+		if (this._perfTimer) { perf.endTimer(this._perfTimer); this._perfTimer = null; }
 		if (!order) return;
 		let canFull = !!order.canFull;
 		let canEdit = !!order.canEdit;

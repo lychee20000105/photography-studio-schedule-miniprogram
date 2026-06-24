@@ -7,6 +7,7 @@ const cacheHelper = require('../../../../../helper/cache_helper.js');
 const pageHelper = require('../../../../../helper/page_helper.js');
 const cloudHelper = require('../../../../../helper/cloud_helper.js');
 const timeHelper = require('../../../../../helper/time_helper.js');
+const perf = require('../../../../../helper/perf_helper.js');
 const ProjectBiz = require('../../../biz/project_biz.js');
 const PublicBiz = require('../../../../../comm/biz/public_biz.js');
 const PassportBiz = require('../../../../../comm/biz/passport_biz.js');
@@ -31,10 +32,9 @@ Page({
 			let opts = {
 				title: 'bar'
 			}
-			await cloudHelper.callCloudSumbit('meet/my_join_someday', params, opts).then(res => {
-				this.setData({
-					myTodayList: res.data
-				});
+			let res = await perf.trackQuery('my_index:_loadTodayList', () => cloudHelper.callCloudSumbit('meet/my_join_someday', params, opts));
+			this.setData({
+				myTodayList: res.data
 			});
 		} catch (err) {
 			console.log(err)
@@ -52,7 +52,9 @@ Page({
 	onShow: async function () {
 		let now = Date.now();
 		if (this._lastLoadTime && now - this._lastLoadTime < 30000) return;
+		this._perfTimer = perf.startTimer('my_index:onShow');
 		await this._loadTodayList();
+		if (this._perfTimer) { perf.endTimer(this._perfTimer); this._perfTimer = null; }
 		this._loadUser();
 		this._lastLoadTime = Date.now();
 	},

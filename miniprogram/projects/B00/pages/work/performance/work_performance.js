@@ -2,6 +2,7 @@ const cloudHelper = require('../../../../../helper/cloud_helper.js');
 const pageHelper = require('../../../../../helper/page_helper.js');
 const guestHelper = require('../../../../../helper/guest_helper.js');
 const orderHelper = require('../../../../../helper/order_helper.js');
+const perf = require('../../../../../helper/perf_helper.js');
 const ProjectBiz = require('../../../biz/project_biz.js');
 
 Page({
@@ -24,6 +25,7 @@ Page({
 	onShow: async function () {
 		let now = Date.now();
 		if (this._lastLoadTime && now - this._lastLoadTime < 30000) return;
+		this._perfTimer = perf.startTimer('performance:onShow');
 		await this._loadData();
 		this._lastLoadTime = Date.now();
 	},
@@ -38,7 +40,8 @@ Page({
 			this.setData({ isLoad: true, isGuest: true, data, rankList: data.rankList || [], orderSummary: orderPreview.summary, orderList: orderPreview.list });
 			return;
 		}
-		let data = await cloudHelper.callCloudData('work/performance_home', { month: this.data.month }, { title: this.data.isLoad ? 'bar' : '加载中' });
+		let data = await perf.trackQuery('performance:_loadData', () => cloudHelper.callCloudData('work/performance_home', { month: this.data.month }, { title: this.data.isLoad ? 'bar' : '加载中' }));
+		if (this._perfTimer) { perf.endTimer(this._perfTimer); this._perfTimer = null; }
 		if (!data) data = null;
 		let orderPreview = await this._loadOrderPreview();
 		this.setData({ isLoad: true, isGuest: false, data, rankList: data ? (data.rankList || []) : [], orderSummary: orderPreview.summary, orderList: orderPreview.list });

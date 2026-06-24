@@ -1,10 +1,12 @@
 const cloudHelper = require('../../../../../helper/cloud_helper.js');
 const pageHelper = require('../../../../../helper/page_helper.js');
+const perf = require('../../../../../helper/perf_helper.js');
 const ProjectBiz = require('../../../biz/project_biz.js');
 
 Page({
 	data: { data: { orders: [] }, orders: [] },
 	onLoad: async function () {
+		this._perfTimer = perf.startTimer('admin_audit:onLoad');
 		ProjectBiz.initPage(this, { isLoadSkin: true });
 		await this._loadData();
 	},
@@ -21,7 +23,8 @@ Page({
 		});
 	},
 	_loadData: async function () {
-		let data = await cloudHelper.callCloudData('work/admin_audit_list', {}, { title: 'bar' });
+		let data = await perf.trackQuery('admin_audit:_loadData', () => cloudHelper.callCloudData('work/admin_audit_list', {}, { title: 'bar' }));
+		if (this._perfTimer) { perf.endTimer(this._perfTimer); this._perfTimer = null; }
 		data = data || { orders: [] };
 		data.orders = this._normalizeOrders(data.orders || []);
 		this.setData({ data, orders: data.orders });
