@@ -1,0 +1,42 @@
+<view class="page">
+	<view class="filter">
+		<view class="filter-row">
+			<input class="keyword" value="{{keyword}}" bindinput="bindKeywordInput" placeholder="搜员工、动作、内容、关联ID" confirm-type="search" bindconfirm="bindSearchTap" />
+			<button class="search-btn" bindtap="bindSearchTap">搜索</button>
+		</view>
+		<view class="seg-row">
+			<picker mode="selector" range="{{actionOptions}}" range-key="name" value="{{actionIndex}}" bindchange="bindActionChange">
+				<view class="select">{{actionPickerText}}</view>
+			</picker>
+			<picker mode="selector" range="{{riskOptions}}" range-key="name" value="{{riskIndex}}" bindchange="bindRiskChange">
+				<view class="select">{{riskPickerText}}</view>
+			</picker>
+			<button class="reset-btn" bindtap="bindResetTap">重置</button>
+		</view>
+	</view>
+
+	<view wx:if="{{!isLoad}}" class="empty">加载中...</view>
+	<view wx:if="{{isLoad && list.length==0}}" class="empty">暂无 AI 审计流水</view>
+
+	<view wx:for="{{list}}" wx:key="_id" class="card">
+		<view class="card-head">
+			<view class="title-wrap">
+				<view class="title">{{item.AGENTAUDIT_TITLE || item.actionText}}</view>
+				<view class="meta">{{item.AGENTAUDIT_STAFF_NAME || '未知员工'}} · {{item.addTimeText}}</view>
+			</view>
+			<view class="risk {{item.riskClass}}">{{item.riskText}}</view>
+		</view>
+		<view class="tags">
+			<text>{{item.actionText}}</text>
+			<text wx:if="{{item.AGENTAUDIT_REF_TYPE}}">{{item.AGENTAUDIT_REF_TYPE}}</text>
+			<text wx:if="{{item.AGENTAUDIT_REF_ID}}">{{item.AGENTAUDIT_REF_ID}}</text>
+		</view>
+		<view class="content">{{item.AGENTAUDIT_CONTENT || '无详细内容'}}</view>
+	</view>
+
+	<view wx:if="{{isLoad && list.length>0 && hasMore}}" class="more">上拉加载更多</view>
+	<view wx:if="{{isLoad && list.length>0 && !hasMore}}" class="more">已到底</view>
+</view>
+
+<tech-footer />
+<work-pet id="workPet" />

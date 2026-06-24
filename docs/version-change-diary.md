@@ -49,11 +49,26 @@
 
 ### 验证结果
 
-- 待本轮本地校验后补充。
+- `node --check cloudfunctions/mcloud/project/B00/service/work_agent_audit_service.js` 通过。
+- `node --check cloudfunctions/mcloud/project/B00/controller/work_admin_controller.js` 通过。
+- `node --check cloudfunctions/mcloud/project/B00/public/route.js` 通过。
+- `node --check cloudfunctions/mcloud/index.js` 通过。
+- `node --check cloudfunctions/mcloud/work_admin_controller_live_patch.js` 通过。
+- `node --check cloudfunctions/mcloud/work_route_live_patch.js` 通过。
+- `node --check miniprogram/projects/B00/pages/work/admin_agent_audit/work_admin_agent_audit.js` 通过。
+- `node --check miniprogram/version.js` 通过。
+- `node --check miniprogram/setting/setting.js` 通过。
+- `miniprogram/app.json`、`admin_agent_audit.json` 与 `project.config.json` JSON 解析通过。
+- live patch 加载检查通过；仅出现项目既有 `ws` 依赖提示，不影响本次 patch 注入。
+- `git diff --check` 通过，仅有 Windows 换行提示。
 
 ### 部署状态
 
-- 待本轮开发版上传和 `mcloud` 增量部署后补充。
+- `mcloud/index.js` 已通过增量部署上传，包体 `370 B`。
+- `mcloud/work_admin_controller_live_patch.js` 已通过增量部署上传，包体 `5.1 KB`。
+- `mcloud/work_route_live_patch.js` 已通过增量部署上传，包体 `2.8 KB`。
+- 小程序开发版已通过微信开发者工具 CLI 上传，版本号 `1.88`，包体 `1.5 MB` / `1,547,955 Byte`。
+- 本次未提交审核、未发布上线；完整 `mcloud` 部署仍沿用增量 live patch 方案避开已知 `EISDIR` 问题。
 
 ### 未完成风险
 

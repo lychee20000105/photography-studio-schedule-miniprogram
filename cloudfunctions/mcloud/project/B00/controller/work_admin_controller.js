@@ -14,6 +14,7 @@ const WorkAdminStaffService = require('../service/work_admin_staff_service.js');
 const AdminWorkService = require('../service/admin/admin_work_service.js');
 const WorkService = require('../service/work_service.js');
 const WorkAiService = require('../service/work_ai_service.js');
+const WorkAgentAuditService = require('../service/work_agent_audit_service.js');
 const WorkStaffModel = require('../model/work_staff_model.js');
 
 class WorkAdminController extends BaseProjectController {
@@ -71,6 +72,7 @@ class WorkAdminController extends BaseProjectController {
 				{ title: '订单审核', desc: '审核完成订单并触发释放', url: '/projects/B00/pages/work/admin_audit/work_admin_audit' },
 				{ title: '问题反馈', desc: '查看员工提交的问题和建议', url: '/projects/B00/pages/work/admin_feedback/work_admin_feedback' },
 				{ title: 'AI 小助手', desc: '配置猫咪对话的接口、模型和提示词', url: '/projects/B00/pages/work/admin_ai/work_admin_ai' },
+				{ title: 'AI 审计流水', desc: '查看小猫执行过的写入动作、风险等级和审查记录', url: '/projects/B00/pages/work/admin_agent_audit/work_admin_agent_audit' },
 			],
 		};
 	}
@@ -275,6 +277,22 @@ class WorkAdminController extends BaseProjectController {
 		await this._assertMiniAdmin();
 		let service = new WorkService();
 		return await service.getAdminFeedbackList(this._userId);
+	}
+
+	async getAgentAuditList() {
+		let input = this.validateData({
+			action: 'string|max:40|name=AI动作',
+			riskLevel: 'string|max:40|name=风险等级',
+			staffId: 'string|max:80|name=员工ID',
+			staffName: 'string|max:80|name=员工姓名',
+			keyword: 'string|max:80|name=关键词',
+			page: 'int|name=页码',
+			size: 'int|name=分页大小',
+			oldTotal: 'int|name=旧总数',
+		});
+		await this._assertMiniAdmin();
+		let service = new WorkAgentAuditService();
+		return await service.listAudits(input);
 	}
 
 	async auditOrder() {
