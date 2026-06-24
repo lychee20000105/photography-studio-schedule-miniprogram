@@ -8,7 +8,7 @@
 <view class="form-group padding">
 		<view class="upload-img">
 		<view class="bg-img" wx:for="{{imgList}}" wx:key="index" bindtap="bindPreviewImgTap" data-url="{{imgList[index]}}">
-			<image src='{{imgList[index]}}' mode='aspectFill'></image>
+			<image lazy-load src='{{imgList[index]}}' mode='aspectFill'></image>
 			<view class="tag bg-red" catchtap="catchDelImgTap" data-index="{{index}}">
 				<text class="icon-close"></text>
 			</view>

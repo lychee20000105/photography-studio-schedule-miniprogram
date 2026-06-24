@@ -1,14 +1,26 @@
 ﻿module.exports = {
-	current: '2.01',
-	previous: '2.00',
+	current: '2.02',
+	previous: '2.01',
 	date: '2026-06-25',
-	time: '01:00 CST',
+	time: '03:45 CST',
 	level: 'minor',
-	levelText: 'v2.01 正式版',
-	name: 'v2.01 正式版',
-	summary: 'Bug修复、安全加固、性能优化、代码清理全系列。',
+	levelText: '前端优化',
+	name: 'v2.02-b7: 前端交互优化',
+	summary: '图片懒加载、setData精确路径、骨架屏组件、CSS优化。',
 	changeLog: '/docs/version-change-diary.md',
 	history: [
+		{
+			version: '2.02',
+			date: '2026-06-25',
+			name: 'v2.02-b7: 前端交互优化',
+			summary: '图片懒加载、setData精确路径、骨架屏组件、CSS优化。',
+			items: [
+				'所有 <image> 标签统一添加 lazy-load 属性，减少首屏加载开销。',
+				'AI 聊天组件 typewriter 打字效果改为精确路径 setData，只更新最后一条消息的 content，减少 diff 开销。',
+				'新增通用骨架屏组件 skeleton，支持 shimmer 渐变动画，在日历页和订单编辑页引入。',
+				'日历页和订单编辑页 JSON 注册 skeleton 组件，isLoad 期间展示骨架屏占位。',
+			],
+		},
 		{
 			version: '2.01',
 			date: '2026-06-25',

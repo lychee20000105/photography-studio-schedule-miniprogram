@@ -20,7 +20,7 @@
 		<view class="cat-stage">
 			<view class="cat-shadow"></view>
 			<view class="cat-scruff"></view>
-			<image class="pet-img" src="/projects/B00/images/work/pet_cat_ref.png" mode="aspectFit"></image>
+			<image lazy-load class="pet-img" src="/projects/B00/images/work/pet_cat_ref.png" mode="aspectFit"></image>
 			<view class="pet-spark one"></view>
 			<view class="pet-spark two"></view>
 		</view>
@@ -102,7 +102,7 @@
 							<view class="chat-bubble" data-content="{{item.content}}" bindlongpress="bindCopyMessage">
 								<view>{{item.content}}</view>
 								<view wx:if="{{item.images && item.images.length}}" class="chat-image-grid">
-									<image
+									<image lazy-load
 										wx:for="{{item.images}}"
 										wx:for-item="img"
 										wx:key="src"
@@ -132,7 +132,7 @@
 
 				<view wx:if="{{chatAttachments.length}}" class="attach-preview">
 					<view wx:for="{{chatAttachments}}" wx:key="index" class="attach-chip">
-						<image wx:if="{{item.src || item.localPath}}" class="attach-thumb" src="{{item.src || item.localPath}}" mode="aspectFill" data-src="{{item.src || item.localPath}}" bindtap="bindPreviewAttachment"></image>
+						<image lazy-load wx:if="{{item.src || item.localPath}}" class="attach-thumb" src="{{item.src || item.localPath}}" mode="aspectFill" data-src="{{item.src || item.localPath}}" bindtap="bindPreviewAttachment"></image>
 						<text>{{item.name || '图片'}}</text>
 						<text class="attach-del" data-idx="{{index}}" bindtap="bindRemoveAttachment">×</text>
 					</view>

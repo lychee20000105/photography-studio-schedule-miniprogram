@@ -1,3 +1,4 @@
+<skeleton loading="{{!options}}" />
 <view class="page" wx:if="{{options}}">
 	<view class="block">
 		<view class="row">
@@ -134,7 +135,7 @@
 		</view>
 		<view class="imgs">
 			<view wx:for="{{imgList}}" wx:key="*this" class="img-wrap">
-				<image src="{{item}}" mode="aspectFill" data-src="{{item}}" bindtap="bindPreviewImageTap" />
+				<image lazy-load src="{{item}}" mode="aspectFill" data-src="{{item}}" bindtap="bindPreviewImageTap" />
 				<view class="img-del" bindtap="bindDelImageTap" data-idx="{{index}}">×</view>
 			</view>
 		</view>

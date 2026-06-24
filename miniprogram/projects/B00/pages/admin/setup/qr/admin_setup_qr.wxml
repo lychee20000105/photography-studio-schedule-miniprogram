@@ -8,7 +8,7 @@
 		<view class="checkin">
 			<view class="notice"><text class="icon-scan margin-right-s text-bold"></text>放在推广的地方展示</view>
 
-			<image bindtap="url" data-type="img" data-url="{{qrUrl}}" mode="aspectFill" class="loading" show-menu-by-longpress="true" src="{{qrUrl}}"></image>
+			<image lazy-load bindtap="url" data-type="img" data-url="{{qrUrl}}" mode="aspectFill" class="loading" show-menu-by-longpress="true" src="{{qrUrl}}"></image>
 			<view class="oprt">长按图片保存小程序码</view>
 		</view>
 

@@ -5,7 +5,7 @@
 		class="load text-grey over {{skin}}"></view>
 
 	<block wx:if="{{noHintImg}}">
-		<image style="height:500rpx" mode="heightFix" wx:if="{{dataList && dataList.total == 0}}" src="{{noHintImg}}" mode="aspectFit" />
+		<image lazy-load style="height:500rpx" mode="heightFix" wx:if="{{dataList && dataList.total == 0}}" src="{{noHintImg}}" mode="aspectFit" />
 	</block>
 
 	<block wx:else> 

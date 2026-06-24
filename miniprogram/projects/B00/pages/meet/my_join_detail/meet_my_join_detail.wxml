@@ -41,7 +41,7 @@
 				</view>
 				<view class="info">
 					<view class="center">
-						<image show-menu-by-longpress="{{true}}" src="{{qrImageData}}" class="loading" />
+						<image lazy-load show-menu-by-longpress="{{true}}" src="{{qrImageData}}" class="loading" />
 					</view>
 				</view>
 			</view>

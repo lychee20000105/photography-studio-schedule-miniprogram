@@ -30,6 +30,13 @@ Page({
 		paymentTypeOptions: PAYMENT_TYPE_OPTIONS,
 		paymentBaseTypeOptions: PAYMENT_BASE_TYPE_OPTIONS,
 		imgList: [],
+		skeletonRows: [
+			{ avatar: false },
+			{ avatar: false },
+			{ avatar: false },
+			{ avatar: false },
+			{ avatar: false },
+		],
 		order: {
 			ORDER_DATE: '',
 			ORDER_TIME: '',

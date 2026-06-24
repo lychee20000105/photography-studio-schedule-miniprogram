@@ -1,0 +1,49 @@
+/* skeleton.wxss — 骨架屏样式 */
+
+.skeleton {
+	padding: 30rpx 20rpx;
+}
+
+.skeleton-row {
+	display: flex;
+	align-items: center;
+	padding: 20rpx 0;
+}
+
+.skeleton-avatar {
+	width: 100rpx;
+	height: 100rpx;
+	border-radius: 50%;
+	background: #eee;
+	flex-shrink: 0;
+	margin-right: 24rpx;
+	animation: shimmer 1.5s infinite;
+}
+
+.skeleton-lines {
+	flex: 1;
+}
+
+.skeleton-line {
+	height: 30rpx;
+	background: #eee;
+	margin: 10rpx 0;
+	border-radius: 6rpx;
+	animation: shimmer 1.5s infinite;
+}
+
+.skeleton-line.short {
+	width: 60%;
+}
+
+@keyframes shimmer {
+	0% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0.4;
+	}
+	100% {
+		opacity: 1;
+	}
+}
