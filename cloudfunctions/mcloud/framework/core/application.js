@@ -141,7 +141,7 @@ async function app(event, context) {
 				route: r,
 				errCode: ex.code,
 				errMsg: ex.message,
-				errStack: ex.stack
+				errStack: _sanitizeStack(ex.stack)
 			});
 
 
@@ -164,6 +164,12 @@ function beforeApp(method) {
 // 展示当前输入数据
 function showEvent(event) {
 	console.warn('[showEvent] route=' + (event && event.route) + ' PID=' + (event && event.PID));
+}
+
+// L-05: 脱敏堆栈中的绝对路径，防止泄露内部结构
+function _sanitizeStack(stack) {
+	if (!stack) return '';
+	return stack.replace(/\/[\w\-\.\/]+\/(cloudfunctions|framework|project)/g, '[...]/$1');
 }
 
 module.exports = {

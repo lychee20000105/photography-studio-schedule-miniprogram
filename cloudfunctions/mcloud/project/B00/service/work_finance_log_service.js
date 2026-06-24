@@ -89,10 +89,12 @@ class WorkFinanceLogService extends BaseProjectService {
 	}
 
 	_maskName(value) {
+		if (value === undefined || value === null) return '';
 		value = this._safeText(value, 50);
 		if (!value) return '';
-		if (value.length == 1) return value;
-		return value.substring(0, 1) + '*'.repeat(Math.min(value.length - 1, 3));
+		let chars = [...value];
+		if (chars.length <= 1) return '*';
+		return chars[0] + '*'.repeat(Math.min(chars.length - 1, 3));
 	}
 
 	_maskMobile(value) {
