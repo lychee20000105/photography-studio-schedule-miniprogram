@@ -1,5 +1,60 @@
 # Changelog
 
+## v2.00 - 2026-06-24
+
+MiMo 极简参数兜底修复版本。本次按小改修复 `+0.01` 从 v1.99 升级为 v2.00，继续处理小猫测试对话返回 `Param Incorrect` 的问题：当 MiMo 拒绝完整 Agent 请求和普通最小重试时，最终兜底请求只保留 `model` 与 `messages` 两个必需字段。
+
+### 修复
+
+- MiMo 文本兜底请求移除 `stream:false`，避免兼容接口对非必需字段过度敏感。
+- 继续保留模型 ID 规范化，MiMo 地址下会把常见错误写法回落到 `mimo-v2.5`。
+- 错误解析兼容 `message`、`msg` 和字符串型 `error`，方便识别第三方接口返回的参数错误。
+- 重新生成 `work_ai_service_live_patch.js`，确保云端 `mcloud` 优先加载新版 AI 服务。
+
+### 安全
+
+- 本次不记录、不提交、不展示任何 API Key 明文。
+
+### 验证
+
+- 待本轮本地校验、云函数增量部署和开发版上传后回填。
+
+### 部署
+
+- 待部署。
+
+## v1.99 - 2026-06-24
+
+AI确认队列生命周期审计版本。本次按小改修复 `+0.01` 从 v1.98 升级为 v1.99，让小猫高风险确认队列从“能确认执行”进一步补齐为“每一步都能被 AI 审计流水复盘”。
+
+### 新增
+
+- `WorkAgentConfirmService` 在创建待确认记录时同步写入 `agent_confirm_pending` 审计流水。
+- 管理员确认执行、驳回或执行失败时，分别写入 `agent_confirm_approved`、`agent_confirm_rejected`、`agent_confirm_failed` 生命周期审计。
+- 生命周期审计保存确认记录 ID、原动作、发起人、处理人、关联对象和脱敏参数摘要，方便后续追查高风险动作从发起到处理的全过程。
+- AI 审计流水列表和详情页新增确认生命周期动作筛选项。
+
+### 安全
+
+- 生命周期审计统一标记为高风险记录，但只保存脱敏参数摘要，不记录 API Key、Token、openid 明文展示或完整敏感业务数据。
+- 确认队列的生命周期审计失败只记录后端错误，不阻塞原确认队列业务流程。
+
+### 验证
+
+- `node --check` 覆盖确认服务、审计服务、审计列表页、审计详情页、版本源、设置文件和两个 live patch，均通过。
+- `miniprogram/app.json`、审计列表/详情页 JSON 与 `project.config.json` JSON 解析通过。
+- `work_ai_service_live_patch.js` 解压后确认服务等本轮依赖与当前源文件一致，`work_ai_service.js` 使用已提交 HEAD 版本以隔离无关未提交改动；`work_admin_controller_live_patch.js` 解压后与当前源文件一致。
+- live patch 实际加载检查通过；仅出现项目既有 `ws` 依赖提示，不影响本轮 patch 注入。
+- 本轮涉及文件 `git diff --check` 通过，仅有既有 LF/CRLF 提示。
+- 敏感信息扫描未发现新增 API Key、Token 或 Secret。
+
+### 部署
+
+- `work_ai_service_live_patch.js` 已通过微信开发者工具 CLI 增量部署到 `mcloud`，包体 `47.1 KB`。
+- `work_admin_controller_live_patch.js` 已通过微信开发者工具 CLI 增量部署到 `mcloud`，包体 `12.2 KB`。
+- 小程序开发版已通过微信开发者工具 CLI 上传，版本号 `1.99`，包体 `1.5 MB` / `1,600,436 Byte`。
+- 本次未提交审核、未发布上线。
+
 ## v1.98 - 2026-06-24
 
 小猫 AI 供应商配置页版本。本次按小改修复 `+0.01` 从 v1.97 升级为 v1.98，把后台 AI 配置页改成更接近 CC Switch 的供应商卡片和编辑面板，方便管理员自由切换 DeepSeek、MiMo、自定义兼容接口，以及单独配置文本模型和视觉模型。

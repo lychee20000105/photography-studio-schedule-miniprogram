@@ -1,6 +1,97 @@
 ﻿# 版本修改日记
 
 
+## v2.00 - 2026-06-24 21:46 CST
+
+### 改动级别
+
+小改修复，v1.99 -> v2.00。
+
+### 本次目标
+
+继续修复小猫后台测试对话里 MiMo 返回 `Param Incorrect` 的问题。截图显示云端仍把参数错误原样返回，说明 MiMo 对请求体字段更敏感；本次把 MiMo 最终兜底请求压缩到最小字段，先保证普通测试对话能跑通。
+
+### 主要修改
+
+- `work_ai_service.js` 的 MiMo 文本兜底请求移除 `stream:false`，只保留 `model` 和 `messages`。
+- 后端错误解析新增 `message`、`msg` 和字符串型 `error` 兼容，减少第三方接口错误形态差异带来的误判。
+- 重新生成 `work_ai_service_live_patch.js`，只替换其中的 AI 服务 payload，不把当前工作区其它未提交改动打入补丁。
+- `miniprogram/version.js`、`miniprogram/setting/setting.js`、`CHANGELOG.md`、`README.md` 和本文档同步升级到 v2.00。
+
+### 涉及文件
+
+- `cloudfunctions/mcloud/project/B00/service/work_ai_service.js`
+- `cloudfunctions/mcloud/work_ai_service_live_patch.js`
+- `miniprogram/version.js`
+- `miniprogram/setting/setting.js`
+- `CHANGELOG.md`
+- `README.md`
+- `docs/version-change-diary.md`
+
+### 验证结果
+
+- 待本轮本地校验、云函数增量部署和开发版上传后回填。
+
+### 部署状态
+
+- 待部署。
+
+### 未完成风险
+
+- 如果 MiMo 仍返回参数错误，需要进一步抓取其真实响应结构；本次已避免记录或输出任何 API Key。
+
+## v1.99 - 2026-06-24 21:37 CST
+
+### 改动级别
+
+小改修复，v1.98 -> v1.99。
+
+### 本次目标
+
+继续补全小猫 Agent 的安全治理层：高风险动作进入确认队列后，待确认、人工确认执行、驳回和执行失败都要进入 AI 审计流水，方便管理员按时间线复盘。
+
+### 主要修改
+
+- `WorkAgentConfirmService` 创建待确认记录后，追加写入 `agent_confirm_pending` 生命周期审计。
+- 管理员确认执行成功后，追加写入 `agent_confirm_approved` 生命周期审计。
+- 管理员驳回确认申请后，追加写入 `agent_confirm_rejected` 生命周期审计。
+- 确认执行失败时，追加写入 `agent_confirm_failed` 生命周期审计，并保留脱敏错误摘要。
+- 生命周期审计摘要统一保存确认记录 ID、原动作、关联对象、发起人、处理人、风险标签和脱敏参数预览。
+- AI 审计流水列表页和详情页新增确认生命周期筛选项，详情复盘文案会提示记录来源于确认队列生命周期。
+- `miniprogram/version.js`、`miniprogram/setting/setting.js`、`CHANGELOG.md`、`README.md` 和本文档同步升级到 v1.99。
+
+### 涉及文件
+
+- `cloudfunctions/mcloud/project/B00/service/work_agent_confirm_service.js`
+- `cloudfunctions/mcloud/project/B00/service/work_agent_audit_service.js`
+- `miniprogram/projects/B00/pages/work/admin_agent_audit/work_admin_agent_audit.js`
+- `miniprogram/projects/B00/pages/work/admin_agent_audit_detail/work_admin_agent_audit_detail.js`
+- `miniprogram/version.js`
+- `miniprogram/setting/setting.js`
+- `CHANGELOG.md`
+- `README.md`
+- `docs/version-change-diary.md`
+
+### 验证结果
+
+- `node --check` 覆盖确认服务、审计服务、审计列表页、审计详情页、版本源、设置文件和两个 live patch，均通过。
+- `miniprogram/app.json`、审计列表/详情页 JSON 与 `project.config.json` JSON 解析通过。
+- `work_ai_service_live_patch.js` 解压后确认服务等本轮依赖与当前源文件一致，`work_ai_service.js` 使用已提交 HEAD 版本以隔离无关未提交改动；`work_admin_controller_live_patch.js` 解压后与当前源文件一致。
+- live patch 实际加载检查通过；仅出现项目既有 `ws` 依赖提示，不影响本轮 patch 注入。
+- 本轮涉及文件 `git diff --check` 通过，仅有既有 LF/CRLF 提示。
+- 敏感信息扫描未发现新增 API Key、Token 或 Secret。
+
+### 部署状态
+
+- `work_ai_service_live_patch.js` 已通过微信开发者工具 CLI 增量部署到 `mcloud`，包体 `47.1 KB`。
+- `work_admin_controller_live_patch.js` 已通过微信开发者工具 CLI 增量部署到 `mcloud`，包体 `12.2 KB`。
+- 小程序开发版已通过微信开发者工具 CLI 上传，版本号 `1.99`，包体 `1.5 MB` / `1,600,436 Byte`。
+- 本次未提交审核、未发布上线。
+
+### 未完成风险
+
+- 本轮只补确认队列生命周期审计，不新增桌面、浏览器、文件或终端控制能力；确认后的业务动作仍沿用现有受控后端服务。
+
 ## v1.98 - 2026-06-24 21:24 CST
 
 ### 改动级别

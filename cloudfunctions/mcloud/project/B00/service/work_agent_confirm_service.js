@@ -5,6 +5,7 @@
 const BaseProjectService = require('./base_project_service.js');
 const dbUtil = require('../../../framework/database/db_util.js');
 const WorkAgentConfirmModel = require('../model/work_agent_confirm_model.js');
+const WorkAgentAuditModel = require('../model/work_agent_audit_model.js');
 
 const DEFAULT_PAGE_SIZE = 20;
 const MAX_PAGE_SIZE = 50;
@@ -64,6 +65,18 @@ class WorkAgentConfirmService extends BaseProjectService {
 			AGENTCONFIRM_REVIEW_TIME: 0,
 			AGENTCONFIRM_REVIEW_NOTE: '',
 		});
+		await this._addLifecycleAudit('pending', Object.assign({ _id: id }, {
+			AGENTCONFIRM_ACTION: action,
+			AGENTCONFIRM_TITLE: meta.title,
+			AGENTCONFIRM_CONTENT: meta.content,
+			AGENTCONFIRM_PAYLOAD: this._plainObject(payload),
+			AGENTCONFIRM_REQUEST_OPENID: asText(openId, 120),
+			AGENTCONFIRM_REQUEST_STAFF_ID: asText(staff._id || staff.STAFF_ID || '', 120),
+			AGENTCONFIRM_REQUEST_STAFF_NAME: asText(staff.STAFF_NAME || '', 80),
+			AGENTCONFIRM_RISK_LEVEL: 'high',
+			AGENTCONFIRM_REF_TYPE: meta.refType,
+			AGENTCONFIRM_REF_ID: meta.refId,
+		}), staff);
 
 		return {
 			id,
@@ -121,7 +134,12 @@ class WorkAgentConfirmService extends BaseProjectService {
 			AGENTCONFIRM_STATUS: WorkAgentConfirmModel.STATUS.DONE,
 			AGENTCONFIRM_RESULT: this._cleanResult(result),
 		});
-		return await this.getConfirm(id);
+		let item = await this.getConfirm(id);
+		await this._addLifecycleAudit('approved', item, {
+			_id: item.AGENTCONFIRM_REVIEW_STAFF_ID || '',
+			STAFF_NAME: item.AGENTCONFIRM_REVIEW_STAFF_NAME || '',
+		}, result);
+		return item;
 	}
 
 	async failApprove(id, err) {
@@ -131,6 +149,11 @@ class WorkAgentConfirmService extends BaseProjectService {
 				error: asText(err && err.message ? err.message : err, 300),
 			},
 		});
+		let item = await this.getConfirm(id);
+		await this._addLifecycleAudit('failed', item, {
+			_id: item.AGENTCONFIRM_REVIEW_STAFF_ID || '',
+			STAFF_NAME: item.AGENTCONFIRM_REVIEW_STAFF_NAME || '',
+		}, { error: err && err.message ? err.message : err });
 	}
 
 	async rejectConfirm(id, note, staff = {}) {
@@ -146,7 +169,9 @@ class WorkAgentConfirmService extends BaseProjectService {
 			AGENTCONFIRM_REVIEW_TIME: Math.floor(Date.now() / 1000),
 			AGENTCONFIRM_REVIEW_NOTE: asText(note || '管理员驳回', 200),
 		});
-		return await this.getConfirm(id);
+		let updated = await this.getConfirm(id);
+		await this._addLifecycleAudit('rejected', updated, staff, { note: note || '管理员驳回' });
+		return updated;
 	}
 
 	_buildWhere(params = {}) {
@@ -200,6 +225,82 @@ class WorkAgentConfirmService extends BaseProjectService {
 			else if (status == WorkAgentConfirmModel.STATUS.FAILED) stats.failedCount++;
 		}
 		return stats;
+	}
+
+	async _addLifecycleAudit(event, item = {}, staff = {}, extra = {}) {
+		try {
+			let action = 'agent_confirm_' + event;
+			let title = this._lifecycleTitle(event, item);
+			let content = this._lifecycleContent(event, item, staff, extra);
+			await WorkAgentAuditModel.insert({
+				AGENTAUDIT_ACTION: action,
+				AGENTAUDIT_TITLE: title,
+				AGENTAUDIT_CONTENT: content,
+				AGENTAUDIT_OPENID: event == 'pending' ? asText(item.AGENTCONFIRM_REQUEST_OPENID, 120) : '',
+				AGENTAUDIT_STAFF_ID: asText((event == 'pending' ? item.AGENTCONFIRM_REQUEST_STAFF_ID : (staff._id || staff.STAFF_ID)) || '', 120),
+				AGENTAUDIT_STAFF_NAME: asText((event == 'pending' ? item.AGENTCONFIRM_REQUEST_STAFF_NAME : staff.STAFF_NAME) || '', 80),
+				AGENTAUDIT_REF_TYPE: 'agent_confirm',
+				AGENTAUDIT_REF_ID: asText(item._id || '', 120),
+				AGENTAUDIT_RISK_LEVEL: 'high',
+				AGENTAUDIT_ACTION_SUMMARY: this._buildLifecycleAuditSummary(event, item, title, content, extra),
+				AGENTAUDIT_STATUS: 1,
+			});
+		} catch (err) {
+			console.error('AI confirm lifecycle audit failed:', err && err.message ? err.message : err);
+		}
+	}
+
+	_lifecycleTitle(event, item = {}) {
+		let actionLabel = ACTION_LABELS[item.AGENTCONFIRM_ACTION] || item.AGENTCONFIRM_ACTION || '高风险动作';
+		let eventLabel = {
+			pending: '待确认',
+			approved: '已确认执行',
+			rejected: '已驳回',
+			failed: '执行失败',
+		}[event] || event;
+		return 'AI确认队列：' + eventLabel + ' - ' + actionLabel;
+	}
+
+	_lifecycleContent(event, item = {}, staff = {}, extra = {}) {
+		let pieces = [
+			'确认记录ID：' + asText(item._id || '', 120),
+			'原动作：' + asText(item.AGENTCONFIRM_ACTION || '', 40),
+			'状态：' + event,
+			'发起人：' + asText(item.AGENTCONFIRM_REQUEST_STAFF_NAME || '', 80),
+			'处理人：' + asText(staff.STAFF_NAME || item.AGENTCONFIRM_REVIEW_STAFF_NAME || '', 80),
+			'关联对象：' + [item.AGENTCONFIRM_REF_TYPE, item.AGENTCONFIRM_REF_ID].filter(Boolean).join('/'),
+		];
+		let result = this._cleanResult(extra || {});
+		if (result.reply) pieces.push('结果：' + result.reply);
+		if (result.error) pieces.push('错误：' + result.error);
+		if (extra && extra.note) pieces.push('说明：' + asText(extra.note, 200));
+		let payload = JSON.stringify(this._maskObject(item.AGENTCONFIRM_PAYLOAD || {}));
+		if (payload.length > 300) payload = payload.slice(0, 300) + '...';
+		pieces.push('参数摘要：' + payload);
+		return pieces.filter(Boolean).join('。');
+	}
+
+	_buildLifecycleAuditSummary(event, item = {}, title = '', content = '', extra = {}) {
+		let tags = ['agent_confirm', 'high_risk'];
+		if (event) tags.push(event);
+		if (item.AGENTCONFIRM_ACTION) tags.push(item.AGENTCONFIRM_ACTION);
+		return {
+			schemaVersion: 1,
+			action: 'agent_confirm_' + event,
+			riskLevel: 'high',
+			requiresAdminReview: event == 'pending',
+			refType: 'agent_confirm',
+			refId: asText(item._id || '', 120),
+			title: asText(title, 120),
+			contentPreview: asText(content, 260),
+			signals: [
+				{ label: '确认记录ID', value: asText(item._id || '', 80) },
+				{ label: '原动作', value: asText(item.AGENTCONFIRM_ACTION || '', 40) },
+				{ label: '关联对象', value: [item.AGENTCONFIRM_REF_TYPE, item.AGENTCONFIRM_REF_ID].filter(Boolean).join('/') },
+			].filter(item => item.value),
+			tags,
+			safetyDecision: event == 'approved' ? 'human_confirmed_sensitive_write' : 'human_review_lifecycle',
+		};
 	}
 
 	_buildActionMeta(action, payload = {}) {

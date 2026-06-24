@@ -219,6 +219,10 @@ class WorkAgentAuditService extends BaseProjectService {
 			summary.lines.push('该动作属于工资、收款、取消或审核类敏感动作，不能仅凭 AI 回复判定业务已完成。');
 		}
 
+		if (/^agent_confirm_/.test(action)) {
+			summary.lines.push('该记录来自 AI 确认队列生命周期，用于追踪高风险动作从待确认、驳回、执行失败到人工确认执行的完整过程。');
+		}
+
 		if (item.AGENTAUDIT_ACTION_SUMMARY && item.AGENTAUDIT_ACTION_SUMMARY.schemaVersion) {
 			summary.lines.push('本条已保存脱敏结构化动作摘要，可用于后续自动复盘和高风险确认队列。');
 		}

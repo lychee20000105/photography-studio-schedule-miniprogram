@@ -3,10 +3,10 @@ module.exports = {
 	CLOUD_ID: 'yunyukeji-d4g7waei5d5d6cdeb', //云服务id ,本地测试环境
 
 	// #### 版本信息
-	VER: 'v1.98',
-	APP_VERSION: '1.98',
+	VER: 'v2.00',
+	APP_VERSION: '2.00',
 	APP_VERSION_DATE: '2026-06-24',
-	APP_VERSION_NAME: '小猫AI供应商配置页',
+	APP_VERSION_NAME: 'MiMo极简参数兜底修复',
 	COMPANY: '云屿摄影｜技术由云屿科技支持',
 
 	// #### 系统参数

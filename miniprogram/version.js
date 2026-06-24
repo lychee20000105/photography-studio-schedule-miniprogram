@@ -1,14 +1,38 @@
 ﻿module.exports = {
-	current: '1.98',
-	previous: '1.97',
+	current: '2.00',
+	previous: '1.99',
 	date: '2026-06-24',
-	time: '21:24 CST',
+	time: '21:46 CST',
 	level: 'patch',
 	levelText: '小改修复',
-	name: '小猫AI供应商配置页',
-	summary: 'AI 配置页改成卡片式供应商列表和编辑面板，管理员可更方便地填写 Base URL、API Key、文本模型和视觉模型。',
+	name: 'MiMo极简参数兜底修复',
+	summary: 'MiMo 测试对话遇到 Param Incorrect 时，后端最终兜底请求只保留 model 和 messages，减少兼容接口参数拒绝。',
 	changeLog: '/docs/version-change-diary.md',
 	history: [
+		{
+			version: '2.00',
+			date: '2026-06-24',
+			name: 'MiMo极简参数兜底修复',
+			summary: 'MiMo 测试对话遇到 Param Incorrect 时，后端最终兜底请求只保留 model 和 messages，减少兼容接口参数拒绝。',
+			items: [
+				'MiMo 文本兜底请求移除 `stream:false`，只发送 OpenAI 兼容接口最小必需字段。',
+				'后端错误解析兼容 `message`、`msg` 和字符串型 `error`，避免接口错误提示丢失或误导。',
+				'重新生成 `work_ai_service_live_patch.js`，确保云端 mcloud 优先加载新版 AI 服务。',
+				'本次不记录、不提交、不展示任何 API Key 明文。',
+			],
+		},
+		{
+			version: '1.99',
+			date: '2026-06-24',
+			name: 'AI确认队列生命周期审计',
+			summary: 'AI确认队列的待确认、人工确认执行、驳回和执行失败都会写入 AI 审计流水，方便管理员复盘高风险动作全过程。',
+			items: [
+				'确认队列创建待处理记录时，同步生成 `agent_confirm_pending` 审计流水。',
+				'管理员确认执行、驳回或执行失败时，分别生成 `agent_confirm_approved`、`agent_confirm_rejected`、`agent_confirm_failed` 生命周期审计。',
+				'生命周期审计保存确认记录 ID、原动作、发起人、处理人、关联对象和脱敏参数摘要，不记录密钥或完整敏感数据。',
+				'AI 审计流水和详情页新增确认生命周期筛选项，安全复盘摘要会提示该记录来自确认队列。',
+			],
+		},
 		{
 			version: '1.98',
 			date: '2026-06-24',
