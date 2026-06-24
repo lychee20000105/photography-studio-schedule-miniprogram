@@ -986,7 +986,9 @@ class WorkAiService extends WorkPermissionService {
 		try {
 			let obj = JSON.parse(text);
 			if (obj && typeof obj == 'object' && !Array.isArray(obj)) return obj;
-		} catch (err) {}
+		} catch (err) {
+			// first JSON.parse attempt failed, will try bracket-based extraction below
+		}
 
 		let start = text.indexOf('{');
 		if (start < 0) return null;
@@ -1005,7 +1007,9 @@ class WorkAiService extends WorkPermissionService {
 		try {
 			let obj = JSON.parse(text.substring(start, end + 1));
 			if (obj && typeof obj == 'object' && !Array.isArray(obj)) return obj;
-		} catch (err) {}
+		} catch (err) {
+			console.error('[WorkAiService._pickJsonObject] bracket extraction parse failed:', err && err.message ? err.message : err);
+		}
 		return null;
 	}
 
@@ -1534,7 +1538,9 @@ class WorkAiService extends WorkPermissionService {
 		try {
 			let day = this._cleanDate(date, false);
 			if (day) return day;
-		} catch (err) {}
+		} catch (err) {
+			console.error('[WorkAiService._cleanPaymentDate] date parse failed:', err && err.message ? err.message : err);
+		}
 		return fallbackDate || timeUtil.time('Y-M-D');
 	}
 

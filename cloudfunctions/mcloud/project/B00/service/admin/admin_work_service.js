@@ -423,7 +423,9 @@ class AdminWorkService extends BaseProjectAdminService {
 						PAYROLL_ACTUAL_AMOUNT: 0,
 						PAYROLL_STATUS: WorkPayrollModel.STATUS.FAIL,
 					});
-				} catch (e) { }
+				} catch (e) {
+					console.error('[AdminWorkService.createPayroll] rollback payroll status failed:', e && e.message ? e.message : e);
+				}
 			}
 			throw err;
 		}
