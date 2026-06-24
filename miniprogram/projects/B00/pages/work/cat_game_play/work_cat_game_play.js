@@ -301,6 +301,9 @@ Page({
 
     this._drawHoles(ctx, w, h);
 
+    // Prune dead moles to prevent unbounded array growth
+    this._moles = this._moles.filter(m => now - m.born < m.duration + 300);
+
     this._moles.forEach(m => {
       const age = now - m.born;
       if (age > m.duration && !m.hit) return;
@@ -523,8 +526,12 @@ Page({
   },
 
   _tSyncToData() {
-    const cells = [];
-    for (let i = 0; i < 16; i++) cells.push({ id: 'bg' + i });
+    // Cache static background cells array (never changes)
+    if (!this._tBgCellsCache) {
+      const cells = [];
+      for (let i = 0; i < 16; i++) cells.push({ id: 'bg' + i });
+      this._tBgCellsCache = cells;
+    }
     const tiles = [];
     const TILE_SIZE = 120, GAP = 16, PAD = 12;
     for (let r = 0; r < 4; r++) {
@@ -541,7 +548,7 @@ Page({
         });
       }
     }
-    this.setData({ tBgCells: cells, tTiles: tiles });
+    this.setData({ tBgCells: this._tBgCellsCache, tTiles: tiles });
   },
 
   on2048TouchStart(e) {
@@ -578,6 +585,7 @@ Page({
 
   _tMoveLeft() {
     let moved = false;
+    let scoreGain = 0;
     for (let r = 0; r < 4; r++) {
       const row = this._tGrid[r].filter(v => v !== 0);
       const merged = [];
@@ -585,7 +593,7 @@ Page({
       while (i < row.length) {
         if (i + 1 < row.length && row[i] === row[i + 1]) {
           merged.push(row[i] * 2);
-          this.setData({ score: this.data.score + row[i] * 2 });
+          scoreGain += row[i] * 2;
           i += 2;
         } else {
           merged.push(row[i]);
@@ -598,11 +606,13 @@ Page({
         this._tGrid[r][c] = merged[c];
       }
     }
+    if (scoreGain > 0) this.setData({ score: this.data.score + scoreGain });
     return moved;
   },
 
   _tMoveRight() {
     let moved = false;
+    let scoreGain = 0;
     for (let r = 0; r < 4; r++) {
       const row = this._tGrid[r].filter(v => v !== 0);
       const merged = [];
@@ -610,7 +620,7 @@ Page({
       while (i >= 0) {
         if (i - 1 >= 0 && row[i] === row[i - 1]) {
           merged.unshift(row[i] * 2);
-          this.setData({ score: this.data.score + row[i] * 2 });
+          scoreGain += row[i] * 2;
           i -= 2;
         } else {
           merged.unshift(row[i]);
@@ -623,11 +633,13 @@ Page({
         this._tGrid[r][c] = merged[c];
       }
     }
+    if (scoreGain > 0) this.setData({ score: this.data.score + scoreGain });
     return moved;
   },
 
   _tMoveUp() {
     let moved = false;
+    let scoreGain = 0;
     for (let c = 0; c < 4; c++) {
       const col = [];
       for (let r = 0; r < 4; r++) if (this._tGrid[r][c] !== 0) col.push(this._tGrid[r][c]);
@@ -636,7 +648,7 @@ Page({
       while (i < col.length) {
         if (i + 1 < col.length && col[i] === col[i + 1]) {
           merged.push(col[i] * 2);
-          this.setData({ score: this.data.score + col[i] * 2 });
+          scoreGain += col[i] * 2;
           i += 2;
         } else {
           merged.push(col[i]);
@@ -649,11 +661,13 @@ Page({
         this._tGrid[r][c] = merged[r];
       }
     }
+    if (scoreGain > 0) this.setData({ score: this.data.score + scoreGain });
     return moved;
   },
 
   _tMoveDown() {
     let moved = false;
+    let scoreGain = 0;
     for (let c = 0; c < 4; c++) {
       const col = [];
       for (let r = 0; r < 4; r++) if (this._tGrid[r][c] !== 0) col.push(this._tGrid[r][c]);
@@ -662,7 +676,7 @@ Page({
       while (i >= 0) {
         if (i - 1 >= 0 && col[i] === col[i - 1]) {
           merged.unshift(col[i] * 2);
-          this.setData({ score: this.data.score + col[i] * 2 });
+          scoreGain += col[i] * 2;
           i -= 2;
         } else {
           merged.unshift(col[i]);
@@ -675,6 +689,7 @@ Page({
         this._tGrid[r][c] = merged[r];
       }
     }
+    if (scoreGain > 0) this.setData({ score: this.data.score + scoreGain });
     return moved;
   },
 
