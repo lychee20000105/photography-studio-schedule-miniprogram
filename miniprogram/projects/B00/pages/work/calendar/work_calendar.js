@@ -10,6 +10,7 @@ Page({
 		isLoad: false,
 		isGuest: false,
 		month: '',
+		monthTitle: '',
 		day: '',
 		scope: 'all',
 		days: [],
@@ -27,6 +28,7 @@ Page({
 		touchMoved: false,
 		isDragging: false,
 		isAnimating: false,
+		rpxRatio: 0.5,
 		skeletonRows: [
 			{ avatar: true },
 			{ avatar: true },
@@ -40,13 +42,20 @@ Page({
 		let today = this._normalizeShareDay(options.day) || this._today();
 		let scope = ['all', 'mine', 'joined'].includes(options.scope) ? options.scope : 'all';
 		let width = this._guessCalendarWidth();
+		let rpxRatio = 0.5;
+		try {
+			let sys = wx.getSystemInfoSync();
+			rpxRatio = sys.rpxRatio || (sys.windowWidth / 750) || 0.5;
+		} catch (e) {}
 		this.setData({
 			month: today.substr(0, 7),
+			monthTitle: this._formatMonthTitle(today.substr(0, 7)),
 			day: today,
 			scope,
 			calendarWidth: width,
 			trackWidth: width * 3,
 			trackX: -width,
+			rpxRatio,
 		});
 	},
 
@@ -78,6 +87,11 @@ Page({
 		return `${y}-${m}-${day}`;
 	},
 
+	_formatMonthTitle(month) {
+		let arr = month.split('-');
+		return `${arr[0]}年${Number(arr[1])}月`;
+	},
+
 	_normalizeShareDay(day) {
 		day = String(day || '').trim();
 		if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return '';
@@ -94,10 +108,12 @@ Page({
 		let day = wx.getStorageSync('WORK_CALENDAR_DAY') || '';
 		if (!day) return;
 		wx.removeStorageSync('WORK_CALENDAR_DAY');
+		let month = day.substr(0, 7);
 		this.setData({
-			month: day.substr(0, 7),
+			month,
+			monthTitle: this._formatMonthTitle(month),
 			day,
-			calendarPanels: this._buildCalendarPanels(day.substr(0, 7), day, this.data.calendarCache),
+			calendarPanels: this._buildCalendarPanels(month, day, this.data.calendarCache),
 			trackX: this.data.calendarWidth ? -this.data.calendarWidth : this.data.trackX,
 			trackTransition: 'none',
 		});
@@ -289,6 +305,13 @@ Page({
 			try {
 				lunar = lunarLib.sloarToLunar(d.getFullYear(), d.getMonth() + 1, d.getDate());
 			} catch (e) {}
+			let hasOrder = false;
+			let hasAppointment = false;
+			let tags = dayMap[date] || [];
+			for (let t of tags) {
+				if (t.kind === 'order') hasOrder = true;
+				else hasAppointment = true;
+			}
 			list.push({
 				date,
 				day: d.getDate(),
@@ -296,7 +319,9 @@ Page({
 				isCurMonth: d.getMonth() + 1 == m,
 				isToday: date == today,
 				isSelect: date == selectedDay,
-				tags: dayMap[date] || [],
+				tags,
+				hasOrder,
+				hasAppointment,
 			});
 		}
 		return list;
@@ -307,11 +332,13 @@ Page({
 		let day = e.currentTarget.dataset.day;
 		if (!day) return;
 		if (this.data.isGuest) {
+			let month = day.substr(0, 7);
 			this.setData({
 				day,
-				month: day.substr(0, 7),
-				days: this._buildDays(day.substr(0, 7), this.data.dayMap || {}, day),
-				calendarPanels: this._buildCalendarPanels(day.substr(0, 7), day, this.data.calendarCache),
+				month,
+				monthTitle: this._formatMonthTitle(month),
+				days: this._buildDays(month, this.data.dayMap || {}, day),
+				calendarPanels: this._buildCalendarPanels(month, day, this.data.calendarCache),
 				trackX: this.data.calendarWidth ? -this.data.calendarWidth : this.data.trackX,
 				trackTransition: 'none',
 			});
@@ -364,7 +391,7 @@ Page({
 			this.setData({ isDragging: false, touchMoved: false });
 			return;
 		}
-		let threshold = Math.min(90, this.data.calendarWidth * 0.22);
+		let threshold = 50 * (this.data.rpxRatio || 0.5);
 		let step = 0;
 		if (Math.abs(dx) >= threshold && Math.abs(dx) > Math.abs(dy) * 1.2) step = dx < 0 ? 1 : -1;
 		this._finishCalendarSlide(step);
@@ -372,10 +399,12 @@ Page({
 
 	bindTodayTap: async function () {
 		let today = this._today();
+		let month = today.substr(0, 7);
 		this.setData({
-			month: today.substr(0, 7),
+			month,
+			monthTitle: this._formatMonthTitle(month),
 			day: today,
-			calendarPanels: this._buildCalendarPanels(today.substr(0, 7), today, this.data.calendarCache),
+			calendarPanels: this._buildCalendarPanels(month, today, this.data.calendarCache),
 			trackX: this.data.calendarWidth ? -this.data.calendarWidth : this.data.trackX,
 			trackTransition: 'none',
 		});
@@ -413,6 +442,7 @@ Page({
 		let day = month + '-01';
 		this.setData({
 			month,
+			monthTitle: this._formatMonthTitle(month),
 			day,
 			days: this._buildDays(month, (this.data.calendarCache || {})[month] || {}, day),
 			calendarPanels: this._buildCalendarPanels(month, day, this.data.calendarCache),

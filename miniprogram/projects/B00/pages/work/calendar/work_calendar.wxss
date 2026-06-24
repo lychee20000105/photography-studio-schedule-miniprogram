@@ -109,7 +109,7 @@ page {
 	flex: 1;
 	min-width: 0;
 	text-align: center;
-	font-size: 44rpx;
+	font-size: 48rpx;
 	font-weight: 800;
 	margin: 0 18rpx;
 	letter-spacing: 0;
@@ -150,20 +150,20 @@ page {
 }
 
 .calendar-viewport {
-	height: 888rpx;
+	height: 760rpx;
 	overflow: hidden;
 	touch-action: pan-y;
 }
 
 .calendar-track {
 	display: flex;
-	height: 888rpx;
+	height: 760rpx;
 	will-change: transform;
 }
 
 .calendar-panel {
 	flex: none;
-	height: 888rpx;
+	height: 760rpx;
 	box-sizing: border-box;
 }
 
@@ -171,7 +171,7 @@ page {
 	text-align: center;
 	color: #8c8c8c;
 	font-weight: 700;
-	padding: 18rpx 0;
+	padding: 12rpx 0;
 }
 
 .week view:first-child,
@@ -187,7 +187,7 @@ page {
 }
 
 .day {
-	min-height: 148rpx;
+	min-height: 120rpx;
 	padding: 12rpx 6rpx;
 	border-right: 1rpx solid #f0f2f5;
 	border-bottom: 1rpx solid #f0f2f5;
@@ -251,6 +251,29 @@ page {
 	overflow: hidden;
 	white-space: nowrap;
 	text-overflow: ellipsis;
+}
+
+.markers {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6rpx;
+	margin-top: 4rpx;
+	height: 12rpx;
+}
+
+.marker-dot {
+	width: 10rpx;
+	height: 10rpx;
+	border-radius: 50%;
+}
+
+.marker-order {
+	background: #537d96;
+}
+
+.marker-appt {
+	background: #6db389;
 }
 
 .section-title-row {
@@ -430,6 +453,13 @@ page {
 	color: #2a2622;
 }
 
+.week {
+	position: sticky;
+	top: 0;
+	z-index: 10;
+	background: #f5efe4;
+}
+
 .week view {
 	color: #8f867b;
 }
@@ -455,8 +485,8 @@ page {
 }
 
 .day.selected {
-	background: rgba(83, 125, 150, .08);
-	box-shadow: inset 0 0 0 2rpx rgba(83, 125, 150, .34);
+	background: rgba(83, 125, 150, .15);
+	box-shadow: inset 0 0 0 2rpx rgba(83, 125, 150, .45);
 }
 
 .tag,

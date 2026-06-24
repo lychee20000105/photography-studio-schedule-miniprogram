@@ -21,7 +21,7 @@
 
 	<view class="monthbar">
 		<view class="month-btn" bindtap="bindPrevMonthTap">‹</view>
-		<view class="month-title">{{month}}</view>
+		<view class="month-title">{{monthTitle}}</view>
 		<view class="today-btn" bindtap="bindTodayTap">今天</view>
 		<view class="month-btn" bindtap="bindNextMonthTap">›</view>
 	</view>
@@ -37,6 +37,10 @@
 				<view wx:for="{{item.days}}" wx:for-item="dayItem" wx:key="date" class="day {{dayItem.isCurMonth?'':'muted'}} {{dayItem.isToday?'today':''}} {{dayItem.isSelect?'selected':''}}" bindtap="bindDayTap" data-day="{{dayItem.date}}">
 					<view class="num">{{dayItem.day}}</view>
 					<view class="lunar">{{dayItem.lunar}}</view>
+					<view class="markers" wx:if="{{dayItem.hasOrder || dayItem.hasAppointment}}">
+						<view class="marker-dot marker-order" wx:if="{{dayItem.hasOrder}}"></view>
+						<view class="marker-dot marker-appt" wx:if="{{dayItem.hasAppointment}}"></view>
+					</view>
 					<view class="tags">
 						<view wx:for="{{dayItem.tags}}" wx:for-item="tag" wx:key="id" class="tag" style="background:{{tag.color}}">{{tag.typeName}}</view>
 					</view>
