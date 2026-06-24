@@ -27,7 +27,14 @@
 			</view>
 			<view class="form-group">
 				<view class="label">API Key</view>
-				<input password="{{true}}" value="{{keyInput}}" bindinput="bindKeyInput" placeholder="{{keyPlaceholder}}" />
+				<view class="key-editor">
+					<input class="key-input" password="{{!showKeyInput}}" value="{{keyInput}}" bindinput="bindKeyInput" maxlength="400" confirm-type="done" adjust-position="{{true}}" cursor-spacing="96" placeholder="{{keyPlaceholder}}" />
+					<view class="key-actions">
+						<button class="key-action primary" bindtap="bindPasteKeyTap">粘贴</button>
+						<button class="key-action" bindtap="bindToggleKeyVisibleTap">{{showKeyInput?'隐藏':'显示'}}</button>
+						<button class="key-action" bindtap="bindClearKeyInputTap">清空</button>
+					</view>
+				</view>
 				<view wx:if="{{hasApiKey}}" class="key-state">当前已保存：{{apiKeyMasked}}</view>
 				<view wx:if="{{hasApiKey}}" class="clear-line">
 					<text>清空已保存 Key</text>
@@ -79,7 +86,14 @@
 			</view>
 			<view class="form-group">
 				<view class="label">视觉 API Key（可选）</view>
-				<input password="{{true}}" value="{{visionKeyInput}}" bindinput="bindVisionKeyInput" placeholder="{{visionKeyPlaceholder}}" />
+				<view class="key-editor">
+					<input class="key-input" password="{{!showVisionKeyInput}}" value="{{visionKeyInput}}" bindinput="bindVisionKeyInput" maxlength="400" confirm-type="done" adjust-position="{{true}}" cursor-spacing="96" placeholder="{{visionKeyPlaceholder}}" />
+					<view class="key-actions">
+						<button class="key-action primary" bindtap="bindPasteVisionKeyTap">粘贴</button>
+						<button class="key-action" bindtap="bindToggleVisionKeyVisibleTap">{{showVisionKeyInput?'隐藏':'显示'}}</button>
+						<button class="key-action" bindtap="bindClearVisionKeyInputTap">清空</button>
+					</view>
+				</view>
 				<view wx:if="{{hasVisionApiKey}}" class="key-state">当前已保存：{{visionApiKeyMasked}}</view>
 				<view wx:if="{{hasVisionApiKey}}" class="clear-line">
 					<text>清空视觉 Key</text>

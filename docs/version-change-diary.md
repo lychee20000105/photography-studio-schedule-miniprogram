@@ -1,6 +1,124 @@
 ﻿# 版本修改日记
 
 
+## v1.88 - 2026-06-24 18:36 CST
+
+### 改动级别
+
+小改修复，v1.87 -> v1.88。
+
+### 本次目标
+
+补齐小猫 Agent 审计流水从“后台写入”到“管理员可查看”的闭环。v1.86 已经让 AI 写入动作尝试落 Agent 审计记录，本次在小程序管理中心增加审计入口、筛选列表和云端查询路由，方便后续追踪小猫到底执行过什么动作、由谁触发、风险等级是什么。
+
+### 和 AI 讨论后的需求结论
+
+- HanaAgent 类桌面能力不能直接搬进小程序，但“可审计、可追溯、可控工具边界”必须保留。
+- 审计记录不只写入，还要能被管理员看见；否则出了问题只能查数据库，不适合小团队日常管理。
+- 审计列表只展示必要摘要，不暴露密钥、Token 或完整隐私内容；审计内容在服务层做长度裁剪。
+- 完整 `mcloud` 部署仍可能受本地 `EISDIR` 问题影响，因此继续采用入口 live patch 注入新增路由与服务。
+
+### 主要修改
+
+- 新增 `work_agent_audit_service.js`，封装 Agent 审计流水分页查询、筛选条件和前端字段清洗。
+- `work_admin_controller.js` 新增管理中心“AI 审计流水”菜单入口和 `getAgentAuditList` 接口。
+- `route.js` 新增 `work/admin_agent_audit_list` 路由。
+- `app.json` 注册 `projects/B00/pages/work/admin_agent_audit/work_admin_agent_audit` 页面。
+- 新增 `admin_agent_audit` 页面四件套，支持关键词、动作、风险筛选，下拉刷新和触底分页。
+- `index.js` 预加载 `work_route_live_patch.js`，新增 live patch 内联最新路由、审计服务和管理控制器。
+- 更新 `miniprogram/version.js`、`miniprogram/setting/setting.js`、`CHANGELOG.md`、`README.md` 和本文档到 v1.88。
+
+### 涉及文件
+
+- `cloudfunctions/mcloud/index.js`
+- `cloudfunctions/mcloud/work_admin_controller_live_patch.js`
+- `cloudfunctions/mcloud/work_route_live_patch.js`
+- `cloudfunctions/mcloud/project/B00/controller/work_admin_controller.js`
+- `cloudfunctions/mcloud/project/B00/public/route.js`
+- `cloudfunctions/mcloud/project/B00/service/work_agent_audit_service.js`
+- `miniprogram/app.json`
+- `miniprogram/projects/B00/pages/work/admin_agent_audit/work_admin_agent_audit.js`
+- `miniprogram/projects/B00/pages/work/admin_agent_audit/work_admin_agent_audit.json`
+- `miniprogram/projects/B00/pages/work/admin_agent_audit/work_admin_agent_audit.wxml`
+- `miniprogram/projects/B00/pages/work/admin_agent_audit/work_admin_agent_audit.wxss`
+- `miniprogram/version.js`
+- `miniprogram/setting/setting.js`
+- `README.md`
+- `CHANGELOG.md`
+- `docs/version-change-diary.md`
+
+### 验证结果
+
+- 待本轮本地校验后补充。
+
+### 部署状态
+
+- 待本轮开发版上传和 `mcloud` 增量部署后补充。
+
+### 未完成风险
+
+- 如果云数据库尚未创建 `bx_work_agent_audit` 集合，历史列表可能为空或依赖 CloudBase 自动建集合行为；写入链路已做失败兜底，不会阻塞小猫原业务动作。
+- 本次只补管理端查看入口，尚未做审计详情页、导出、批量复盘或风险统计看板。
+
+## v1.87 - 2026-06-24 18:32 CST
+
+### 改动级别
+
+体验修复，v1.86 -> v1.87。
+
+### 本次目标
+
+修复小李在真实手机上配置 AI API 时遇到的三个问题：API Key 不能方便粘贴，配置页显示不规整，以及测试对话返回 `Param Incorrect` 后无法继续判断配置问题。
+
+### 和 AI 讨论后的需求结论
+
+- 手机端不能只依赖密码输入框长按粘贴；管理员需要一个明确的“粘贴”按钮直接读取剪贴板。
+- API Key 属于敏感信息，页面可以显示本次正在输入的内容，但已保存 Key 仍只展示脱敏值。
+- 第三方兼容接口返回 `Param Incorrect` 时，不应只把原始英文报错丢给用户；应先自动降级重试，再给出 Base URL、模型 ID、视觉模型兼容性的排查方向。
+
+### 主要修改
+
+- `work_admin_ai.js` 新增剪贴板读取、Key 显示/隐藏、清空输入和粘贴内容清洗逻辑。
+- `work_admin_ai.wxml` 将主 Key 与视觉 Key 输入区改成“输入框 + 粘贴/显示/清空”结构。
+- `work_admin_ai.wxss` 固定 Key 操作按钮布局，提升手机端输入区稳定性，并避免小猫浮层挡住配置页操作。
+- `work_ai_service.js` 在 AI 请求遇到 400/422 或参数兼容错误时，自动用最小 Chat Completions 请求体重试一次。
+- `work_ai_service.js` 将参数错误提示改为可执行排查说明，覆盖 Base URL、模型 ID 和视觉模型配置。
+- 更新 `miniprogram/version.js`、`miniprogram/setting/setting.js`、`CHANGELOG.md`、`README.md` 和本文档到 v1.87。
+
+### 涉及文件
+
+- `miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.js`
+- `miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.wxml`
+- `miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.wxss`
+- `cloudfunctions/mcloud/project/B00/service/work_ai_service.js`
+- `cloudfunctions/mcloud/work_ai_service_live_patch.js`
+- `miniprogram/version.js`
+- `miniprogram/setting/setting.js`
+- `CHANGELOG.md`
+- `README.md`
+- `docs/version-change-diary.md`
+
+### 验证结果
+
+- `node --check miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.js` 通过。
+- `node --check cloudfunctions/mcloud/project/B00/service/work_ai_service.js` 通过。
+- `node --check cloudfunctions/mcloud/work_ai_service_live_patch.js` 通过。
+- `node --check miniprogram/version.js` 通过。
+- `node --check miniprogram/setting/setting.js` 通过。
+- `miniprogram/app.json` 与 `project.config.json` JSON 解析通过。
+- `work_ai_service_live_patch.js` 解压后与 `work_ai_service.js`、`work_ai_agent_registry.js`、`work_ai_agent_memory.js`、`work_agent_audit_model.js` 一致。
+- `git diff --check` 通过，仅有 Windows 换行提示。
+
+### 部署状态
+
+- `work_ai_service_live_patch.js` 已通过微信开发者工具 CLI 增量部署到 `mcloud`，包体 `39.8 KB`。
+- 小程序开发版已通过微信开发者工具 CLI 上传，版本号 `1.87`，包体 `1.5 MB` / `1,547,783 Byte`。
+- 云函数增量部署前三次遇到微信 Cloud API `getCloudAPISignedHeader failed` / `41002 system error`，最后一次重试成功。
+
+### 未完成风险
+
+- 未验证每一家第三方 APIHub 对最小参数重试的兼容程度；如果模型 ID 本身填错或该接口不是 OpenAI Chat Completions 兼容接口，仍需要管理员更正配置。
+
 ## v1.86 - 2026-06-24 03:20 CST
 
 ### 改动级别

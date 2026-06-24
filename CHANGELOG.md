@@ -1,6 +1,52 @@
 # Changelog
 
 
+## v1.88 - 2026-06-24
+
+小猫 Agent 审计流水后台版本。本次按小改修复 `+0.01` 从 v1.87 升级为 v1.88，重点补齐 v1.86 已写入的 Agent 审计记录在管理中心可查看、可筛选、可追溯的闭环。
+
+### 新增
+
+- 管理中心新增“AI 审计流水”入口，管理员可查看小猫执行过的写入动作、风险等级、操作者、关联业务和审查内容。
+- 新增 `work_agent_audit_service.js`，封装审计流水分页查询、筛选和字段清洗，避免前端直接接触模型细节。
+- 新增 `work/admin_agent_audit_list` 云函数路由，支持按动作、风险等级、员工和关键词筛选。
+- 新增 `admin_agent_audit` 小程序页面，支持关键词搜索、动作/风险筛选、下拉刷新和分页加载。
+- 新增 `work_route_live_patch.js` 并在 `mcloud/index.js` 中预加载，用于完整部署遇到 `EISDIR` 时仍能注入最新路由。
+
+### 验证
+
+- 待本轮本地校验后补充。
+
+### 部署
+
+- 待本轮开发版上传和 mcloud 增量部署后补充。
+
+## v1.87 - 2026-06-24
+
+AI配置粘贴与接口兼容修复版本。本次按体验修复 `+0.01` 从 v1.86 升级为 v1.87，重点处理手机端 API Key 不好粘贴、配置页按钮/输入框不够规整，以及部分 OpenAI 兼容接口返回 `Param Incorrect` 后无法继续测试的问题。
+
+### 修复
+
+- AI 配置页主 API Key 和视觉 API Key 新增 `粘贴 / 显示 / 清空` 操作；粘贴直接读取剪贴板，并自动清理换行和空格。
+- Key 输入框改为整行宽度，操作按钮固定三等分排列，减少手机端标签、输入框和按钮互相挤压造成的误触。
+- AI 请求遇到 `Param Incorrect` 或 400/422 参数兼容错误时，自动用最小 Chat Completions 参数重试一次，兼容部分聚合接口不支持 `temperature`、`max_tokens` 等参数的情况。
+- 接口参数错误提示改为指向 Base URL、模型 ID 和视觉模型兼容性，避免只显示一行不明确的 `Param Incorrect`。
+
+### 验证
+
+- `node --check miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.js` 通过。
+- `node --check cloudfunctions/mcloud/project/B00/service/work_ai_service.js` 通过。
+- `node --check cloudfunctions/mcloud/work_ai_service_live_patch.js` 通过。
+- `node --check miniprogram/version.js` 与 `node --check miniprogram/setting/setting.js` 通过。
+- `miniprogram/app.json` 与 `project.config.json` JSON 解析通过。
+- `work_ai_service_live_patch.js` 解压后与 `work_ai_service.js`、Agent 注册表、轻量记忆和审计模型源码一致。
+- `git diff --check` 通过，仅有 Windows 换行提示。
+
+### 部署
+
+- `work_ai_service_live_patch.js` 已通过微信开发者工具 CLI 增量部署到 `mcloud`，包体 `39.8 KB`。
+- 小程序开发版已通过微信开发者工具 CLI 上传，版本号 `1.87`，包体 `1.5 MB` / `1,547,783 Byte`。
+
 ## v1.86 - 2026-06-24
 
 小猫 Agent Hana 架构底座升级版本。参考桌面方案里的 HanaAgent 分层思路，先落地小程序可承受的后端 Agent 基础：技能注册、动作白名单、轻量会话记忆、审计流水和自由模型配置修复。本次按功能升级 `+0.10` 从 v1.76 升级为 v1.86。

@@ -85,6 +85,8 @@ Page({
 		hasVisionApiKey: false,
 		apiKeyMasked: '',
 		visionApiKeyMasked: '',
+		showKeyInput: false,
+		showVisionKeyInput: false,
 		keyPlaceholder: 'sk-...',
 		visionKeyPlaceholder: '留空沿用主 Key',
 		textModelOptions: [],
@@ -127,6 +129,8 @@ Page({
 			hasVisionApiKey: !!cfg.hasVisionApiKey,
 			apiKeyMasked: cfg.apiKeyMasked || '',
 			visionApiKeyMasked: cfg.visionApiKeyMasked || '',
+			showKeyInput: false,
+			showVisionKeyInput: false,
 			keyPlaceholder: cfg.hasApiKey ? ('已保存：' + (cfg.apiKeyMasked || '******') + '，留空不修改') : 'sk-...',
 			visionKeyPlaceholder: cfg.hasVisionApiKey ? ('已保存：' + (cfg.visionApiKeyMasked || '******') + '，留空不修改') : '留空沿用主 Key',
 			textModelIndex: textModelState.modelIndex,
@@ -354,6 +358,59 @@ Page({
 		this.setData({ visionKeyInput: e.detail.value, clearVisionKey: false });
 	},
 
+	_cleanSecretText: function (value) {
+		return String(value || '').replace(/\s+/g, '').trim();
+	},
+
+	_getClipboardSecret: function () {
+		return new Promise((resolve, reject) => {
+			wx.getClipboardData({
+				success: res => resolve(this._cleanSecretText(res && res.data)),
+				fail: reject,
+			});
+		});
+	},
+
+	bindPasteKeyTap: async function () {
+		try {
+			let value = await this._getClipboardSecret();
+			if (!value) return pageHelper.showModal('剪贴板里没有可粘贴的 API Key');
+			this.setData({ keyInput: value, clearKey: false });
+			pageHelper.showSuccToast('已粘贴');
+		} catch (err) {
+			console.error(err);
+			pageHelper.showModal('读取剪贴板失败，请确认微信已允许小程序访问剪贴板');
+		}
+	},
+
+	bindPasteVisionKeyTap: async function () {
+		try {
+			let value = await this._getClipboardSecret();
+			if (!value) return pageHelper.showModal('剪贴板里没有可粘贴的视觉 API Key');
+			this.setData({ visionKeyInput: value, clearVisionKey: false });
+			pageHelper.showSuccToast('已粘贴');
+		} catch (err) {
+			console.error(err);
+			pageHelper.showModal('读取剪贴板失败，请确认微信已允许小程序访问剪贴板');
+		}
+	},
+
+	bindToggleKeyVisibleTap: function () {
+		this.setData({ showKeyInput: !this.data.showKeyInput });
+	},
+
+	bindToggleVisionKeyVisibleTap: function () {
+		this.setData({ showVisionKeyInput: !this.data.showVisionKeyInput });
+	},
+
+	bindClearKeyInputTap: function () {
+		this.setData({ keyInput: '', clearKey: false });
+	},
+
+	bindClearVisionKeyInputTap: function () {
+		this.setData({ visionKeyInput: '', clearVisionKey: false });
+	},
+
 	bindEnabledChange: function (e) {
 		this.setData({ 'form.enabled': !!e.detail.value });
 	},
@@ -375,8 +432,8 @@ Page({
 		form.model = (form.model || '').trim();
 		form.visionApiUrl = (form.visionApiUrl || '').trim();
 		form.visionModel = (form.visionModel || '').trim();
-		form.apiKey = (this.data.keyInput || '').trim();
-		form.visionApiKey = (this.data.visionKeyInput || '').trim();
+		form.apiKey = this._cleanSecretText(this.data.keyInput);
+		form.visionApiKey = this._cleanSecretText(this.data.visionKeyInput);
 		form.temperature = Number(form.temperature || 0.7);
 		form.maxTokens = Number(form.maxTokens || 600);
 
@@ -416,6 +473,8 @@ Page({
 				hasVisionApiKey: !!cfg.hasVisionApiKey,
 				apiKeyMasked: cfg.apiKeyMasked || '',
 				visionApiKeyMasked: cfg.visionApiKeyMasked || '',
+				showKeyInput: false,
+				showVisionKeyInput: false,
 				keyPlaceholder: cfg.hasApiKey ? ('已保存：' + (cfg.apiKeyMasked || '******') + '，留空不修改') : 'sk-...',
 				visionKeyPlaceholder: cfg.hasVisionApiKey ? ('已保存：' + (cfg.visionApiKeyMasked || '******') + '，留空不修改') : '留空沿用主 Key',
 				textModelIndex: textModelState.modelIndex,

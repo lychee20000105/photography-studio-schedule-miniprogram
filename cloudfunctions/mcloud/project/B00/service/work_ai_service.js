@@ -349,6 +349,25 @@ class WorkAiService extends WorkPermissionService {
 			return await this._handleAgentReply(openId, staff, reply, responseConfig, result, imageAttachments, pageContext);
 		} catch (err) {
 			if (err && err.name == 'AppError') throw err;
+			if (this._shouldRetryWithMinimalBody(err, body)) {
+				try {
+					let minimalBody = this._minimalChatBody(body);
+					let minimalResult = await this._postJson(selectedApiUrl, minimalBody, {
+						Authorization: 'Bearer ' + selectedApiKey,
+					});
+					let minimalReply = this._pickReply(minimalResult);
+					if (minimalReply) {
+						let minimalConfig = Object.assign({}, config, {
+							model: selectedModel,
+							providerName: getProviderNameForRequest(config, hasImages),
+						});
+						return await this._handleAgentReply(openId, staff, minimalReply, minimalConfig, minimalResult, imageAttachments, pageContext);
+					}
+				} catch (minimalErr) {
+					console.error('AI minimal retry failed:', minimalErr && minimalErr.message ? minimalErr.message : minimalErr);
+					err = minimalErr;
+				}
+			}
 			// If a separate vision model is unstable, try the text model once on
 			// the same request. Do not force a hard-coded model on custom APIs.
 			let fallbackModel = hasImages ? asText(config.model, 120) : '';
@@ -825,6 +844,23 @@ class WorkAiService extends WorkPermissionService {
 		}
 		if (result.output_text) return asText(result.output_text, 4000);
 		return '';
+	}
+
+	_minimalChatBody(body = {}) {
+		return {
+			model: body.model,
+			messages: body.messages,
+			stream: false,
+		};
+	}
+
+	_shouldRetryWithMinimalBody(err, body = {}) {
+		if (!err || !body.model || !body.messages) return false;
+		let msg = String(err.safeMessage || err.message || '').toLowerCase();
+		return err.statusCode == 400
+			|| err.statusCode == 422
+			|| msg.indexOf('param') >= 0
+			|| msg.indexOf('参数') >= 0;
 	}
 
 	_pickJsonObject(text) {
@@ -2300,6 +2336,7 @@ class WorkAiService extends WorkPermissionService {
 		if (statusCode == 404) return 'AI 接口地址或模型不存在，请检查后台配置';
 		if (statusCode == 429) return 'AI 接口额度或频率受限，请稍后重试';
 		if (statusCode >= 500) return 'AI 服务或当前模型暂时不可用，请稍后重试；如果连续出现，请在AI配置里换一个可用模型。';
+		if (/param|parameter|参数/i.test(msg)) return 'AI 接口参数不兼容，请确认 Base URL 是 OpenAI 兼容的 /v1 地址、模型 ID 填写正确；如果是纯文本模型，图片识别模型请单独填写支持读图的模型。';
 		return msg ? ('AI 接口返回错误：' + msg.slice(0, 120)) : 'AI 接口返回错误，请检查后台配置';
 	}
 }
