@@ -79,7 +79,7 @@
  	}
 
  	err(str) {
- 		error(str);
+ 		this.error(str);
  	}
 
  	getLogOut() {

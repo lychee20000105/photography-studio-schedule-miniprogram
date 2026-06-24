@@ -8,8 +8,8 @@ function handlerOther(event) {
 	let isOther = false;
 
 	if (!event) return {
-		isOther,
-		eventX
+		isOther: false,
+		eventX: event
 	};
 
 	// 公众号事件处理
