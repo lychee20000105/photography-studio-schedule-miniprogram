@@ -295,6 +295,15 @@ class WorkAdminController extends BaseProjectController {
 		return await service.listAudits(input);
 	}
 
+	async getAgentAuditDetail() {
+		let input = this.validateData({
+			id: 'must|id|name=AI审计记录ID',
+		});
+		await this._assertMiniAdmin();
+		let service = new WorkAgentAuditService();
+		return await service.getAuditDetail(input.id);
+	}
+
 	async auditOrder() {
 		let input = this.validateData({
 			id: 'must|id|name=订单ID',

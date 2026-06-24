@@ -26,6 +26,7 @@
 		"projects/B00/pages/work/admin_feedback/work_admin_feedback",
 		"projects/B00/pages/work/admin_ai/work_admin_ai",
 		"projects/B00/pages/work/admin_agent_audit/work_admin_agent_audit",
+		"projects/B00/pages/work/admin_agent_audit_detail/work_admin_agent_audit_detail",
 		"projects/B00/pages/default/index/default_index",
 		"projects/B00/pages/about/index/about_index",
 		"projects/B00/pages/product/detail/product_detail",

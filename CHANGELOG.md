@@ -1,5 +1,36 @@
 # Changelog
 
+## v1.94 - 2026-06-24
+
+AI审计详情页版本。本次按小改修复 `+0.01` 从 v1.93 升级为 v1.94，让管理员可以从 AI 审计流水列表点开单条记录，查看完整审计内容、关联对象和安全复盘摘要。
+
+### 新增
+
+- `work_agent_audit_service.js` 新增 `getAuditDetail`，按审计记录 ID 返回单条有效记录。
+- `work_admin_controller.js` 新增 `getAgentAuditDetail`，继续要求小程序管理员权限。
+- `route.js` 新增 `work/admin_agent_audit_detail` 只读路由。
+- 新增 `admin_agent_audit_detail` 页面，支持从列表卡片进入详情、下拉刷新、查看基础信息、完整审计内容和安全复盘。
+
+### 修复
+
+- 修正 AI 审计流水统计区域异常闭合标签，减少小程序编译和渲染风险。
+
+### 验证
+
+- `node --check` 覆盖本轮触达的云端服务、控制器、路由、live patch、审计页面 JS、版本源和设置文件，均通过。
+- `miniprogram/app.json`、审计列表/详情页 JSON 和 `project.config.json` JSON 解析通过，AI 审计详情页已注册。
+- AI 审计列表页和详情页 WXML view 标签数量 sanity check 通过，未发现异常 `/view>` 闭合。
+- `work_admin_controller_live_patch.js` 与 `work_route_live_patch.js` 解压后与源文件一致，实际加载检查通过。
+- 本轮涉及文件 `git diff --check` 通过，仅有既有 LF/CRLF 提示。
+- 敏感信息扫描未发现新增 API Key、Token 或 Secret。
+
+### 部署
+
+- `work_admin_controller_live_patch.js` 已通过微信开发者工具 CLI 增量部署到 `mcloud`，包体 `6.5 KB`。
+- `work_route_live_patch.js` 已通过微信开发者工具 CLI 增量部署到 `mcloud`，包体 `2.8 KB`。
+- 小程序开发版已通过微信开发者工具 CLI 上传，版本号 `1.94`，包体 `1.5 MB` / `1,566,038 Byte`。
+- 本次未提交审核、未发布上线。
+
 
 ## v1.93 - 2026-06-24
 

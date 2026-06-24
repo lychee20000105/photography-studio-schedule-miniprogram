@@ -1,14 +1,26 @@
 ﻿module.exports = {
-	current: '1.93',
-	previous: '1.92',
+	current: '1.94',
+	previous: '1.93',
 	date: '2026-06-24',
-	time: '20:02 CST',
+	time: '20:17 CST',
 	level: 'patch',
 	levelText: '小改修复',
-	name: 'AI审计统计摘要',
-	summary: 'AI 审计流水页新增筛选统计摘要，管理员可快速查看总数、高风险、财务相关、最近操作、最多动作和最多员工。',
+	name: 'AI审计详情页',
+	summary: 'AI 审计流水支持点开详情，管理员可查看完整审计内容、关联对象和安全复盘摘要。',
 	changeLog: '/docs/version-change-diary.md',
 	history: [
+		{
+			version: '1.94',
+			date: '2026-06-24',
+			name: 'AI审计详情页',
+			summary: 'AI 审计流水支持点开详情，管理员可查看完整审计内容、关联对象和安全复盘摘要。',
+			items: [
+				'新增 `work/admin_agent_audit_detail` 只读路由，管理员可按审计记录 ID 查看单条详情。',
+				'审计详情后端返回完整审计内容、动作、风险、员工、关联对象和安全复盘摘要，不返回 openid、密钥或敏感配置。',
+				'新增 `admin_agent_audit_detail` 页面，列表卡片可点击进入详情页，支持下拉刷新。',
+				'修正 AI 审计流水页统计区域的异常闭合标签，减少小程序编译和渲染风险。',
+			],
+		},
 		{
 			version: '1.93',
 			date: '2026-06-24',

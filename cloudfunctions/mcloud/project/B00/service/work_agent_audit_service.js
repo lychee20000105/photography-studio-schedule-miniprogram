@@ -44,6 +44,19 @@ class WorkAgentAuditService extends BaseProjectService {
 		return ret;
 	}
 
+	async getAuditDetail(id) {
+		id = asText(id, 80);
+		if (!id) this.AppError('缺少审计记录ID');
+
+		let item = await WorkAgentAuditModel.getOne({
+			_id: id,
+			AGENTAUDIT_STATUS: 1,
+		});
+		if (!item) this.AppError('审计记录不存在或已失效');
+
+		return this._cleanAuditDetail(item);
+	}
+
 	_buildWhere(params = {}) {
 		let where = {
 			AGENTAUDIT_STATUS: 1,
@@ -138,6 +151,41 @@ class WorkAgentAuditService extends BaseProjectService {
 			AGENTAUDIT_RISK_LEVEL: item.AGENTAUDIT_RISK_LEVEL || 'normal',
 			AGENTAUDIT_ADD_TIME: item.AGENTAUDIT_ADD_TIME || 0,
 		};
+	}
+
+	_cleanAuditDetail(item = {}) {
+		let detail = this._cleanAudit(item);
+		detail.AGENTAUDIT_CONTENT = asText(item.AGENTAUDIT_CONTENT, 3000);
+		detail.AGENTAUDIT_EDIT_TIME = item.AGENTAUDIT_EDIT_TIME || 0;
+		detail.safety = this._buildSafetySummary(detail);
+		return detail;
+	}
+
+	_buildSafetySummary(item = {}) {
+		let risk = item.AGENTAUDIT_RISK_LEVEL || 'normal';
+		let action = item.AGENTAUDIT_ACTION || 'agent_action';
+		let summary = {
+			riskLevel: risk,
+			action,
+			requiresAdminReview: risk == 'high' || risk == 'finance',
+			lines: [],
+		};
+
+		if (risk == 'high') summary.lines.push('该记录命中高风险边界，适合由管理员复查业务结果。');
+		else if (risk == 'finance') summary.lines.push('该记录涉及收款、金额、工资或提成等财务语义，建议结合业务记录核对。');
+		else summary.lines.push('该记录为普通风险级别，仍保留操作人、时间和关联对象用于追溯。');
+
+		if (item.AGENTAUDIT_REF_TYPE || item.AGENTAUDIT_REF_ID) {
+			summary.lines.push('已记录关联业务对象，便于从审计流水追到小记、订单或其他业务记录。');
+		} else {
+			summary.lines.push('本条没有关联业务对象ID，复盘时主要参考标题和审计内容。');
+		}
+
+		if (/pay_payroll|void_payment|cancel_order|audit_order/.test(action)) {
+			summary.lines.push('该动作属于工资、收款、取消或审核类敏感动作，不能仅凭 AI 回复判定业务已完成。');
+		}
+
+		return summary;
 	}
 }
 

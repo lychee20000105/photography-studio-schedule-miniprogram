@@ -1,0 +1,158 @@
+page {
+	background: #f5efe4;
+	color: #2a2622;
+}
+
+.page {
+	padding: 24rpx 24rpx 150rpx;
+	box-sizing: border-box;
+}
+
+.empty {
+	height: 360rpx;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: #6b6158;
+	font-size: 28rpx;
+}
+
+.hero,
+.section {
+	background: #fbf7ee;
+	border: 1rpx solid #d8cfbe;
+	border-radius: 10rpx;
+	box-shadow: 0 12rpx 38rpx rgba(42, 38, 34, .06);
+	box-sizing: border-box;
+}
+
+.hero {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 18rpx;
+	padding: 26rpx 24rpx;
+	margin-bottom: 20rpx;
+}
+
+.hero-main {
+	flex: 1;
+	min-width: 0;
+}
+
+.eyebrow {
+	color: #537d96;
+	font-size: 22rpx;
+	line-height: 1.35;
+	font-weight: 900;
+}
+
+.title {
+	margin-top: 8rpx;
+	color: #2a2622;
+	font-size: 34rpx;
+	line-height: 1.35;
+	font-weight: 900;
+	word-break: break-all;
+}
+
+.meta {
+	margin-top: 10rpx;
+	color: #6b6158;
+	font-size: 24rpx;
+	line-height: 1.45;
+}
+
+.risk {
+	flex-shrink: 0;
+	min-width: 108rpx;
+	height: 46rpx;
+	line-height: 46rpx;
+	border-radius: 6rpx;
+	text-align: center;
+	font-size: 22rpx;
+	font-weight: 900;
+}
+
+.risk-normal {
+	background: rgba(83, 125, 150, .14);
+	color: #537d96;
+}
+
+.risk-finance {
+	background: rgba(166, 112, 45, .14);
+	color: #8a5a1f;
+}
+
+.risk-high {
+	background: rgba(194, 65, 65, .14);
+	color: #a33a3a;
+}
+
+.section {
+	padding: 22rpx 24rpx;
+	margin-bottom: 20rpx;
+}
+
+.section-title {
+	color: #2a2622;
+	font-size: 28rpx;
+	line-height: 1.35;
+	font-weight: 900;
+	margin-bottom: 14rpx;
+}
+
+.row {
+	display: flex;
+	align-items: flex-start;
+	gap: 18rpx;
+	padding: 14rpx 0;
+	border-top: 1rpx solid rgba(216, 207, 190, .68);
+}
+
+.row-label {
+	flex-shrink: 0;
+	width: 128rpx;
+	color: #6b6158;
+	font-size: 24rpx;
+	line-height: 1.45;
+}
+
+.row-value {
+	flex: 1;
+	min-width: 0;
+	color: #303846;
+	font-size: 24rpx;
+	line-height: 1.45;
+	font-weight: 800;
+	word-break: break-all;
+}
+
+.content {
+	color: #303846;
+	font-size: 26rpx;
+	line-height: 1.65;
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.safety-line {
+	position: relative;
+	padding-left: 22rpx;
+	margin-top: 10rpx;
+	color: #303846;
+	font-size: 25rpx;
+	line-height: 1.6;
+	word-break: break-all;
+}
+
+.safety-line::before {
+	content: "";
+	position: absolute;
+	left: 0;
+	top: 18rpx;
+	width: 8rpx;
+	height: 8rpx;
+	border-radius: 50%;
+	background: #537d96;
+}

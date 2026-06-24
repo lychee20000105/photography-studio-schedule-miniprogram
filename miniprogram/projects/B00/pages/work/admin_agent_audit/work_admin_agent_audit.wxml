@@ -45,7 +45,7 @@
 	<view wx:if="{{!isLoad}}" class="empty">加载中...</view>
 	<view wx:if="{{isLoad && list.length==0}}" class="empty">暂无 AI 审计流水</view>
 
-	<view wx:for="{{list}}" wx:key="_id" class="card">
+	<view wx:for="{{list}}" wx:key="_id" class="card" data-id="{{item._id}}" bindtap="bindDetailTap">
 		<view class="card-head">
 			<view class="title-wrap">
 				<view class="title">{{item.AGENTAUDIT_TITLE || item.actionText}}</view>

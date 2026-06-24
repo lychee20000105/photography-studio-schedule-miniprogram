@@ -86,6 +86,7 @@ module.exports = {
 		'work/admin_ai_models_get': 'work_admin_controller@getAiModels',
 		'work/admin_ai_config_save': 'work_admin_controller@saveAiConfig#demo',
 		'work/admin_agent_audit_list': 'work_admin_controller@getAgentAuditList',
+		'work/admin_agent_audit_detail': 'work_admin_controller@getAgentAuditDetail',
 
 		// 预约
 	'meet/list': 'meet_controller@getMeetList',

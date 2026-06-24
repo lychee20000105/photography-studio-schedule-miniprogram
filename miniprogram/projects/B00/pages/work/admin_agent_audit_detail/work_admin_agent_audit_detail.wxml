@@ -1,0 +1,35 @@
+<view class="page">
+	<view wx:if="{{!isLoad}}" class="empty">加载中...</view>
+
+	<view wx:if="{{isLoad && detail}}" class="detail">
+		<view class="hero">
+			<view class="hero-main">
+				<view class="eyebrow">AI 审计详情</view>
+				<view class="title">{{detail.AGENTAUDIT_TITLE || detail.actionText}}</view>
+				<view class="meta">{{detail.AGENTAUDIT_STAFF_NAME || '未知员工'}} · {{detail.addTimeText}}</view>
+			</view>
+			<view class="risk {{riskClass}}">{{detail.riskText}}</view>
+		</view>
+
+		<view class="section">
+			<view class="section-title">基础信息</view>
+			<view class="row" wx:for="{{rows}}" wx:key="label">
+				<view class="row-label">{{item.label}}</view>
+				<view class="row-value">{{item.value}}</view>
+			</view>
+		</view>
+
+		<view class="section">
+			<view class="section-title">审计内容</view>
+			<view class="content">{{detail.AGENTAUDIT_CONTENT || '无详细内容'}}</view>
+		</view>
+
+		<view class="section">
+			<view class="section-title">安全复盘</view>
+			<view wx:for="{{detail.safetyLines}}" wx:key="*this" class="safety-line">{{item}}</view>
+			<view wx:if="{{detail.safetyLines.length==0}}" class="safety-line">暂无额外安全摘要。</view>
+		</view>
+	</view>
+</view>
+
+<tech-footer />

@@ -130,6 +130,14 @@ Page({
 		await this._loadList(true);
 	},
 
+	bindDetailTap: function (e) {
+		let id = e.currentTarget.dataset.id || '';
+		if (!id) return;
+		wx.navigateTo({
+			url: '/projects/B00/pages/work/admin_agent_audit_detail/work_admin_agent_audit_detail?id=' + encodeURIComponent(id),
+		});
+	},
+
 	async _loadList(reset) {
 		let nextPage = reset ? 1 : this.data.page + 1;
 		let action = this.data.actionOptions[this.data.actionIndex] || this.data.actionOptions[0];

@@ -1,6 +1,77 @@
 ﻿# 版本修改日记
 
 
+## v1.94 - 2026-06-24 20:17 CST
+
+### 改动级别
+
+小改修复，v1.93 -> v1.94。
+
+### 本次目标
+
+继续补齐小猫 Agent 的可管理性：AI 审计流水不只停留在列表和统计，管理员可以点开单条记录，查看完整审计内容、关联对象和安全复盘摘要，方便把“小猫做了什么、谁触发的、风险在哪里”追清楚。
+
+### 主要修改
+
+- `work_agent_audit_service.js` 新增 `getAuditDetail`，按审计记录 ID 返回单条有效记录，并对返回内容做长度控制。
+- `work_admin_controller.js` 新增 `getAgentAuditDetail`，复用小程序管理员权限校验。
+- `route.js` 新增 `work/admin_agent_audit_detail` 只读路由。
+- `work_admin_agent_audit.js` 新增列表卡片详情跳转。
+- `work_admin_agent_audit.wxml` 列表卡片支持点击进入详情，并修正统计区域异常闭合标签。
+- 新增 `admin_agent_audit_detail` 页面，展示基础信息、完整审计内容和安全复盘摘要，支持下拉刷新。
+- `miniprogram/app.json` 注册 AI 审计详情页。
+- 重新生成 `work_admin_controller_live_patch.js` 和 `work_route_live_patch.js`，确保云端 mcloud 使用最新控制器、审计服务和路由。
+- `miniprogram/version.js`、`miniprogram/setting/setting.js`、`CHANGELOG.md`、`README.md` 和本文档同步升级到 v1.94。
+
+### 涉及文件
+
+- `cloudfunctions/mcloud/project/B00/service/work_agent_audit_service.js`
+- `cloudfunctions/mcloud/project/B00/controller/work_admin_controller.js`
+- `cloudfunctions/mcloud/project/B00/public/route.js`
+- `cloudfunctions/mcloud/work_admin_controller_live_patch.js`
+- `cloudfunctions/mcloud/work_route_live_patch.js`
+- `miniprogram/app.json`
+- `miniprogram/projects/B00/pages/work/admin_agent_audit/work_admin_agent_audit.js`
+- `miniprogram/projects/B00/pages/work/admin_agent_audit/work_admin_agent_audit.wxml`
+- `miniprogram/projects/B00/pages/work/admin_agent_audit_detail/work_admin_agent_audit_detail.js`
+- `miniprogram/projects/B00/pages/work/admin_agent_audit_detail/work_admin_agent_audit_detail.wxml`
+- `miniprogram/projects/B00/pages/work/admin_agent_audit_detail/work_admin_agent_audit_detail.wxss`
+- `miniprogram/projects/B00/pages/work/admin_agent_audit_detail/work_admin_agent_audit_detail.json`
+- `miniprogram/version.js`
+- `miniprogram/setting/setting.js`
+- `CHANGELOG.md`
+- `README.md`
+- `docs/version-change-diary.md`
+
+### 验证结果
+
+- `node --check cloudfunctions/mcloud/project/B00/service/work_agent_audit_service.js` 通过。
+- `node --check cloudfunctions/mcloud/project/B00/controller/work_admin_controller.js` 通过。
+- `node --check cloudfunctions/mcloud/project/B00/public/route.js` 通过。
+- `node --check cloudfunctions/mcloud/work_admin_controller_live_patch.js` 通过。
+- `node --check cloudfunctions/mcloud/work_route_live_patch.js` 通过。
+- `node --check miniprogram/projects/B00/pages/work/admin_agent_audit/work_admin_agent_audit.js` 通过。
+- `node --check miniprogram/projects/B00/pages/work/admin_agent_audit_detail/work_admin_agent_audit_detail.js` 通过。
+- `node --check miniprogram/version.js` 与 `node --check miniprogram/setting/setting.js` 通过。
+- `miniprogram/app.json`、`work_admin_agent_audit.json`、`work_admin_agent_audit_detail.json` 和 `project.config.json` JSON 解析通过，详情页已注册。
+- AI 审计列表页和详情页 WXML view 标签数量 sanity check 通过，未发现异常 `/view>` 闭合。
+- `work_admin_controller_live_patch.js` 解压后与 `work_agent_audit_service.js`、`work_agent_audit_model.js`、`work_admin_controller.js` 源码一致。
+- `work_route_live_patch.js` 解压后与 `route.js` 源码一致。
+- live patch 实际加载检查通过；仅出现项目既有 `ws` 依赖提示，不影响本次 patch 注入。
+- 本轮涉及文件 `git diff --check` 通过，仅有既有 LF/CRLF 提示。
+- 敏感信息扫描未发现新增 API Key、Token 或 Secret。
+
+### 部署状态
+
+- `work_admin_controller_live_patch.js` 已通过微信开发者工具 CLI 增量部署到 `mcloud`，包体 `6.5 KB`。
+- `work_route_live_patch.js` 已通过微信开发者工具 CLI 增量部署到 `mcloud`，包体 `2.8 KB`。
+- 小程序开发版已通过微信开发者工具 CLI 上传，版本号 `1.94`，包体 `1.5 MB` / `1,566,038 Byte`。
+- 本次未提交审核、未发布上线。
+
+### 未完成风险
+
+- 当前详情页展示的是已存在审计模型里的标题、内容、动作、风险和关联对象；历史流水没有单独保存模型原始 JSON，因此“原始工具参数 / 模型返回结构”的独立字段需要后续版本从审计写入源头继续增强。
+
 ## v1.93 - 2026-06-24 20:02 CST
 
 ### 改动级别
