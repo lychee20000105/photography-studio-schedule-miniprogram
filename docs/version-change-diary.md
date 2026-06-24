@@ -46,6 +46,8 @@
 - `node --check miniprogram/setting/setting.js` 通过。
 - `miniprogram/app.json` 与 `project.config.json` JSON 解析通过。
 - `work_ai_service_live_patch.js` 解压后与 `work_ai_service.js`、`work_ai_agent_registry.js`、`work_ai_agent_memory.js`、`work_agent_audit_model.js` 一致。
+- 敏感信息扫描通过，用户提供的 Key 未写入仓库文件。
+- 本地直连小米 MiMo 接口验证 `mimo-v2.5` 返回 200 和中文回复。
 - live patch 加载检查通过；仅出现项目既有 `ws` 依赖提示，不影响本次 patch 注入。
 - `git diff --check` 通过，仅有 Windows 换行提示。
 
