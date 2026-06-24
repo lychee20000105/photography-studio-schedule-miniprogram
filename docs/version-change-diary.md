@@ -1,6 +1,52 @@
 ﻿# 版本修改日记
 
 
+## v2.02 - 2026-06-24 12:00 CST
+
+### 改动级别
+
+新功能，v2.01 -> v2.02。
+
+### 本次目标
+
+在小猫助手宠物系统基础上，新增内置小游戏功能。用户从"我的"页面宠物面板的"小猫助手"按钮进入养成游戏主页，融合长期养成 + 短效小游戏（3分钟一局），以"小云为云屿工作室努力工作"为核心形象。
+
+### 主要修改
+
+- 新增 `helper/game_helper.js` 游戏数据管理模块：Storage Key 定义、默认状态、读写方法、资源增减、经验升级、每日签到、离线收益计算、游戏日志、宠物状态双向同步。
+- 新增 `work_cat_game` 养成主页：自定义导航栏、资源显示（金币/素材/灵感）、离线收益弹窗、猫咪状态面板（等级/阶段/经验条）、每日签到、三款小游戏入口、商店/装修占位。
+- 新增 `work_cat_game_play` 游戏执行页：游戏介绍、玩法说明、3分钟倒计时、点击得分、结算弹窗（金币/素材/灵感/经验奖励）、游戏日志写入。
+- 我的页宠物面板"定制"按钮改为"小猫助手"，跳转到 `cat_game` 页面。
+- `app.json` 注册两个新页面路由。
+
+### 涉及文件
+
+- 新增：`miniprogram/helper/game_helper.js`
+- 新增：`miniprogram/projects/B00/pages/work/cat_game/work_cat_game.js`
+- 新增：`miniprogram/projects/B00/pages/work/cat_game/work_cat_game.wxml`
+- 新增：`miniprogram/projects/B00/pages/work/cat_game/work_cat_game.wxss`
+- 新增：`miniprogram/projects/B00/pages/work/cat_game/work_cat_game.json`
+- 新增：`miniprogram/projects/B00/pages/work/cat_game_play/work_cat_game_play.js`
+- 新增：`miniprogram/projects/B00/pages/work/cat_game_play/work_cat_game_play.wxml`
+- 新增：`miniprogram/projects/B00/pages/work/cat_game_play/work_cat_game_play.wxss`
+- 新增：`miniprogram/projects/B00/pages/work/cat_game_play/work_cat_game_play.json`
+- 修改：`miniprogram/app.json`
+- 修改：`miniprogram/projects/B00/pages/work/my/work_my.js`
+- 修改：`miniprogram/projects/B00/pages/work/my/work_my.wxml`
+- 修改：`miniprogram/setting/setting.js`
+- 修改：`miniprogram/version.js`
+- 修改：`CHANGELOG.md`
+- 修改：`docs/version-change-diary.md`
+
+### 验证结果
+
+- 微信开发者工具中"我的"页面宠物面板显示"小猫助手"按钮。
+- 点击进入养成主页，显示猫咪状态、资源、签到、小游戏入口。
+- 点击小游戏进入执行页，倒计时和点击得分正常。
+- 结算弹窗显示正确奖励并写入本地存储。
+- 返回养成主页后资源/经验已更新。
+
+
 ## v2.00 - 2026-06-24 21:46 CST
 
 ### 改动级别

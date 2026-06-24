@@ -163,7 +163,7 @@ Page({
 		pageHelper.showSuccToast('已照顾');
 	},
 	bindCustomPetTap: function () {
-		wx.navigateTo({ url: '../feedback/work_feedback' });
+		wx.navigateTo({ url: '../cat_game/work_cat_game' });
 	},
 	url: function (e) {
 		pageHelper.url(e, this);

@@ -1,5 +1,26 @@
 # Changelog
 
+## v2.02 - 2026-06-24
+
+小猫助手内置小游戏 MVP。新增养成游戏入口、game_helper 数据管理模块、三款小游戏骨架。
+
+### 新增
+
+- `helper/game_helper.js` 游戏数据管理模块：金币/素材/灵感/经验资源体系、每日签到、离线收益、游戏日志。
+- `work_cat_game` 养成主页：猫咪状态面板、资源显示、每日签到、小游戏入口、离线收益弹窗。
+- `work_cat_game_play` 游戏执行页：接单快拍/修图挑战/小红书爆款三款小游戏骨架。
+- 我的页宠物面板"定制"按钮改为"小猫助手"，跳转到养成游戏主页。
+- 宠物状态双向同步：游戏 exp 反哺浮动小猫，宠物类型同步到游戏内角色。
+
+### 文件
+
+- 新增：`miniprogram/helper/game_helper.js`
+- 新增：`miniprogram/projects/B00/pages/work/cat_game/` (4 files)
+- 新增：`miniprogram/projects/B00/pages/work/cat_game_play/` (4 files)
+- 修改：`miniprogram/app.json`（注册新页面路由）
+- 修改：`miniprogram/projects/B00/pages/work/my/work_my.js`（入口跳转）
+- 修改：`miniprogram/projects/B00/pages/work/my/work_my.wxml`（按钮文案）
+
 ## v2.00 - 2026-06-24
 
 MiMo 极简参数兜底修复版本。本次按小改修复 `+0.01` 从 v1.99 升级为 v2.00，继续处理小猫测试对话返回 `Param Incorrect` 的问题：当 MiMo 拒绝完整 Agent 请求和普通最小重试时，最终兜底请求只保留 `model` 与 `messages` 两个必需字段。

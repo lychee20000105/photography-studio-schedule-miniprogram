@@ -1,0 +1,75 @@
+<!-- 游戏未开始 -->
+<view class="play-container" wx:if="{{!playing && !result}}">
+  <view class="game-header-card">
+    <text class="game-emoji">{{gameId === 'photo' ? '&#x1F4F7;' : gameId === 'retouch' ? '&#x1F3A8;' : '&#x1F4F0;'}}</text>
+    <text class="game-title">{{gameInfo.name}}</text>
+    <text class="game-desc-full">{{gameInfo.desc}}</text>
+  </view>
+
+  <view class="game-rules">
+    <text class="rules-title">玩法说明</text>
+    <text class="rule-line" wx:if="{{gameId === 'photo'}}">&#x2022; 点击屏幕拍摄客人表情</text>
+    <text class="rule-line" wx:if="{{gameId === 'photo'}}">&#x2022; 抓到最佳表情得分更高</text>
+    <text class="rule-line" wx:if="{{gameId === 'photo'}}">&#x2022; 3分钟内尽可能多拍照</text>
+    <text class="rule-line" wx:if="{{gameId === 'retouch'}}">&#x2022; 拖动滤镜到正确位置</text>
+    <text class="rule-line" wx:if="{{gameId === 'retouch'}}">&#x2022; 3分钟内完成尽可能多的修图</text>
+    <text class="rule-line" wx:if="{{gameId === 'retouch'}}">&#x2022; 连续正确有额外加分</text>
+    <text class="rule-line" wx:if="{{gameId === 'post'}}">&#x2022; 选择标题和封面组合</text>
+    <text class="rule-line" wx:if="{{gameId === 'post'}}">&#x2022; 好的组合获得更多点赞</text>
+    <text class="rule-line" wx:if="{{gameId === 'post'}}">&#x2022; 3分钟内发尽可能多的帖子</text>
+  </view>
+
+  <view class="start-btn" bind:tap="onStartTap">
+    <text class="start-text">开始工作 &#x1F43E;</text>
+  </view>
+</view>
+
+<!-- 游戏中 -->
+<view class="play-container" wx:if="{{playing}}">
+  <view class="play-header">
+    <view class="play-timer">
+      <text class="timer-label">剩余时间</text>
+      <text class="timer-value">{{timeDisplay}}</text>
+    </view>
+    <view class="play-score">
+      <text class="score-label">得分</text>
+      <text class="score-value">{{score}}</text>
+    </view>
+  </view>
+
+  <!-- 点击游戏区域 -->
+  <canvas type="2d" id="gameCanvas" class="game-canvas" bind:tap="onCanvasTap"></canvas>
+
+  <view class="play-tip">
+    <text wx:if="{{gameId === 'photo'}}">点击屏幕拍照 &#x1F4F7;</text>
+    <text wx:if="{{gameId === 'retouch'}}">点击屏幕修图 &#x1F3A8;</text>
+    <text wx:if="{{gameId === 'post'}}">点击屏幕发帖 &#x1F4F0;</text>
+  </view>
+</view>
+
+<!-- 结算 -->
+<view class="result-modal" wx:if="{{result}}">
+  <view class="result-card">
+    <text class="result-title">&#x1F389; 工作完成！</text>
+    <text class="result-score">得分：{{result.score}}</text>
+    <view class="result-rewards">
+      <view class="reward-item" wx:if="{{result.coins > 0}}">
+        <text class="reward-icon">&#x1F4B0;</text>
+        <text class="reward-value">+{{result.coins}} 金币</text>
+      </view>
+      <view class="reward-item" wx:if="{{result.materials > 0}}">
+        <text class="reward-icon">&#x2728;</text>
+        <text class="reward-value">+{{result.materials}} 素材</text>
+      </view>
+      <view class="reward-item" wx:if="{{result.inspiration > 0}}">
+        <text class="reward-icon">&#x1F4A1;</text>
+        <text class="reward-value">+{{result.inspiration}} 灵感</text>
+      </view>
+      <view class="reward-item" wx:if="{{result.exp > 0}}">
+        <text class="reward-icon">&#x2B50;</text>
+        <text class="reward-value">+{{result.exp}} 经验</text>
+      </view>
+    </view>
+    <view class="result-btn" bind:tap="onResultTap">返回工作室</view>
+  </view>
+</view>

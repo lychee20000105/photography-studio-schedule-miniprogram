@@ -56,7 +56,7 @@
 		<view class="pet-actions">
 			<view bindtap="bindFeedPetTap">喂食</view>
 			<view bindtap="bindCarePetTap">照顾</view>
-			<view bindtap="bindCustomPetTap">定制</view>
+			<view bindtap="bindCustomPetTap">小猫助手</view>
 		</view>
 	</view>
 

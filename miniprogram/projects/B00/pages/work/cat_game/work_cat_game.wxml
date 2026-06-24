@@ -1,0 +1,101 @@
+<!-- 顶部状态栏 -->
+<view class="game-header">
+  <view class="header-left" bind:tap="onBackTap">
+    <text class="back-icon">&#x2190;</text>
+  </view>
+  <view class="header-center">
+    <text class="header-title">小云工作室</text>
+  </view>
+  <view class="header-right">
+    <view class="resource-bar">
+      <view class="resource-item">
+        <text class="res-icon coin-icon">&#x1F4B0;</text>
+        <text class="res-value">{{gameState.coins}}</text>
+      </view>
+      <view class="resource-item">
+        <text class="res-icon mat-icon">&#x2728;</text>
+        <text class="res-value">{{gameState.materials}}</text>
+      </view>
+      <view class="resource-item">
+        <text class="res-icon ins-icon">&#x1F4A1;</text>
+        <text class="res-value">{{gameState.inspiration}}</text>
+      </view>
+    </view>
+  </view>
+</view>
+
+<!-- 离线收益弹窗 -->
+<view class="offline-modal" wx:if="{{showOfflineReward}}" bind:tap="onClaimOffline">
+  <view class="offline-card" catch:tap="">
+    <text class="offline-title">欢迎回来~</text>
+    <text class="offline-desc">小云独自工作了 {{offlineReward.hours}} 小时</text>
+    <view class="offline-rewards">
+      <text class="offline-reward-item">&#x1F4B0; +{{offlineReward.coins}} 金币</text>
+      <text class="offline-reward-item">&#x2B50; +{{offlineReward.exp}} 经验</text>
+    </view>
+    <view class="offline-btn" bind:tap="onClaimOffline">开心收下</view>
+  </view>
+</view>
+
+<!-- 主场景区域 -->
+<view class="studio-scene">
+  <!-- TODO: Canvas 场景渲染区 (v2.02 实现) -->
+  <view class="scene-placeholder">
+    <view class="cat-avatar {{petType}}">
+      <text class="cat-emoji">{{petTypeInfo.icon === 'cloud' ? '&#x2601;' : petTypeInfo.icon === 'camera' ? '&#x1F4F7;' : '&#x2B50;'}}</text>
+    </view>
+    <text class="cat-greeting">喵~ 我是{{petTypeInfo.label}}！</text>
+    <text class="cat-career">正在努力当{{petTypeInfo.career}}~</text>
+  </view>
+</view>
+
+<!-- 猫咪状态面板 -->
+<view class="status-panel">
+  <view class="status-row">
+    <view class="status-left">
+      <text class="pet-name">{{petTypeInfo.label}}</text>
+      <text class="pet-phase">{{phaseInfo.label}}</text>
+    </view>
+    <view class="status-right">
+      <text class="pet-level">Lv.{{gameState.level}}</text>
+    </view>
+  </view>
+  <view class="exp-bar">
+    <view class="exp-fill" style="width: {{expPercent}}%"></view>
+    <text class="exp-text" wx:if="{{gameState.level < 20}}">{{gameState.exp}} / {{gameState.level * 40}}</text>
+    <text class="exp-text" wx:else>MAX</text>
+  </view>
+</view>
+
+<!-- 每日签到 -->
+<view class="checkin-bar" bind:tap="onCheckinTap">
+  <text class="checkin-icon">&#x1F4C5;</text>
+  <text class="checkin-text">{{gameState.dailyCheckin ? '今日已签到 &#x2705;' : '每日签到 +20金币'}}</text>
+</view>
+
+<!-- 小游戏入口 -->
+<view class="section-title">去工作啦</view>
+<view class="game-list">
+  <view class="game-card" wx:for="{{gameTypes}}" wx:key="id" data-id="{{item.id}}" bind:tap="onGameTap">
+    <view class="game-icon-wrap {{item.id}}">
+      <text class="game-icon-emoji">{{item.id === 'photo' ? '&#x1F4F7;' : item.id === 'retouch' ? '&#x1F3A8;' : '&#x1F4F0;'}}</text>
+    </view>
+    <view class="game-info">
+      <text class="game-name">{{item.name}}</text>
+      <text class="game-desc">{{item.desc}}</text>
+    </view>
+    <text class="game-arrow">&#x203A;</text>
+  </view>
+</view>
+
+<!-- 底部功能 -->
+<view class="bottom-actions">
+  <view class="action-btn" bind:tap="onShopTap">
+    <text class="action-icon">&#x1F6CD;</text>
+    <text class="action-text">商店</text>
+  </view>
+  <view class="action-btn" bind:tap="onDecorTap">
+    <text class="action-icon">&#x1F3E0;</text>
+    <text class="action-text">装修</text>
+  </view>
+</view>
