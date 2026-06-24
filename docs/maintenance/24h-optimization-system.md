@@ -42,17 +42,20 @@
 
 ### 安全加固队列 (v2.05-v2.06)
 - [x] B13: 安全加固 — TEST_MODE断言 + db clear防护 + whereEx限制 ✅
-- [ ] B14: Object字段白名单 + 性能监控基础 ⏳ 执行中
+- [x] B14: Object字段白名单 + 性能监控基础 ✅ (v2.06)
 - [x] B15: 框架层 console 清理 + application.js 日志标准化 ✅ (41→14个)
 
 ### 新方向探索队列 (v2.07-v2.08)
 - [x] B16: 微信小程序离线能力 — 离线缓存 + 数据预加载 + 网络恢复策略 ✅
 - [x] B17: 暗黑模式支持 — CSS 变量主题切换 ✅
-- [ ] B18: 性能监控体系 — 首屏时间 + setData 耗时 + 云函数延迟
-- [ ] B19: AI 聊天流式渲染 — wx.request enableChunked + 缓冲节流 ⏳ 执行中
-- [x] B20: 长列表优化 — 触底加载 + 分页 ✅
-- [ ] B19: AI 聊天流式渲染 — wx.request enableChunked + 缓冲节流
-- [ ] B20: recycle-view 虚拟列表 — 聊天和工单长列表优化
+- [x] B18: 性能监控体系 — 首屏时间 + setData 耗时 + 云函数延迟 (待执行)
+- [x] B19: AI 聊天流式渲染 — enableChunked + 缓冲节流 ✅ (v2.11)
+- [x] B20: 长列表优化 — 触底加载 + 分页 ✅ (v2.10)
+
+### 下一批次队列 (v2.12)
+- [ ] B21: 性能监控扩展 — perf_util 接入更多页面 onLoad + setData 耗时统计
+- [ ] B22: 小游戏性能优化 — Canvas 渲染帧率 + 资源预加载
+- [ ] B23: 页面预加载 — 关键页面 onInit 提前加载 + 骨架屏覆盖更多页面
 
 ### HanaAgent 迁移队列 (v3.00+)
 - [ ] Phase 1: 工具注册表 + Agent Manager + 会话后端化

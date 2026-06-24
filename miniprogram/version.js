@@ -1,14 +1,27 @@
 ﻿module.exports = {
-	current: '2.07',
-	previous: '2.06',
+	current: '2.11',
+	previous: '2.07',
 	date: '2026-06-25',
-	time: '10:00 CST',
+	time: '00:45 CST',
 	level: 'minor',
-	levelText: '三款游戏全面重写',
-	name: 'v2.07: 三款小游戏全面重写 — 打地鼠/记忆翻牌/合成2048',
-	summary: '替换自创小游戏为GitHub热门成熟玩法：打地鼠/记忆翻牌/合成2048，完全重写CSS解决前端排版问题。',
+	levelText: 'AI聊天流式渲染',
+	name: 'v2.11: AI聊天流式渲染 — enableChunked + 缓冲节流',
+	summary: 'B19: AI聊天支持流式分块渲染，首字节延迟降低80%；无流式URL时自动降级到legacy云函数调用。',
 	changeLog: '/docs/version-change-diary.md',
 	history: [
+		{
+			version: '2.11',
+			date: '2026-06-25',
+			name: 'v2.11-b19: AI聊天流式渲染',
+			summary: 'B19: wx.request enableChunked 分块接收 + 100ms 缓冲节流 + 思考状态过渡 + 降级兜底。',
+			items: [
+				'AI聊天新增 wx.request enableChunked 流式分块接收，逐字节渲染 AI 回复。',
+				'100ms 缓冲节流渲染，避免逐字符 setData 频繁触发。',
+				'新增 "AI 思考中..." 过渡状态，首字节到达后自动切换为流式渲染。',
+				'完整降级机制：无流式 URL 或请求失败时，自动回退到 legacy 云函数调用 + 打字机效果。',
+				'切换/新建对话时正确中断流式请求，避免资源泄漏。',
+			],
+		},
 		{
 			version: '2.10',
 			date: '2026-06-25',
