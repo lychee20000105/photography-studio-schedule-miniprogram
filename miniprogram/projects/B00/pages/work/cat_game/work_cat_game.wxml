@@ -31,6 +31,8 @@
     <text class="offline-desc">小云独自工作了 {{offlineReward.hours}} 小时</text>
     <view class="offline-rewards">
       <text class="offline-reward-item">&#x1F4B0; +{{offlineReward.coins}} 金币</text>
+      <text class="offline-reward-item" wx:if="{{offlineReward.materials > 0}}">&#x2728; +{{offlineReward.materials}} 素材</text>
+      <text class="offline-reward-item" wx:if="{{offlineReward.inspiration > 0}}">&#x1F4A1; +{{offlineReward.inspiration}} 灵感</text>
       <text class="offline-reward-item">&#x2B50; +{{offlineReward.exp}} 经验</text>
     </view>
     <view class="offline-btn" bind:tap="onClaimOffline">开心收下</view>
@@ -71,6 +73,30 @@
 <view class="checkin-bar {{gameState.dailyCheckin ? '' : 'checkin-glow'}}" bind:tap="onCheckinTap">
   <text class="checkin-icon">&#x1F4C5;</text>
   <text class="checkin-text">{{gameState.dailyCheckin ? '今日已签到 &#x2705;' : '每日签到 +20金币'}}</text>
+</view>
+
+<!-- 每日任务 -->
+<view class="daily-tasks-section">
+  <view class="section-header" bind:tap="onToggleDailyTasks">
+    <text class="section-title-inline">&#x1F4CB; 每日任务</text>
+    <text class="section-toggle">{{showDailyTasks ? '收起' : '展开'}}</text>
+  </view>
+  <view class="task-list" wx:if="{{showDailyTasks}}">
+    <view class="task-item {{item.done ? 'done' : ''}}" wx:for="{{dailyTasks}}" wx:key="id">
+      <view class="task-info">
+        <text class="task-check">{{item.done ? (item.claimed ? '&#x2705;' : '&#x2B50;') : '&#x25CB;'}}</text>
+        <text class="task-desc">{{item.desc}}</text>
+      </view>
+      <view class="task-reward-btn {{item.done && !item.claimed ? 'claimable' : ''}}"
+        data-id="{{item.id}}" bind:tap="onClaimTask"
+        wx:if="{{item.done && !item.claimed}}">
+        <text class="reward-btn-text">领取</text>
+      </view>
+      <text class="task-reward-hint" wx:else>
+        {{item.claimed ? '已领取' : '+' + item.reward.coins + '金币 +' + item.reward.exp + '经验'}}
+      </text>
+    </view>
+  </view>
 </view>
 
 <!-- 浮动数字弹出 -->

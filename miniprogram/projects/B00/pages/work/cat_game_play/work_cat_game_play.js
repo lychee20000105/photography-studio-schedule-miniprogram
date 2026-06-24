@@ -650,6 +650,7 @@ Page({
     gameHelper.saveState(state);
     gameHelper.syncToPetState(state);
     gameHelper.addPlayLog(gameId, score, { coins, materials, inspiration, exp });
+    gameHelper.recordGameResult(state, score, this.data.combo);
 
     try { wx.vibrateShort({ type: 'heavy' }); } catch (e) {}
     this.setData({

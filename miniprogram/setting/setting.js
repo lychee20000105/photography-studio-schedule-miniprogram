@@ -3,10 +3,10 @@ module.exports = {
 	CLOUD_ID: 'yunyukeji-d4g7waei5d5d6cdeb', //云服务id ,本地测试环境
 
 	// #### 版本信息
-	VER: 'v2.05',
-	APP_VERSION: '2.05',
+	VER: 'v2.06',
+	APP_VERSION: '2.06',
 	APP_VERSION_DATE: '2026-06-24',
-	APP_VERSION_NAME: '修图挑战+小红书爆款小游戏',
+	APP_VERSION_NAME: '每日任务+养成系统完善',
 	COMPANY: '云屿摄影｜技术由云屿科技支持',
 
 	// #### 系统参数

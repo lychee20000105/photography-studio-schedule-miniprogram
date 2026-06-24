@@ -147,8 +147,73 @@ function calcOfflineReward(state) {
   if (hours < 1) return null;
   const maxHours = Math.min(hours, 24);
   const coins = Math.floor(maxHours * 3);
+  const materials = Math.floor(maxHours * 1.5);
+  const inspiration = Math.floor(maxHours * 1);
   const exp = Math.floor(maxHours * 2);
-  return { coins, exp, hours: Math.floor(maxHours) };
+  return { coins, materials, inspiration, exp, hours: Math.floor(maxHours) };
+}
+
+// ===== 每日任务系统 =====
+const DAILY_TASK_DEFS = [
+  { id: 'play1',    desc: '玩一局小游戏',       check: (s) => s.dailyPlayCount >= 1,  reward: { coins: 15, exp: 3 } },
+  { id: 'play3',    desc: '玩3局小游戏',         check: (s) => s.dailyPlayCount >= 3,  reward: { coins: 30, exp: 8 } },
+  { id: 'checkin',  desc: '每日签到',             check: (s) => s.dailyCheckin,         reward: { coins: 10, exp: 2 } },
+  { id: 'score10',  desc: '单局得分超过10',       check: (s) => s.dailyBestScore >= 10, reward: { coins: 20, exp: 5 } },
+  { id: 'combo5',   desc: '达成5连击',            check: (s) => s.dailyBestCombo >= 5,  reward: { coins: 25, exp: 6 } },
+];
+
+function initDailyTasks(state) {
+  const today = new Date().toISOString().slice(0, 10);
+  if (state.dailyTaskDate !== today) {
+    state.dailyTaskDate = today;
+    state.dailyTasks = DAILY_TASK_DEFS.map(t => ({ id: t.id, claimed: false }));
+    state.dailyPlayCount = 0;
+    state.dailyBestScore = 0;
+    state.dailyBestCombo = 0;
+  }
+  if (!state.dailyTasks || !Array.isArray(state.dailyTasks)) {
+    state.dailyTasks = DAILY_TASK_DEFS.map(t => ({ id: t.id, claimed: false }));
+  }
+  return state;
+}
+
+function getDailyTaskStatus(state) {
+  initDailyTasks(state);
+  return DAILY_TASK_DEFS.map(def => {
+    const task = state.dailyTasks.find(t => t.id === def.id) || { claimed: false };
+    return {
+      id: def.id,
+      desc: def.desc,
+      done: def.check(state),
+      claimed: task.claimed,
+      reward: def.reward,
+    };
+  });
+}
+
+function claimDailyTask(state, taskId) {
+  initDailyTasks(state);
+  const def = DAILY_TASK_DEFS.find(t => t.id === taskId);
+  if (!def) return { ok: false, msg: '任务不存在' };
+  const task = state.dailyTasks.find(t => t.id === taskId);
+  if (!task) return { ok: false, msg: '任务不存在' };
+  if (task.claimed) return { ok: false, msg: '已领取' };
+  if (!def.check(state)) return { ok: false, msg: '未完成' };
+  task.claimed = true;
+  if (def.reward.coins) addCoins(state, def.reward.coins);
+  if (def.reward.materials) addMaterials(state, def.reward.materials);
+  if (def.reward.inspiration) addInspiration(state, def.reward.inspiration);
+  if (def.reward.exp) addExp(state, def.reward.exp);
+  saveState(state);
+  return { ok: true, reward: def.reward };
+}
+
+function recordGameResult(state, score, combo) {
+  initDailyTasks(state);
+  state.dailyPlayCount = (state.dailyPlayCount || 0) + 1;
+  if (score > (state.dailyBestScore || 0)) state.dailyBestScore = score;
+  if (combo > (state.dailyBestCombo || 0)) state.dailyBestCombo = combo;
+  saveState(state);
 }
 
 function addPlayLog(gameId, score, reward) {
@@ -199,6 +264,7 @@ module.exports = {
   GAME_STATE_KEY,
   GAME_PLAY_LOG_KEY,
   GAME_GUIDE_KEY,
+  DAILY_TASK_DEFS,
   defaultState,
   getState,
   saveState,
@@ -215,4 +281,8 @@ module.exports = {
   addPlayLog,
   syncToPetState,
   syncFromPetState,
+  initDailyTasks,
+  getDailyTaskStatus,
+  claimDailyTask,
+  recordGameResult,
 };

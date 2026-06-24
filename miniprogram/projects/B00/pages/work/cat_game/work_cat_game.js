@@ -28,6 +28,9 @@ Page({
     materialsBump: false,
     inspirationBump: false,
     floatPopup: { show: false, text: '', x: 0, y: 0 },
+    // 每日任务
+    dailyTasks: [],
+    showDailyTasks: false,
   },
 
   _timers: [],
@@ -79,6 +82,7 @@ Page({
     } catch (e) {}
 
     const offlineReward = gameHelper.calcOfflineReward(state);
+    const dailyTasks = gameHelper.getDailyTaskStatus(state);
 
     // 记录旧值用于 countUp
     const oldState = this.data.gameState;
@@ -91,6 +95,7 @@ Page({
       petTypeInfo: PET_TYPES[petType] || PET_TYPES.cloud,
       offlineReward,
       showOfflineReward: !!offlineReward && offlineReward.coins > 0,
+      dailyTasks,
       loading: false,
     });
 
@@ -159,13 +164,17 @@ Page({
     const state = this.data.gameState;
     const reward = this.data.offlineReward;
     if (!reward || reward.coins <= 0) return;
-    // Immediately hide to prevent double-tap
     this.setData({ showOfflineReward: false });
     try { wx.vibrateShort({ type: 'medium' }); } catch (e) {}
     gameHelper.addCoins(state, reward.coins);
+    if (reward.materials) gameHelper.addMaterials(state, reward.materials);
+    if (reward.inspiration) gameHelper.addInspiration(state, reward.inspiration);
     gameHelper.addExp(state, reward.exp);
     gameHelper.saveState(state);
-    wx.showToast({ title: `领取 ${reward.coins} 金币`, icon: 'none' });
+    let msg = `+${reward.coins}金币`;
+    if (reward.materials) msg += ` +${reward.materials}素材`;
+    if (reward.inspiration) msg += ` +${reward.inspiration}灵感`;
+    wx.showToast({ title: msg, icon: 'none' });
     this._loadState();
   },
 
@@ -176,6 +185,27 @@ Page({
       try { wx.vibrateShort({ type: 'medium' }); } catch (e) {}
       this._showFloatPopup('+20 金币');
       wx.showToast({ title: `签到成功 +${result.coins}金币`, icon: 'none' });
+    } else {
+      wx.showToast({ title: result.msg, icon: 'none' });
+    }
+    this._loadState();
+  },
+
+  onToggleDailyTasks() {
+    this.setData({ showDailyTasks: !this.data.showDailyTasks });
+  },
+
+  onClaimTask(e) {
+    const taskId = e.currentTarget.dataset.id;
+    const state = this.data.gameState;
+    const result = gameHelper.claimDailyTask(state, taskId);
+    if (result.ok) {
+      try { wx.vibrateShort({ type: 'medium' }); } catch (e) {}
+      let msg = '领取成功';
+      if (result.reward.coins) msg += ` +${result.reward.coins}金币`;
+      if (result.reward.exp) msg += ` +${result.reward.exp}经验`;
+      wx.showToast({ title: msg, icon: 'none' });
+      this._showFloatPopup('+' + (result.reward.coins || 0) + ' 金币');
     } else {
       wx.showToast({ title: result.msg, icon: 'none' });
     }

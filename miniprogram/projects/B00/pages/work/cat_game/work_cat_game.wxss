@@ -169,7 +169,7 @@ page {
 
 /* 签到 */
 .checkin-bar {
-  margin: 0 24rpx 24rpx;
+  margin: 0 24rpx 16rpx;
   background: #fff;
   border-radius: 16rpx;
   padding: 20rpx 24rpx;
@@ -188,6 +188,46 @@ page {
 }
 .checkin-icon { font-size: 36rpx; margin-right: 12rpx; }
 .checkin-text { font-size: 28rpx; color: #4f5368; }
+
+/* 每日任务 */
+.daily-tasks-section {
+  margin: 0 24rpx 16rpx;
+  background: #fff;
+  border-radius: 16rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.04);
+  overflow: hidden;
+  animation: slideUp 0.5s ease-out both;
+  animation-delay: 0.35s;
+}
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx 24rpx;
+}
+.section-title-inline { font-size: 28rpx; font-weight: 600; color: #333; }
+.section-toggle { font-size: 24rpx; color: #999; }
+.task-list { padding: 0 24rpx 16rpx; }
+.task-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14rpx 0;
+  border-bottom: 1rpx solid #f5f5f5;
+}
+.task-item:last-child { border-bottom: none; }
+.task-item.done .task-desc { color: #999; text-decoration: line-through; }
+.task-info { display: flex; align-items: center; gap: 10rpx; }
+.task-check { font-size: 28rpx; }
+.task-desc { font-size: 26rpx; color: #333; }
+.task-reward-btn {
+  background: linear-gradient(135deg, #ff6b6b, #ffa07a);
+  border-radius: 20rpx;
+  padding: 6rpx 20rpx;
+}
+.task-reward-btn:active { opacity: 0.8; }
+.reward-btn-text { font-size: 24rpx; color: #fff; font-weight: 600; }
+.task-reward-hint { font-size: 22rpx; color: #bbb; }
 
 /* 小游戏列表 */
 .section-title {
