@@ -21,7 +21,10 @@ Page({
 		this.setData({ month: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` });
 	},
 	onShow: async function () {
+		let now = Date.now();
+		if (this._lastLoadTime && now - this._lastLoadTime < 30000) return;
 		await this._loadData();
+		this._lastLoadTime = Date.now();
 	},
 	onPullDownRefresh: async function () {
 		await this._loadData();

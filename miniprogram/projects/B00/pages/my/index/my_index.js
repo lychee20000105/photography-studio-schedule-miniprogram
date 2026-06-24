@@ -50,8 +50,11 @@ Page({
 	 * 生命周期函数--监听页面显示
 	 */
 	onShow: async function () {
+		let now = Date.now();
+		if (this._lastLoadTime && now - this._lastLoadTime < 30000) return;
 		await this._loadTodayList();
 		this._loadUser();
+		this._lastLoadTime = Date.now();
 	},
 
 	/**

@@ -590,14 +590,15 @@ Component({
 			});
 		},
 		_chooseImageAttachment() {
-			wx.chooseImage({
+			wx.chooseMedia({
 				count: Math.max(1, 4 - (this.data.chatAttachments || []).length),
+				mediaType: ['image'],
 				sizeType: ['compressed'],
 				sourceType: ['album', 'camera'],
 				success: async res => {
-					let paths = res.tempFilePaths || [];
-					await this._uploadAttachments(paths.map((path, idx) => ({
-						path,
+					let files = res.tempFiles || [];
+					await this._uploadAttachments(files.map((file, idx) => ({
+						path: file.tempFilePath,
 						name: '截图' + (idx + 1) + '.jpg',
 						type: 'image',
 					})));
@@ -1116,12 +1117,12 @@ Component({
 				idx++;
 				let ch = text[idx - 1];
 				let nextDelay = isPunctuation(ch) ? speed * 2 : speed;
-				let partial = text.slice(0, idx) + '▌';
 				let same = !self.data.activeChatId || self.data.activeChatId === _capturedThreadId;
-				if (same) {
+				if (same && (idx % 3 === 0 || idx >= text.length)) {
+					let partial = text.slice(0, idx) + '▌';
 					let msgs = trimMessages(messages.concat([{ role: 'assistant', content: partial }]));
 					self.setData({ chatMessages: msgs });
-					if (idx % 5 === 0) self._scrollChatToBottom();
+					if (idx % 15 === 0) self._scrollChatToBottom();
 				}
 				self._typewriterTimer = setTimeout(tick, nextDelay);
 			}

@@ -808,6 +808,7 @@ class WorkService extends BaseProjectService {
 				title: order.ORDER_TYPE_NAME,
 				customer: canFull ? order.ORDER_CUSTOMER_NAME : (order.ORDER_CUSTOMER_SURNAME || this._getSurname(order.ORDER_CUSTOMER_NAME)),
 				canFull,
+				participantIds: Array.isArray(order.ORDER_PARTICIPANTS) ? order.ORDER_PARTICIPANTS.map(p => p.staffId).filter(Boolean) : [],
 			});
 		}
 

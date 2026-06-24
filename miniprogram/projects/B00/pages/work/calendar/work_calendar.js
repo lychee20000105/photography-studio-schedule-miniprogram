@@ -136,6 +136,10 @@ Page({
 			let days = data.days || {};
 			let cache = Object.assign({}, this.data.calendarCache || {});
 			cache[month] = days;
+			let cacheMonths = Object.keys(cache).sort();
+			if (cacheMonths.length > 5) {
+				for (let i = 0; i < cacheMonths.length - 5; i++) delete cache[cacheMonths[i]];
+			}
 			this.setData({
 				calendarCache: cache,
 				dayMap: month == this.data.month ? days : this.data.dayMap,
@@ -154,9 +158,13 @@ Page({
 		try {
 			let data = await cloudHelper.callCloudData('work/calendar', params, opts);
 			if (!data) return;
-			let days = await this._filterCalendarDaysForScope(data.days || {});
+			let days = this._filterCalendarDaysForScope(data.days || {});
 			let cache = Object.assign({}, this.data.calendarCache || {});
 			cache[month] = days;
+			let cacheMonths = Object.keys(cache).sort();
+			if (cacheMonths.length > 5) {
+				for (let i = 0; i < cacheMonths.length - 5; i++) delete cache[cacheMonths[i]];
+			}
 			this.setData({
 					calendarCache: cache,
 					dayMap: month == this.data.month ? days : this.data.dayMap,
@@ -168,6 +176,15 @@ Page({
 		} catch (err) {
 			console.error(err);
 		}
+	},
+
+	_isJoinedTag(tag) {
+		if (!tag || tag.kind != 'order') return false;
+		let staffId = (this.data.options && this.data.options.staff) ? this.data.options.staff._id : '';
+		if (!staffId) return false;
+		let ids = tag.participantIds;
+		if (!Array.isArray(ids)) return false;
+		return ids.indexOf(staffId) >= 0;
 	},
 
 	_isJoinedOrder: async function (orderId) {
@@ -184,18 +201,12 @@ Page({
 		}
 	},
 
-	_filterCalendarDaysForScope: async function (dayMap) {
+	_filterCalendarDaysForScope: function (dayMap) {
 		if (this.data.scope != 'joined') return dayMap || {};
 		let result = {};
-		let joinCache = {};
 		for (let day in (dayMap || {})) {
 			let tags = dayMap[day] || [];
-			let nextTags = [];
-			for (let tag of tags) {
-				if (!tag || tag.kind != 'order') continue;
-				if (joinCache[tag.id] === undefined) joinCache[tag.id] = await this._isJoinedOrder(tag.id);
-				if (joinCache[tag.id]) nextTags.push(tag);
-			}
+			let nextTags = tags.filter(tag => this._isJoinedTag(tag));
 			if (nextTags.length) result[day] = nextTags;
 		}
 		return result;

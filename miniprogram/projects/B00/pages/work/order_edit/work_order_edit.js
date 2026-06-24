@@ -317,8 +317,11 @@ Page({
 	},
 
 	bindChooseImageTap: function () {
-		wx.chooseImage({
+		wx.chooseMedia({
 			count: 9,
+			mediaType: ['image'],
+			sizeType: ['compressed'],
+			sourceType: ['album', 'camera'],
 			success: async res => {
 				let addImgs = [];
 				wx.showLoading({
@@ -327,7 +330,7 @@ Page({
 				});
 
 				for (let k = 0; k < res.tempFiles.length; k++) {
-					let path = res.tempFiles[k].path || res.tempFilePaths[k];
+					let path = res.tempFiles[k].tempFilePath;
 					let size = res.tempFiles[k].size;
 
 					if (!contentCheckHelper.imgTypeCheck(path)) {
