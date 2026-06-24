@@ -35,7 +35,7 @@ async function getExportDataURL(key) {
 
 // 删除数据文件
 async function deleteDataExcel(key) {
-	console.log('[deleteExcel]  BEGIN... , key=' + key)
+	console.warn('[deleteExcel] BEGIN, key=' + key)
 
 	// 取出数据  
 	let expData = await setupUtil.get(key);
@@ -44,7 +44,7 @@ async function deleteDataExcel(key) {
 	// 文件路径
 	let xlsPath = expData.EXPORT_CLOUD_ID;
 
-	console.log('[deleteExcel]  path = ' + xlsPath);
+	console.warn('[deleteExcel] path=' + xlsPath);
 
 	const cloud = cloudBase.getCloud();
 	try {
@@ -52,12 +52,12 @@ async function deleteDataExcel(key) {
 			fileList: [xlsPath],
 		});
 
-		console.log(res && res.fileList);
+		console.log('[deleteExcel] deleteFile result:', res && res.fileList);
 		let fileResult = res && res.fileList && res.fileList[0];
 		if (!fileResult || fileResult.status != 0) {
 			let status = fileResult ? fileResult.status : 'EMPTY_RESULT';
 			let errMsg = fileResult && fileResult.errMsg ? fileResult.errMsg : '删除导出文件失败';
-			console.log('[deleteUserExcel]  ERROR = ', status + ' >> ' + errMsg);
+			console.error('[deleteExcel] ERROR:', status + ' >> ' + errMsg);
 			if (status == -503003) throw new AppError('文件不存在或者已经删除');
 			throw new AppError('操作失败，请重新删除');
 		}
@@ -65,12 +65,12 @@ async function deleteDataExcel(key) {
 		// 删除导出数据记录
 		await setupUtil.remove(key);
 
-		console.log('[deleteExcel]  OVER.');
+		console.warn('[deleteExcel] OVER');
 
 	} catch (error) {
 		if (error && error.name == 'AppError') throw error;
 
-		console.log('[deleteExcel]  ERROR = ', error);
+		console.error('[deleteExcel] ERROR:', error);
 		throw new AppError('操作失败，请重新删除');
 	}
 
@@ -96,7 +96,7 @@ async function exportDataExcel(key, title, total, data, options = {}) {
 	}]);
 
 	// 把excel文件保存到云存储里
-	console.log('[ExportData]  Save to ' + xlsPath);
+	console.log('[ExportData] Save to ' + xlsPath);
 	const cloud = cloudBase.getCloud();
 	let upload = await cloud.uploadFile({
 		cloudPath: xlsPath,
@@ -110,10 +110,10 @@ async function exportDataExcel(key, title, total, data, options = {}) {
 		EXPORT_KEY: key,
 		EXPORT_CLOUD_ID: upload.fileID
 	}
-	console.log(dataExport)
+	console.log('[ExportData] export record:', dataExport)
 	await setupUtil.set(key, dataExport);
 
-	console.log('[ExportData]  OVER.')
+	console.log('[ExportData] OVER')
 
 	return {
 		total

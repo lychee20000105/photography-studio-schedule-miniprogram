@@ -538,13 +538,13 @@ class Model {
 
 			// 数据类型
 			if (!util.isDefined(dbStructure[k].type)) {
-				console.log('[数据填写错误1]字段类型未定义：' + k);
+				console.warn('[数据填写错误1]字段类型未定义：' + k);
 				throw new AppError('数据填写错误1');
 			}
 
 			// 是否定义必填 
 			if (!util.isDefined(dbStructure[k].required)) {
-				console.log('[数据填写错误2]required未定义：' + k);
+				console.warn('[数据填写错误2]required未定义：' + k);
 				throw new AppError('数据填写错误2');
 			}
 
@@ -557,13 +557,13 @@ class Model {
 						data[k] = dbStructure[k].defVal;
 					else {
 						// 必填且无缺省值 
-						console.log('[数据填写错误3]字段未填写：' + k);
+						console.warn('[数据填写错误3]字段未填写：' + k);
 						throw new AppError('数据填写错误3 ' + k);
 					}
 				} else {
 					// 非必填字段必须有缺省值
 					if (!util.isDefined(dbStructure[k].defVal)) {
-						console.log('[数据填写错误4]非必填字段必须有缺省值：' + k);
+						console.warn('[数据填写错误4]非必填字段必须有缺省值：' + k);
 						throw new AppError('数据填写错误4');
 					}
 					data[k] = dbStructure[k].defVal;

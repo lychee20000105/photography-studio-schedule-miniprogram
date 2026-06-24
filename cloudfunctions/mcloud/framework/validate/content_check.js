@@ -43,13 +43,13 @@ async function checkImg(imgData, mine) {
 			}
 
 		})
-		console.log('imgcheck', result);
+		console.warn('[imgcheck] result:', result);
 		if (!result || result.errCode !== 0) {
 			throw new AppError('图片内容不合适，请修改');
 		}
 
 	} catch (err) {
-		console.log('imgcheck ex', err);
+		console.error('[imgcheck] error:', err);
 		throw new AppError('图片内容不合适，请修改');
 	}
 
@@ -124,7 +124,7 @@ async function checkText(txt) {
 		}
 
 	} catch (err) {
-		console.log('checkText ex', err);
+		console.error('[checkText] error:', err);
 		throw new AppError('文字内容不合适，请修改或者重试');
 	}
 
