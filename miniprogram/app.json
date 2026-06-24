@@ -94,6 +94,7 @@
 		"cmpts/public/form/form_set/field/form_set_field",
 		"cmpts/public/form/form_show/content/form_show_content"
 	],
+	"lazyCodeLoading": "requiredComponents",
 	"window": {
 		"backgroundColor": "#f5efe4",
 		"backgroundTextStyle": "dark",
@@ -141,6 +142,12 @@
 		]
 	},
 	"permission": {},
+	"networkTimeout": {
+		"request": 15000,
+		"downloadFile": 30000,
+		"uploadFile": 60000,
+		"connectSocket": 15000
+	},
 	"usingComponents": {
 		"cmpt-comm-list": "/cmpts/public/list/comm_list_cmpt",
 		"cmpt-picker": "/cmpts/public/picker/picker_cmpt",
