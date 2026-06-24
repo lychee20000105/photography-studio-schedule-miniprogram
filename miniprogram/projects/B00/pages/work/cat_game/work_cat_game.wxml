@@ -50,7 +50,7 @@
 </view>
 
 <!-- 猫咪状态面板 -->
-<view class="status-panel">
+<view class="status-panel" wx:if="{{gameState}}">
   <view class="status-row">
     <view class="status-left">
       <text class="pet-name">{{petTypeInfo.label}}</text>

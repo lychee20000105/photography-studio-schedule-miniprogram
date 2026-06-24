@@ -1,6 +1,7 @@
 const cloudHelper = require('../../../../../helper/cloud_helper.js');
 const pageHelper = require('../../../../../helper/page_helper.js');
 const guestHelper = require('../../../../../helper/guest_helper.js');
+const gameHelper = require('../../../../../helper/game_helper.js');
 const ProjectBiz = require('../../../biz/project_biz.js');
 const versionInfo = require('../../../../../version.js');
 
@@ -96,6 +97,18 @@ Page({
 	},
 	_savePet(pet) {
 		let ret = this._petWithText(pet);
+		// Sync pet level/exp changes to game state before saving pet
+		try {
+			const gameState = gameHelper.getState();
+			if (ret.pet.level > gameState.level) {
+				gameState.level = ret.pet.level;
+				gameState.exp = ret.pet.exp || 0;
+				gameState.phase = gameHelper.getPhase(gameState.level);
+			} else if (ret.pet.level === gameState.level && (ret.pet.exp || 0) > gameState.exp) {
+				gameState.exp = ret.pet.exp || 0;
+			}
+			gameHelper.saveState(gameState);
+		} catch (e) {}
 		wx.setStorageSync(PET_KEY, ret.pet);
 		this.setData({ pet: ret.pet, petTypeIndex: ret.idx });
 		this._refreshPetComponent();
@@ -147,7 +160,12 @@ Page({
 		let pet = Object.assign({}, this.data.pet || this._defaultPet());
 		pet.hunger = Math.min(100, Number(pet.hunger || 0) + 22);
 		pet.health = Math.min(100, Number(pet.health || 0) + 5);
-		pet.exp = Number(pet.exp || 0) + 8;
+		// Use gameHelper to handle exp + level-up properly
+		const state = gameHelper.getState();
+		gameHelper.addExp(state, 8);
+		// Don't save state here; _savePet will sync and save
+		pet.exp = state.exp;
+		pet.level = state.level;
 		pet.mood = 'happy';
 		pet.moodText = '吃饱了';
 		this._savePet(pet);
@@ -156,7 +174,12 @@ Page({
 	bindCarePetTap: function () {
 		let pet = Object.assign({}, this.data.pet || this._defaultPet());
 		pet.health = Math.min(100, Number(pet.health || 0) + 18);
-		pet.exp = Number(pet.exp || 0) + 6;
+		// Use gameHelper to handle exp + level-up properly
+		const state = gameHelper.getState();
+		gameHelper.addExp(state, 6);
+		// Don't save state here; _savePet will sync and save
+		pet.exp = state.exp;
+		pet.level = state.level;
 		pet.mood = 'happy';
 		pet.moodText = '被照顾好了';
 		this._savePet(pet);

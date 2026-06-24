@@ -1,0 +1,25 @@
+﻿{
+    "updatedAt":  "2026-06-20T03:32:21.4384815+08:00",
+    "currentRound":  1,
+    "state":  "decomposing",
+    "decisionNeeded":  "none",
+    "latestDigest":  "Creating decomposition for batch 1.",
+    "changedFiles":  [
+
+                     ],
+    "validation":  {
+                       "commands":  [
+
+                                    ],
+                       "passed":  0,
+                       "failed":  0
+                   },
+    "publish":  {
+                    "pushed":  false,
+                    "releaseUrl":  "",
+                    "blockedReason":  ""
+                },
+    "currentArtifact":  "",
+    "nextCheckAfterSeconds":  1200,
+    "supervisorReadPolicy":  "Read this summary first. Do not read raw manifests/audits/logs unless decisionNeeded is not none, validation failed, publish blocked, or user asks."
+}

@@ -1,4 +1,15 @@
-page { background: #f5efe4; min-height: 100vh; }
+/* ===== CSS Custom Properties ===== */
+page {
+  --color-primary: #ff6b6b;
+  --color-primary-end: #ffa07a;
+  --color-bg: #f5efe4;
+  --color-card: #fff;
+  --color-text: #333;
+  --color-text-sub: #999;
+  --shadow-card: 0 4rpx 20rpx rgba(0,0,0,0.06);
+  background: var(--color-bg);
+  min-height: 100vh;
+}
 
 .play-container { padding: 24rpx; }
 
@@ -10,6 +21,7 @@ page { background: #f5efe4; min-height: 100vh; }
   text-align: center;
   margin-bottom: 24rpx;
   box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.05);
+  animation: slideUp 0.5s ease-out both;
 }
 .game-emoji { font-size: 80rpx; display: block; margin-bottom: 16rpx; }
 .game-title { font-size: 36rpx; font-weight: 600; color: #333; display: block; margin-bottom: 12rpx; }
@@ -21,6 +33,8 @@ page { background: #f5efe4; min-height: 100vh; }
   border-radius: 20rpx;
   padding: 28rpx;
   margin-bottom: 32rpx;
+  animation: slideUp 0.5s ease-out both;
+  animation-delay: 0.15s;
 }
 .rules-title { font-size: 28rpx; font-weight: 600; color: #333; display: block; margin-bottom: 16rpx; }
 .rule-line { font-size: 26rpx; color: #666; display: block; margin-bottom: 8rpx; }
@@ -32,8 +46,33 @@ page { background: #f5efe4; min-height: 100vh; }
   padding: 24rpx 0;
   text-align: center;
   box-shadow: 0 4rpx 20rpx rgba(255,107,107,0.3);
+  transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: slideUp 0.5s ease-out both, btnPulse 2.5s ease-in-out infinite;
+  animation-delay: 0.3s, 0s;
 }
+.start-btn:active { transform: scale(0.95); }
 .start-text { font-size: 32rpx; color: #fff; font-weight: 600; }
+
+/* ===== 3-2-1 倒计时 ===== */
+.countdown-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 998;
+}
+.countdown-number {
+  font-size: 160rpx;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 4rpx 20rpx rgba(255,107,107,0.5);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+}
+.countdown-number.zoom {
+  animation: countdownZoom 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
 
 /* 游戏中 */
 .play-header {
@@ -47,10 +86,55 @@ page { background: #f5efe4; min-height: 100vh; }
   padding: 16rpx 24rpx;
   min-width: 180rpx;
   text-align: center;
+  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.04);
 }
 .timer-label, .score-label { font-size: 22rpx; color: #999; display: block; }
 .timer-value { font-size: 40rpx; font-weight: 700; color: #ff6b6b; }
 .score-value { font-size: 40rpx; font-weight: 700; color: #ff6b6b; }
+
+/* 计时器危险态 - 低于30秒红色脉冲 */
+.play-timer.timer-danger {
+  animation: timerDangerPulse 0.6s ease-in-out infinite alternate;
+  border: 2rpx solid rgba(255,60,60,0.4);
+}
+.play-timer.timer-danger .timer-value {
+  color: #e53e3e;
+  animation: textPulse 0.5s ease-in-out infinite alternate;
+}
+
+/* 屏幕震动 */
+.play-container.shake {
+  animation: screenShake 0.15s linear;
+}
+
+/* 屏幕闪白 */
+.screen-flash {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(255,255,255,0.6);
+  z-index: 100;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.1s ease;
+}
+.screen-flash.show {
+  opacity: 1;
+}
+
+/* 粒子容器 */
+.particle-container {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 90;
+  pointer-events: none;
+}
+.particle {
+  position: absolute;
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: 50%;
+  animation: particleBurst 0.6s ease-out forwards;
+}
 
 .game-canvas {
   width: 100%;
@@ -58,7 +142,9 @@ page { background: #f5efe4; min-height: 100vh; }
   background: #e8f4f8;
   border-radius: 24rpx;
   margin-bottom: 16rpx;
+  transition: transform 0.08s ease;
 }
+.game-canvas:active { transform: scale(0.98); }
 
 .play-tip {
   text-align: center;
@@ -71,11 +157,13 @@ page { background: #f5efe4; min-height: 100vh; }
 .result-modal {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(8rpx);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 999;
+  animation: fadeIn 0.3s ease-out;
 }
 .result-card {
   background: #fff;
@@ -83,11 +171,25 @@ page { background: #f5efe4; min-height: 100vh; }
   padding: 48rpx;
   width: 560rpx;
   text-align: center;
+  animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 8rpx 40rpx rgba(0,0,0,0.12);
+  position: relative;
+  z-index: 2;
 }
 .result-title { font-size: 36rpx; font-weight: 600; color: #333; display: block; margin-bottom: 16rpx; }
 .result-score { font-size: 28rpx; color: #888; display: block; margin-bottom: 24rpx; }
 .result-rewards { display: flex; flex-direction: column; gap: 16rpx; margin-bottom: 32rpx; }
-.reward-item { display: flex; align-items: center; justify-content: center; gap: 8rpx; }
+.reward-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+  animation: scaleIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+.reward-item:nth-child(1) { animation-delay: 0.1s; }
+.reward-item:nth-child(2) { animation-delay: 0.2s; }
+.reward-item:nth-child(3) { animation-delay: 0.3s; }
+.reward-item:nth-child(4) { animation-delay: 0.4s; }
 .reward-icon { font-size: 32rpx; }
 .reward-value { font-size: 28rpx; color: #ff6b6b; font-weight: 600; }
 .result-btn {
@@ -97,4 +199,79 @@ page { background: #f5efe4; min-height: 100vh; }
   padding: 16rpx 0;
   font-size: 30rpx;
   font-weight: 600;
+  transition: transform 0.12s ease;
+}
+.result-btn:active { transform: scale(0.95); }
+
+/* ===== 彩纸效果 ===== */
+.confetti-container {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+}
+.confetti {
+  position: absolute;
+  width: 16rpx;
+  height: 16rpx;
+  opacity: 0;
+}
+.confetti.c1 { left: 10%; background: #ff6b6b; animation: confettiFall 2.5s 0s ease-out forwards; }
+.confetti.c2 { left: 25%; background: #ffa07a; animation: confettiFall 2.5s 0.2s ease-out forwards; width: 20rpx; height: 10rpx; }
+.confetti.c3 { left: 40%; background: #ffe066; animation: confettiFall 2.5s 0.4s ease-out forwards; border-radius: 50%; }
+.confetti.c4 { left: 55%; background: #a18cd1; animation: confettiFall 2.5s 0.1s ease-out forwards; }
+.confetti.c5 { left: 70%; background: #fbc2eb; animation: confettiFall 2.5s 0.3s ease-out forwards; width: 12rpx; height: 24rpx; }
+.confetti.c6 { left: 85%; background: #81ecec; animation: confettiFall 2.5s 0.5s ease-out forwards; border-radius: 50%; }
+.confetti.c7 { left: 15%; background: #74b9ff; animation: confettiFall 2.5s 0.35s ease-out forwards; width: 20rpx; height: 8rpx; }
+.confetti.c8 { left: 60%; background: #55efc4; animation: confettiFall 2.5s 0.25s ease-out forwards; }
+
+/* ===== Keyframe Animations ===== */
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(40rpx); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.5); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes btnPulse {
+  0%, 100% { box-shadow: 0 4rpx 20rpx rgba(255,107,107,0.3); }
+  50% { box-shadow: 0 4rpx 32rpx rgba(255,107,107,0.55); }
+}
+@keyframes countdownZoom {
+  0% { transform: scale(2.5); opacity: 0.3; }
+  40% { transform: scale(0.85); opacity: 1; }
+  70% { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes screenShake {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-6rpx); }
+  50% { transform: translateX(6rpx); }
+  75% { transform: translateX(-4rpx); }
+  100% { transform: translateX(0); }
+}
+@keyframes timerDangerPulse {
+  0% { box-shadow: 0 0 0 rgba(255,60,60,0); }
+  100% { box-shadow: 0 0 20rpx rgba(255,60,60,0.35); }
+}
+@keyframes textPulse {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.15); }
+}
+@keyframes particleBurst {
+  0% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.2) translateY(-30rpx); }
+}
+@keyframes confettiFall {
+  0% { opacity: 1; top: -20rpx; transform: rotateZ(0deg) translateX(0); }
+  25% { transform: rotateZ(90deg) translateX(30rpx); }
+  50% { transform: rotateZ(180deg) translateX(-20rpx); }
+  75% { opacity: 0.8; transform: rotateZ(270deg) translateX(15rpx); }
+  100% { opacity: 0; top: 100vh; transform: rotateZ(360deg) translateX(-10rpx); }
 }

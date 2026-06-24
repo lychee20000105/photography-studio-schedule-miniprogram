@@ -1,0 +1,27 @@
+﻿{
+    "updatedAt":  "2026-06-20T23:29:14.3226790+08:00",
+    "currentRound":  1,
+    "state":  "running",
+    "decisionNeeded":  "none",
+    "latestDigest":  "Worker round 1 still active.",
+    "changedFiles":  [
+
+                     ],
+    "validation":  {
+                       "commands":  [
+
+                                    ],
+                       "passed":  0,
+                       "failed":  0
+                   },
+    "publish":  {
+                    "pushed":  false,
+                    "releaseUrl":  "",
+                    "blockedReason":  ""
+                },
+    "workerPids":  [
+                       0
+                   ],
+    "nextCheckAfterSeconds":  1800,
+    "supervisorReadPolicy":  "Read this summary first. Use read_decision_packet.ps1 for checks. Do not read raw logs/full diffs unless decisionNeeded is not none, validation failed, publish blocked, safety risk exists, or user asks."
+}

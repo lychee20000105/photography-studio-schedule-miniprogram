@@ -30,12 +30,38 @@ Page({
     floatPopup: { show: false, text: '', x: 0, y: 0 },
   },
 
+  _timers: [],
+
   onLoad() {
-    this._loadState();
+    // onShow will also fire, so skip _loadState here to avoid double-load
   },
 
   onShow() {
     this._loadState();
+  },
+
+  onHide() {
+    this._clearAllTimers();
+  },
+
+  onUnload() {
+    this._clearAllTimers();
+  },
+
+  _clearAllTimers() {
+    this._timers.forEach(id => clearTimeout(id));
+    this._timers = [];
+  },
+
+  _setTimer(fn, delay) {
+    const id = setTimeout(() => {
+      // Remove from tracking array when it fires
+      const idx = this._timers.indexOf(id);
+      if (idx >= 0) this._timers.splice(idx, 1);
+      fn();
+    }, delay);
+    this._timers.push(id);
+    return id;
   },
 
   _loadState() {
@@ -94,7 +120,7 @@ Page({
 
     // 触发 bump 动画
     this.setData({ [bumpKey]: true });
-    setTimeout(() => this.setData({ [bumpKey]: false }), 400);
+    this._setTimer(() => this.setData({ [bumpKey]: false }), 400);
 
     const tick = () => {
       step++;
@@ -103,9 +129,9 @@ Page({
         return;
       }
       this.setData({ [displayKey]: Math.round(fromVal + stepVal * step) });
-      setTimeout(tick, 50);
+      this._setTimer(tick, 50);
     };
-    setTimeout(tick, 50);
+    this._setTimer(tick, 50);
   },
 
   _showFloatPopup(text) {
@@ -122,21 +148,23 @@ Page({
           y: rect.top - 10,
         }
       });
-      setTimeout(() => {
+      this._setTimer(() => {
         this.setData({ 'floatPopup.show': false });
       }, 900);
     });
   },
 
   onClaimOffline() {
+    if (!this.data.showOfflineReward) return;
     const state = this.data.gameState;
     const reward = this.data.offlineReward;
-    if (!reward) return;
+    if (!reward || reward.coins <= 0) return;
+    // Immediately hide to prevent double-tap
+    this.setData({ showOfflineReward: false });
     try { wx.vibrateShort({ type: 'medium' }); } catch (e) {}
     gameHelper.addCoins(state, reward.coins);
     gameHelper.addExp(state, reward.exp);
     gameHelper.saveState(state);
-    this.setData({ showOfflineReward: false });
     wx.showToast({ title: `领取 ${reward.coins} 金币`, icon: 'none' });
     this._loadState();
   },
@@ -155,7 +183,7 @@ Page({
   },
 
   onGameTap(e) {
-    try { wx.vibrateShort({ type: 'light' }); } catch (e) {}
+    try { wx.vibrateShort({ type: 'light' }); } catch (err) {}
     const gameId = e.currentTarget.dataset.id;
     wx.navigateTo({
       url: `../cat_game_play/work_cat_game_play?id=${gameId}`,

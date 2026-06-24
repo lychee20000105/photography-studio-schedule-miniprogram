@@ -4,9 +4,9 @@ module.exports = {
 
 	// #### 版本信息
 	VER: 'v2.03',
-	APP_VERSION: '2.03',
+	APP_VERSION: '3.03',
 	APP_VERSION_DATE: '2026-06-24',
-	APP_VERSION_NAME: '小猫助手游戏UX动画优化',
+	APP_VERSION_NAME: '小猫游戏UX优化+Bug修复',
 	COMPANY: '云屿摄影｜技术由云屿科技支持',
 
 	// #### 系统参数

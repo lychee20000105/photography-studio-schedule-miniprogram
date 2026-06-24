@@ -1,5 +1,10 @@
+<!-- 3-2-1 倒计时 -->
+<view class="countdown-overlay" wx:if="{{countdown > 0}}">
+  <view class="countdown-number {{countdownAnim ? 'zoom' : ''}}">{{countdown}}</view>
+</view>
+
 <!-- 游戏未开始 -->
-<view class="play-container" wx:if="{{!playing && !result}}">
+<view class="play-container" wx:if="{{!playing && !result && countdown <= 0}}">
   <view class="game-header-card">
     <text class="game-emoji">{{gameId === 'photo' ? '&#x1F4F7;' : gameId === 'retouch' ? '&#x1F3A8;' : '&#x1F4F0;'}}</text>
     <text class="game-title">{{gameInfo.name}}</text>
@@ -25,15 +30,25 @@
 </view>
 
 <!-- 游戏中 -->
-<view class="play-container" wx:if="{{playing}}">
+<view class="play-container {{screenShake ? 'shake' : ''}}" wx:if="{{playing}}">
+  <!-- 屏幕闪白 -->
+  <view class="screen-flash {{flashShow ? 'show' : ''}}" wx:if="{{flashShow}}"></view>
+
   <view class="play-header">
-    <view class="play-timer">
+    <view class="play-timer {{timeLeft <= 30 ? 'timer-danger' : ''}}">
       <text class="timer-label">剩余时间</text>
       <text class="timer-value">{{timeDisplay}}</text>
     </view>
     <view class="play-score">
       <text class="score-label">得分</text>
       <text class="score-value">{{score}}</text>
+    </view>
+  </view>
+
+  <!-- 粒子特效容器 -->
+  <view class="particle-container" wx:if="{{particles.length > 0}}">
+    <view class="particle" wx:for="{{particles}}" wx:key="id"
+      style="left: {{item.x}}px; top: {{item.y}}px; background: {{item.color}};">
     </view>
   </view>
 
@@ -49,6 +64,17 @@
 
 <!-- 结算 -->
 <view class="result-modal" wx:if="{{result}}">
+  <!-- 彩纸 -->
+  <view class="confetti-container">
+    <view class="confetti c1"></view>
+    <view class="confetti c2"></view>
+    <view class="confetti c3"></view>
+    <view class="confetti c4"></view>
+    <view class="confetti c5"></view>
+    <view class="confetti c6"></view>
+    <view class="confetti c7"></view>
+    <view class="confetti c8"></view>
+  </view>
   <view class="result-card">
     <text class="result-title">&#x1F389; 工作完成！</text>
     <text class="result-score">得分：{{result.score}}</text>

@@ -44,15 +44,26 @@ function getState() {
   let state = wx.getStorageSync(GAME_STATE_KEY);
   if (!state || typeof state !== 'object') {
     state = defaultState();
-    wx.setStorageSync(GAME_STATE_KEY, state);
+    try { wx.setStorageSync(GAME_STATE_KEY, state); } catch (e) {}
   }
+  // Ensure level is within valid range [1, 20]
+  state.level = Math.max(1, Math.min(20, Number(state.level) || 1));
+  state.coins = Math.max(0, Number(state.coins) || 0);
+  state.materials = Math.max(0, Number(state.materials) || 0);
+  state.inspiration = Math.max(0, Number(state.inspiration) || 0);
+  state.exp = Math.max(0, Number(state.exp) || 0);
   return state;
 }
 
 function saveState(state) {
   if (!state) return;
   state.lastActiveTime = Date.now();
-  wx.setStorageSync(GAME_STATE_KEY, state);
+  try {
+    wx.setStorageSync(GAME_STATE_KEY, state);
+  } catch (e) {
+    // Storage quota exceeded or other error — degrade gracefully
+    console.warn('[game_helper] saveState failed:', e);
+  }
 }
 
 function getPhase(level) {
@@ -74,8 +85,9 @@ function getExpToNextLevel(level) {
 function addExp(state, amount) {
   if (!state || amount <= 0) return state;
   state.exp += amount;
-  const needed = getExpToNextLevel(state.level);
-  while (state.exp >= needed && state.level < 20) {
+  while (state.level < 20) {
+    const needed = getExpToNextLevel(state.level);
+    if (state.exp < needed) break;
     state.exp -= needed;
     state.level += 1;
   }
@@ -86,9 +98,11 @@ function addExp(state, amount) {
   return state;
 }
 
+const MAX_RESOURCE = 9999999;
+
 function addCoins(state, amount) {
   if (!state || amount <= 0) return state;
-  state.coins = (state.coins || 0) + amount;
+  state.coins = Math.min(MAX_RESOURCE, (state.coins || 0) + amount);
   return state;
 }
 
@@ -101,13 +115,13 @@ function spendCoins(state, amount) {
 
 function addMaterials(state, amount) {
   if (!state || amount <= 0) return state;
-  state.materials = (state.materials || 0) + amount;
+  state.materials = Math.min(MAX_RESOURCE, (state.materials || 0) + amount);
   return state;
 }
 
 function addInspiration(state, amount) {
   if (!state || amount <= 0) return state;
-  state.inspiration = (state.inspiration || 0) + amount;
+  state.inspiration = Math.min(MAX_RESOURCE, (state.inspiration || 0) + amount);
   return state;
 }
 
@@ -138,16 +152,20 @@ function calcOfflineReward(state) {
 }
 
 function addPlayLog(gameId, score, reward) {
-  let logs = wx.getStorageSync(GAME_PLAY_LOG_KEY);
-  if (!Array.isArray(logs)) logs = [];
-  logs.unshift({
-    gameId,
-    score,
-    reward,
-    time: Date.now(),
-  });
-  if (logs.length > 50) logs = logs.slice(0, 50);
-  wx.setStorageSync(GAME_PLAY_LOG_KEY, logs);
+  try {
+    let logs = wx.getStorageSync(GAME_PLAY_LOG_KEY);
+    if (!Array.isArray(logs)) logs = [];
+    logs.unshift({
+      gameId,
+      score,
+      reward,
+      time: Date.now(),
+    });
+    if (logs.length > 50) logs = logs.slice(0, 50);
+    wx.setStorageSync(GAME_PLAY_LOG_KEY, logs);
+  } catch (e) {
+    console.warn('[game_helper] addPlayLog failed:', e);
+  }
 }
 
 function syncToPetState(gameState) {
