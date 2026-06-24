@@ -1,7 +1,7 @@
 /**
  * Notes: 云函数业务主逻辑
  * Ver : CCMiniCloud Framework 2.8.1 ALL RIGHTS RESERVED BY cclinUX0730 (wechat)
- * Date: 2025-09-05 04:00:00 
+ * Date: 2025-09-05 04:00:00
  */
 const util = require('../utils/util.js');
 const cloudBase = require('../cloud/cloud_base.js');
@@ -80,28 +80,23 @@ async function app(event, context) {
 			let actionNameArr = actionName.split('#');
 			actionName = actionNameArr[0];
 			if (actionNameArr[1] && config.IS_DEMO) {
-				console.log('### APP Before = ' + actionNameArr[1]);
+				console.warn('APP Before = ' + actionNameArr[1]);
 				return beforeApp(actionNameArr[1]);
 			}
 		}
 
-		console.log('');
-		console.log('');
 		let time = timeUtil.time('Y-M-D h:m:s');
 		timeTicks = timeUtil.time();
 		let openId = wxContext.OPENID;
 
-		console.log('▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤');
-		console.log(`【↘${time} ENV (${config.CLOUD_ID})】【Request Base↘↘↘】\n【↘Route =***${r}】\n【↘Controller = ${controllerName}】\n【↘Action = ${actionName}】`);
+		console.log(`[REQ] ${time} Route=${r} Controller=${controllerName} Action=${actionName}`);
 
-
-
-		// 引入逻辑controller 
+		// 引入逻辑controller
 		controllerName = controllerName.toLowerCase().trim();
 		const ControllerClass = PROJECT_CONTROLLERS[PID](controllerName);
 		const controller = new ControllerClass(r, openId, event);
- 
-		// 调用方法    
+
+		// 调用方法
 		await controller['initSetup']();
 		let result = await controller[actionName]();
 
@@ -116,14 +111,9 @@ async function app(event, context) {
 				result = appUtil.handlerData(result, r); // 有数据返回
 		}
 
-
-		console.log('------');
 		time = timeUtil.time('Y-M-D h:m:s');
 		timeTicks = timeUtil.time() - timeTicks;
-		console.log(`【${time}】【Return Base↗↗↗】\n【↗Route =***${r}】\n【↗Controller = ${controllerName}】\n【↗Action = ${actionName}】\n【↗Duration = ${timeTicks}ms】`);
-		console.log('▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦');
-		console.log('');
-		console.log('');
+		console.log(`[RES] ${time} Route=${r} Duration=${timeTicks}ms`);
 
 		return result;
 
@@ -131,17 +121,12 @@ async function app(event, context) {
 	} catch (ex) {
 		const log = cloud.logger();
 
-		console.log('------');
 		time = timeUtil.time('Y-M-D h:m:s');
 		timeTicks = timeUtil.time() - timeTicks;
-		console.error(`【${time}】【Return Base↗↗↗】\n【↗Route = ${r}】\n【↗Controller = ${controllerName}】\n【↗Action = ${actionName}】\n【↗Duration = ${timeTicks}ms】\n【↗Exception MSG = ${ex.message}, CODE=${ex.code}】`);
+		console.error(`[ERR] ${time} Route=${r} Duration=${timeTicks}ms Exception=${ex.message} Code=${ex.code}`);
 
 		// 系统级错误定位调试
 		if (config.TEST_MODE && ex.name != 'AppError') throw ex;
-
-		console.log('▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦▦');
-		console.log('');
-		console.log('');
 
 		if (ex.name == 'AppError') {
 			log.warn({
@@ -152,7 +137,6 @@ async function app(event, context) {
 			// 自定义error处理
 			return appUtil.handlerAppErr(ex.message, ex.code);
 		} else {
-			//console.log(ex); 
 			log.error({
 				route: r,
 				errCode: ex.code,
@@ -179,10 +163,7 @@ function beforeApp(method) {
 
 // 展示当前输入数据
 function showEvent(event) {
-	console.log({
-		route: event && event.route,
-		PID: event && event.PID
-	});
+	console.warn('[showEvent] route=' + (event && event.route) + ' PID=' + (event && event.PID));
 }
 
 module.exports = {
