@@ -28,6 +28,13 @@
 		<view wx:if="{{item.PAYMENT_IS_LOCKED==1}}" class="meta">已进工资/锁定，如需处理请新增退款或冲减</view>
 		<button wx:if="{{item.PAYMENT_STATUS==10 && item.PAYMENT_IS_LOCKED!=1}}" class="void" data-id="{{item._id}}" bindtap="bindVoidTap">作废</button>
 	</view>
+
+	<view class="list-footer" wx:if="{{listLoadingMore}}">
+		<text>加载中...</text>
+	</view>
+	<view class="list-footer" wx:elif="{{listNoMore && list.length > 0}}">
+		<text>没有更多了</text>
+	</view>
 </view>
 
 <tech-footer />

@@ -1,5 +1,6 @@
 const cloudHelper = require('../../../../../helper/cloud_helper.js');
 const pageHelper = require('../../../../../helper/page_helper.js');
+const ListHelper = require('../../../../../helper/list_helper.js');
 const ProjectBiz = require('../../../biz/project_biz.js');
 
 const PAYMENT_TYPE_OPTIONS = [
@@ -40,7 +41,12 @@ Page({
 		let day = `${m}-${String(d.getDate()).padStart(2, '0')}`;
 		this.setData({ month: m, 'payment.PAYMENT_DATE': day });
 		this._syncPaymentLabels();
+		ListHelper.initPage(this, 20);
 		this._loadList();
+	},
+
+	onReachBottom: async function () {
+		await ListHelper.loadMore(this, this._loadMorePayments.bind(this), 'list');
 	},
 
 	onPullDownRefresh: async function () {
@@ -67,8 +73,12 @@ Page({
 	},
 
 	_loadList: async function () {
-		let res = await cloudHelper.callCloudData('work/admin_payment_list', { month: this.data.month, keyword: this.data.keyword, size: 50 }, { title: 'bar' });
-		this.setData({ list: res ? (res.list || []) : [] });
+		ListHelper.refresh(this, this._loadMorePayments.bind(this), 'list');
+	},
+
+	_loadMorePayments: async function (page, size) {
+		let res = await cloudHelper.callCloudData('work/admin_payment_list', { month: this.data.month, keyword: this.data.keyword, page, size }, { title: page === 1 ? 'bar' : '' });
+		return res ? (res.list || []) : [];
 	},
 
 	bindInput: function (e) {
@@ -107,6 +117,7 @@ Page({
 
 	bindMonthChange: async function (e) {
 		this.setData({ month: e.detail.value });
+		ListHelper.initPage(this, 20);
 		await this._loadList();
 	},
 

@@ -1,15 +1,22 @@
 const AdminBiz = require('../../../../../../comm/biz/admin_biz.js');
 const cloudHelper = require('../../../../../../helper/cloud_helper.js');
 const pageHelper = require('../../../../../../helper/page_helper.js');
+const ListHelper = require('../../../../../../helper/list_helper.js');
 const ProjectBiz = require('../../../../biz/project_biz.js');
 
 Page({
-	data: { data: null },
+	data: { data: null, listLoadingMore: false, listNoMore: false },
 	onLoad: async function () {
 		if (!AdminBiz.isAdmin(this)) return;
 
 		ProjectBiz.initPage(this, { isLoadSkin: true });
+		ListHelper.initPage(this, 20);
 		await this._loadData();
+	},
+	onReachBottom: async function () {
+		if (this._auditListType === 'paginated') {
+			await ListHelper.loadMore(this, this._loadMoreOrders.bind(this), 'data.orders');
+		}
 	},
 	onPullDownRefresh: async function () {
 		if (!AdminBiz.isAdmin(this)) {
@@ -17,14 +24,41 @@ Page({
 			return;
 		}
 
+		ListHelper.initPage(this, 20);
 		await this._loadData();
 		wx.stopPullDownRefresh();
+	},
+	_loadMoreOrders: async function (page, size) {
+		let data = await cloudHelper.callCloudData('admin/work_audit_list', { page, size }, {});
+		if (data && data.orders) {
+			// 合并 items/rests 只在第一页返回
+			if (page === 1 && data.items) {
+				this.setData({ 'data.items': data.items || [] });
+			}
+			if (page === 1 && data.rests) {
+				this.setData({ 'data.rests': data.rests || [] });
+			}
+			return data.orders;
+		}
+		return [];
 	},
 	_loadData: async function () {
 		if (!AdminBiz.isAdmin(this)) return;
 
-		let data = await cloudHelper.callCloudData('admin/work_audit_list', {}, { title: 'bar' });
-		this.setData({ data: data || { orders: [], items: [], rests: [] } });
+		let data = await cloudHelper.callCloudData('admin/work_audit_list', { page: 1, size: 20 }, { title: 'bar' });
+		if (data && data.orders && data.orders.length >= 20) {
+			// 数据量大，启用分页模式
+			this._auditListType = 'paginated';
+			this._listPage = 2; // 第1页已在结果中
+			this.setData({
+				data: { orders: data.orders || [], items: data.items || [], rests: data.rests || [] },
+				listNoMore: false
+			});
+		} else {
+			// 数据量小，一次性加载
+			this._auditListType = 'full';
+			this.setData({ data: data || { orders: [], items: [], rests: [] }, listNoMore: true });
+		}
 	},
 	bindPartAmountInput: function (e) {
 		let oi = e.currentTarget.dataset.oi;

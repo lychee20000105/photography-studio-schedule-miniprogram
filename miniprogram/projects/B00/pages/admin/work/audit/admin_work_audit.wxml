@@ -35,6 +35,13 @@
 			<button class="pass" bindtap="bindRestAuditTap" data-id="{{item._id}}" data-pass="{{true}}">通过</button>
 		</view>
 	</view>
+
+	<view class="list-footer" wx:if="{{listLoadingMore}}">
+		<text>加载中...</text>
+	</view>
+	<view class="list-footer" wx:elif="{{listNoMore && data.orders.length > 0}}">
+		<text>没有更多了</text>
+	</view>
 </view>
 
 <tech-footer />
