@@ -1,14 +1,25 @@
 ﻿module.exports = {
-	current: '2.16',
-	previous: '2.15',
+	current: '2.17',
+	previous: '2.16',
 	date: '2026-06-25',
-	time: '01:20 CST',
-	level: 'patch',
-	levelText: '图片mode修复',
-	name: 'v2.16: 图片优化 — mode+lazy-load覆盖率审计',
-	summary: 'B25: 全量审计38个image标签，lazy-load已达100%覆盖，补充1处缺失mode属性。',
+	time: '01:25 CST',
+	level: 'minor',
+	levelText: 'WXS视图层格式化',
+	name: 'v2.17: WXS过滤器 — 日期/金额格式化移到视图层',
+	summary: 'B26: 新增共享WXS格式化模块，admin_audit和admin_payment列表日期金额改用视图层渲染。',
 	changeLog: '/docs/version-change-diary.md',
 	history: [
+		{
+			version: '2.17',
+			date: '2026-06-25',
+			name: 'v2.17-b26: WXS过滤器',
+			summary: 'B26: WXS 视图层格式化减少 JS setData 开销。',
+			items: [
+				'新增 miniprogram/helper/filters.wxs，提供 fmtDate/fmtDateShort/fmtAmount/fmtMoney/fmtOrderStatus。',
+				'admin_audit 列表日期和金额改用 WXS 视图层格式化。',
+				'admin_payment 三处日期和金额改用 WXS 格式化。',
+			],
+		},
 		{
 			version: '2.16',
 			date: '2026-06-25',
