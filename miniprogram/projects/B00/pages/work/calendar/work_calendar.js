@@ -381,6 +381,9 @@ Page({
 		let dx = touch.clientX - this.data.touchStartX;
 		let dy = touch.clientY - this.data.touchStartY;
 		if (Math.abs(dx) < Math.abs(dy) * 1.2) return;
+		let now = Date.now();
+		if (this._lastSwipeUpdate && now - this._lastSwipeUpdate < 50) return;
+		this._lastSwipeUpdate = now;
 		this.setData({ trackX: -this.data.calendarWidth + dx, touchMoved: Math.abs(dx) > 8 });
 	},
 

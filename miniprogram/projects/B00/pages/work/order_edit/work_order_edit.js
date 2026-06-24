@@ -206,8 +206,7 @@ Page({
 		let field = e.currentTarget.dataset.field;
 		let list = this.data.order.ORDER_PAYMENTS || [];
 		if (!list[idx] || list[idx].isLocked || list[idx].PAYMENT_IS_LOCKED == 1) return;
-		list[idx][field] = e.detail.value;
-		this.setData({ 'order.ORDER_PAYMENTS': list });
+		this.setData({ ['order.ORDER_PAYMENTS[' + idx + '].' + field]: e.detail.value });
 	},
 
 	bindPaymentTypeChange: function (e) {
@@ -319,9 +318,7 @@ Page({
 
 	bindPartManualInput: function (e) {
 		let idx = e.currentTarget.dataset.idx;
-		let list = this.data.order.ORDER_PARTICIPANTS || [];
-		list[idx].manualAmount = e.detail.value;
-		this.setData({ 'order.ORDER_PARTICIPANTS': list });
+		this.setData({ ['order.ORDER_PARTICIPANTS[' + idx + '].manualAmount']: e.detail.value });
 	},
 
 	bindChooseImageTap: function () {

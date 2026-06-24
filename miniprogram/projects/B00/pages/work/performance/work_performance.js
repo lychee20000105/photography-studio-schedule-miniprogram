@@ -37,14 +37,14 @@ Page({
 		if (guestHelper.isGuest()) {
 			let data = guestHelper.getPerformance(this.data.month);
 			let orderPreview = this._buildOrderPreview(guestHelper.getOrders(this.data.month));
-			this.setData({ isLoad: true, isGuest: true, data, rankList: data.rankList || [], orderSummary: orderPreview.summary, orderList: orderPreview.list });
+			this.setData({ isLoad: true, isGuest: true, data, rankList: [], orderSummary: orderPreview.summary, orderList: orderPreview.list });
 			return;
 		}
 		let data = await perf.trackQuery('performance:_loadData', () => cloudHelper.callCloudData('work/performance_home', { month: this.data.month }, { title: this.data.isLoad ? 'bar' : '加载中' }));
 		if (this._perfTimer) { perf.endTimer(this._perfTimer); this._perfTimer = null; }
 		if (!data) data = null;
 		let orderPreview = await this._loadOrderPreview();
-		this.setData({ isLoad: true, isGuest: false, data, rankList: data ? (data.rankList || []) : [], orderSummary: orderPreview.summary, orderList: orderPreview.list });
+		this.setData({ isLoad: true, isGuest: false, data, rankList: [], orderSummary: orderPreview.summary, orderList: orderPreview.list });
 	},
 	bindMonthChange: async function (e) {
 		this.setData({ month: e.detail.value, isLoad: false, rankExpanded: false, rankScope: 'staff' });

@@ -157,5 +157,11 @@
 		"tech-footer": "/cmpts/tech_footer/tech_footer",
 		"work-pet": "/cmpts/work_pet/work_pet"
 	},
-	"sitemapLocation": "sitemap.json"
+	"sitemapLocation": "sitemap.json",
+	"preloadRule": {
+		"projects/B00/pages/work/calendar/work_calendar": {
+			"network": "all",
+			"packages": ["projects/B00/pages/work/day_detail", "projects/B00/pages/work/order_edit", "projects/B00/pages/work/add"]
+		}
+	}
 }
