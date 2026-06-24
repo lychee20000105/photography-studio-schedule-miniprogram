@@ -11,6 +11,8 @@ const PET_BOX = { width: 84, height: 92 };
 const DEFAULT_CONTEXT_LIMIT = 128000;
 const LOCAL_IMAGE_DIR = 'work_pet_images';
 const CHAT_RENDER_LIMIT = 50; // B11: max messages rendered at once
+const STREAM_FLUSH_INTERVAL = 100; // B19: buffer flush interval ms
+const STREAM_URL_KEY = 'WORK_PET_STREAM_URL'; // B19: cloud function HTTP trigger URL
 const AGENT_VERSION = {
 	version: '0.4.0',
 	date: '2026-06-24',
@@ -587,6 +589,8 @@ Component({
 			uploadingAttachment: false,
 			chatLoading: false,
 			chatSending: false,
+			chatStreaming: false, // B19: streaming in progress
+			chatThinkPhase: false, // B19: "AI thinking..." phase before first chunk
 			chatAnchor: 'chat-bottom',
 			chatHasOlder: false,
 			activeThread: decorateThread(makeThread()),
@@ -607,6 +611,8 @@ Component({
 			if (this._burstTimer) { clearTimeout(this._burstTimer); this._burstTimer = null; }
 			if (this._typewriterTimer) { clearTimeout(this._typewriterTimer); this._typewriterTimer = null; }
 			if (this._refreshTimer) { clearTimeout(this._refreshTimer); this._refreshTimer = null; }
+			if (this._flushTimer) { clearTimeout(this._flushTimer); this._flushTimer = null; }
+			if (this._streamReqTask) { try { this._streamReqTask.abort(); } catch (e) {} this._streamReqTask = null; }
 		},
 	},
 	pageLifetimes: {
@@ -963,32 +969,52 @@ Component({
 							action: 'create_order',
 							data: { date: guestRet.date },
 						});
-					} else {
-						let history = trimMessages(messages.slice(0, -1));
-						let missedImage = findMissedImageFollowup(text, history);
-						let quickRet = shouldQuickAckNoSupplement(text, history)
-							? { action: 'none', reply: '收到，不补充。本次对话不再继续调用 AI。' }
-							: await this._tryHandleQuickDateUpdate(text, history);
-						if (!quickRet && missedImage && missedImage.reply) {
-							quickRet = { action: 'none', reply: missedImage.reply };
-						}
-						if (quickRet) {
-							reply = quickRet.reply || '已处理完成。';
-							this._refreshPageAfterAgentAction(quickRet);
-						} else {
-							let res = await cloudHelper.callCloud('work/ai_chat', {
-								message: missedImage && missedImage.message ? missedImage.message : text,
-								history,
-								attachments: missedImage && missedImage.attachment ? [missedImage.attachment] : attachments,
-								pageContext: this._getPageContext(),
-							}, { hint: false });
-							let data = res && res.data ? res.data : {};
-							reply = data.reply || '我收到啦，但 AI 没有返回文字。';
-							this._applyContextMeta(data);
-							this._refreshPageAfterAgentAction(data);
-						}
+						// Guest: use typewriter
+						this._typewriterDisplay(reply, messages, _sendThreadId);
+						return;
 					}
-					// Phase 3: Use typewriter effect for AI replies
+
+					let history = trimMessages(messages.slice(0, -1));
+
+					// B19: Try streaming first for normal AI chat (no quick/missedImage shortcuts)
+					let quickRet = shouldQuickAckNoSupplement(text, history)
+						? { action: 'none', reply: '收到，不补充。本次对话不再继续调用 AI。' }
+						: await this._tryHandleQuickDateUpdate(text, history);
+					let missedImage = findMissedImageFollowup(text, history);
+					if (!quickRet && missedImage && missedImage.reply) {
+						quickRet = { action: 'none', reply: missedImage.reply };
+					}
+
+					if (quickRet) {
+						reply = quickRet.reply || '已处理完成。';
+						this._refreshPageAfterAgentAction(quickRet);
+						this._typewriterDisplay(reply, messages, _sendThreadId);
+						return;
+					}
+
+					// B19: Try streaming path for full AI chat
+					let streamMessage = missedImage && missedImage.message ? missedImage.message : text;
+					let streamAttachments = missedImage && missedImage.attachment ? [missedImage.attachment] : attachments;
+					try {
+						let streamResult = await this._sendChatStreaming(
+							streamMessage, history, streamAttachments, messages, _sendThreadId
+						);
+						if (streamResult === 'streaming') {
+							// Streaming in progress — finishStreaming will handle completion
+							return;
+						}
+						if (streamResult === true) {
+							// Non-chunked single response handled inside _sendChatStreaming
+							return;
+						}
+					} catch (streamErr) {
+						console.warn('B19 streaming failed, falling back to legacy:', streamErr);
+					}
+
+					// B19 fallback: legacy cloud call + typewriter
+					reply = await this._sendChatLegacy(
+						streamMessage, history, streamAttachments, messages, _sendThreadId
+					);
 					this._typewriterDisplay(reply, messages, _sendThreadId);
 					return; // typewriter handles setData and _saveChat
 				} catch (err) {
@@ -1150,6 +1176,7 @@ Component({
 		},
 		bindNewChat() {
 			if (this._typewriterTimer) { clearTimeout(this._typewriterTimer); this._typewriterTimer = null; }
+			this._cleanupStreaming();
 			let threads = this._loadThreads().threads;
 			let thread = decorateThread(makeThread());
 			threads = sortThreads([thread].concat(threads)).slice(0, 20);
@@ -1169,6 +1196,7 @@ Component({
 		},
 		bindSwitchChat(e) {
 			if (this._typewriterTimer) { clearTimeout(this._typewriterTimer); this._typewriterTimer = null; }
+			this._cleanupStreaming();
 			let id = e.currentTarget.dataset.id || '';
 			let state = this._loadThreads();
 			let thread = state.threads.find(item => item.id == id);
@@ -1385,6 +1413,197 @@ Component({
 				self._typewriterTimer = setTimeout(tick, nextDelay);
 			}
 			this._typewriterTimer = setTimeout(tick, speed);
+		},
+		// B19: Streaming buffer — accumulate chunks and flush at throttle interval
+		_bufferText(text) {
+			this._pendingText = (this._pendingText || '') + text;
+			// First chunk received — switch from "thinking" to streaming phase
+			if (this.data.chatThinkPhase) {
+				this.setData({ chatThinkPhase: false });
+			}
+			if (!this._flushTimer) {
+				this._flushTimer = setTimeout(() => {
+					this._flushTimer = null;
+					this._flushBuffer();
+				}, STREAM_FLUSH_INTERVAL);
+			}
+		},
+		_flushBuffer() {
+			if (!this._pendingText || this._destroyed) return;
+			let text = this._pendingText;
+			this._pendingText = '';
+			if (this._aiStreamMsgIdx == null) return;
+			let same = !this.data.activeChatId || this.data.activeChatId === this._streamThreadId;
+			if (same) {
+				this.setData({
+					[`chatMessages[${this._aiStreamMsgIdx}].content`]: text + '▌',
+				});
+				this._scrollChatToBottom();
+			}
+		},
+		// B19: Streaming AI chat via wx.request enableChunked
+		async _sendChatStreaming(text, history, attachments, messages, _sendThreadId) {
+			let streamUrl = wx.getStorageSync(STREAM_URL_KEY) || '';
+			if (!streamUrl) return false;
+
+			let token = '';
+			try {
+				let cacheHelper = require('../../helper/cache_helper.js');
+				let constants = require('../../comm/constants.js');
+				let user = cacheHelper.get(constants.CACHE_TOKEN);
+				if (user && user.id) token = user.id;
+			} catch (e) {}
+
+			let pageContext = this._getPageContext();
+			let reqBody = {
+				message: text,
+				history,
+				attachments,
+				pageContext,
+				stream: true,
+			};
+
+			let placeholder = trimMessages(messages.concat([{ role: 'assistant', content: '' }]));
+			this._aiStreamMsgIdx = placeholder.length - 1;
+			this._pendingText = '';
+			this._streamThreadId = _sendThreadId;
+			let stillSame = !this.data.activeChatId || this.data.activeChatId === _sendThreadId;
+			if (stillSame) {
+				this.setData({ chatMessages: placeholder, chatThinkPhase: true, chatStreaming: true });
+			}
+
+			let chunkAvailable = false;
+
+			return new Promise((resolve, reject) => {
+				let reqTask = wx.request({
+					url: streamUrl,
+					method: 'POST',
+					enableChunked: true,
+					header: {
+						'Content-Type': 'application/json',
+						Authorization: token ? ('Bearer ' + token) : '',
+					},
+					data: JSON.stringify(reqBody),
+					timeout: 90000,
+					success: (res) => {
+						if (!chunkAvailable) {
+							let body = '';
+							try {
+								if (res && res.data) {
+									if (typeof res.data === 'string') body = res.data;
+									else if (res.data instanceof ArrayBuffer) body = new TextDecoder().decode(res.data);
+									else body = JSON.stringify(res.data);
+								}
+							} catch (e) {}
+							let reply = '';
+							try {
+								let parsed = JSON.parse(body);
+								reply = (parsed && (parsed.reply || (parsed.data && parsed.data.reply))) || '';
+								if (reply) {
+									this._applyContextMeta(parsed.data || parsed);
+									this._refreshPageAfterAgentAction(parsed.data || parsed);
+								}
+							} catch (e) {}
+							if (!reply) reply = body || 'AI 没有返回文字。';
+							this._finishStreaming(reply, messages, _sendThreadId);
+						} else {
+							this._flushBuffer();
+							let fullReply = '';
+							if (this._aiStreamMsgIdx != null) {
+								let msg = (this.data.chatMessages || [])[this._aiStreamMsgIdx];
+								if (msg && msg.content) fullReply = String(msg.content).replace(/▌$/, '');
+							}
+							if (!fullReply) fullReply = 'AI 没有返回文字。';
+							this._finishStreaming(fullReply, messages, _sendThreadId, res && res.data);
+						}
+					},
+					fail: (err) => {
+						this._cleanupStreaming();
+						reject(err);
+					},
+				});
+				this._streamReqTask = reqTask;
+
+				if (typeof reqTask.onChunkReceived === 'function') {
+					chunkAvailable = true;
+					reqTask.onChunkReceived((res) => {
+						try {
+							let chunkText = '';
+							if (res && res.data) {
+								if (res.data instanceof ArrayBuffer) {
+									chunkText = new TextDecoder().decode(res.data);
+								} else if (typeof res.data === 'string') {
+									chunkText = res.data;
+								} else {
+									chunkText = new TextDecoder().decode(res.data);
+								}
+							}
+							if (chunkText) this._bufferText(chunkText);
+						} catch (decodeErr) {
+							console.warn('B19 chunk decode error:', decodeErr);
+						}
+					});
+					resolve('streaming');
+				} else {
+					try { reqTask.abort(); } catch (e) {}
+					this._cleanupStreaming();
+					resolve(false);
+				}
+			});
+		},
+		_finishStreaming(fullReply, messages, threadId) {
+			let final = trimMessages(messages.concat([{ role: 'assistant', content: fullReply }]));
+			let enriched = enrichMessagesWithBlocks(final);
+			let same = !this.data.activeChatId || this.data.activeChatId === threadId;
+			if (same) {
+				this.setData({
+					chatMessages: enriched,
+					chatLoading: false,
+					chatSending: false,
+					chatStreaming: false,
+					chatThinkPhase: false,
+				});
+				this._scrollChatToBottom();
+			} else {
+				this.setData({ chatLoading: false, chatSending: false, chatStreaming: false, chatThinkPhase: false });
+			}
+			this._saveChat(final, threadId);
+			this._cleanupStreaming();
+		},
+		_cleanupStreaming() {
+			if (this._flushTimer) { clearTimeout(this._flushTimer); this._flushTimer = null; }
+			this._pendingText = '';
+			this._aiStreamMsgIdx = null;
+			this._streamReqTask = null;
+			this._streamThreadId = '';
+			this.setData({ chatStreaming: false, chatThinkPhase: false });
+		},
+		// B19: Legacy cloud call fallback for when streaming is unavailable
+		async _sendChatLegacy(text, history, attachments) {
+			let reply = '';
+			let missedImage = findMissedImageFollowup(text, history);
+			let quickRet = shouldQuickAckNoSupplement(text, history)
+				? { action: 'none', reply: '收到，不补充。本次对话不再继续调用 AI。' }
+				: await this._tryHandleQuickDateUpdate(text, history);
+			if (!quickRet && missedImage && missedImage.reply) {
+				quickRet = { action: 'none', reply: missedImage.reply };
+			}
+			if (quickRet) {
+				reply = quickRet.reply || '已处理完成。';
+				this._refreshPageAfterAgentAction(quickRet);
+			} else {
+				let res = await cloudHelper.callCloud('work/ai_chat', {
+					message: missedImage && missedImage.message ? missedImage.message : text,
+					history,
+					attachments: missedImage && missedImage.attachment ? [missedImage.attachment] : attachments,
+					pageContext: this._getPageContext(),
+				}, { hint: false });
+				let data = res && res.data ? res.data : {};
+				reply = data.reply || '我收到啦，但 AI 没有返回文字。';
+				this._applyContextMeta(data);
+				this._refreshPageAfterAgentAction(data);
+			}
+			return reply;
 		},
 		_refreshPageAfterAgentAction(data = {}) {
 			let action = data.action || '';

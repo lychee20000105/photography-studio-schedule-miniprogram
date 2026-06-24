@@ -172,12 +172,22 @@
 								</view>
 							</view>
 						</view>
-					<view wx:if="{{chatLoading}}" class="chat-msg assistant chat-msg-enter">
+					<view wx:if="{{chatLoading && !chatStreaming}}" class="chat-msg assistant chat-msg-enter">
 						<view class="chat-avatar-wrap">
 							<view class="chat-avatar-ai">猫</view>
 						</view>
 						<view class="chat-bubble loading">
 							<text class="typing-text">小猫正在思考</text>
+							<text class="typing-dots"><text class="dot dot1">.</text><text class="dot dot2">.</text><text class="dot dot3">.</text></text>
+						</view>
+					</view>
+					<!-- B19: Streaming thinking phase — waiting for first chunk -->
+					<view wx:if="{{chatThinkPhase}}" class="chat-msg assistant chat-msg-enter">
+						<view class="chat-avatar-wrap">
+							<view class="chat-avatar-ai">猫</view>
+						</view>
+						<view class="chat-bubble loading stream-thinking">
+							<text class="typing-text">AI 思考中</text>
 							<text class="typing-dots"><text class="dot dot1">.</text><text class="dot dot2">.</text><text class="dot dot3">.</text></text>
 						</view>
 					</view>
