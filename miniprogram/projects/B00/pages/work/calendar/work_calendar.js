@@ -1,4 +1,5 @@
 const cloudHelper = require('../../../../../helper/cloud_helper.js');
+const NetworkHelper = require('../../../../../helper/network_helper.js');
 const pageHelper = require('../../../../../helper/page_helper.js');
 const guestHelper = require('../../../../../helper/guest_helper.js');
 const dateHelper = require('../../../../../helper/date_helper.js');
@@ -178,7 +179,9 @@ Page({
 			scope: this.data.scope,
 		};
 		try {
-			let data = await cloudHelper.callCloudData('work/calendar', params, opts);
+			// 使用缓存：TTL 60s，key 按月+scope 隔离
+			let cacheKey = 'cache_calendar_' + month + '_' + (this.data.scope || 'all');
+			let data = await cloudHelper.callCloudCached('work/calendar', params, cacheKey, 60000, opts);
 			if (!data) return;
 			let days = this._filterCalendarDaysForScope(data.days || {});
 			let cache = Object.assign({}, this.data.calendarCache || {});

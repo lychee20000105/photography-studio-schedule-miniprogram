@@ -1,0 +1,6 @@
+<view class="offline-bar {{isOffline ? 'show' : 'hide'}}" wx:if="{{isOffline}}">
+  <view class="offline-content">
+    <text class="offline-text">当前无网络连接</text>
+    <view class="offline-retry" bindtap="bindRetry">重试</view>
+  </view>
+</view>

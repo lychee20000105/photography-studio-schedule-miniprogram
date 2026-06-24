@@ -1,0 +1,41 @@
+.offline-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  background: #e74c3c;
+  padding: 16rpx 24rpx;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.offline-bar.hide {
+  transform: translateY(-100%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.offline-bar.show {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.offline-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.offline-text {
+  color: #ffffff;
+  font-size: 26rpx;
+  margin-right: 20rpx;
+}
+
+.offline-retry {
+  color: #ffffff;
+  font-size: 24rpx;
+  padding: 6rpx 24rpx;
+  border: 1rpx solid rgba(255,255,255,0.6);
+  border-radius: 6rpx;
+}

@@ -1,5 +1,6 @@
 const setting = require('./setting/setting.js');
 const versionInfo = require('./version.js');
+const NetworkHelper = require('./helper/network_helper.js');
 
 const DEFAULT_SHARE_IMAGE = '/projects/B00/images/default_index_bg.png';
 const VERSION_NOTICE_KEY = 'YUNYU_VERSION_NOTICE_CLOSED';
@@ -120,6 +121,9 @@ App({
 	},
 
 	onLaunch: function (options) {
+
+		// 网络状态监听
+		NetworkHelper.init();
 
 		if (!wx.cloud) {
 			console.error('请使用 2.2.3 或以上的基础库以使用云能力')

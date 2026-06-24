@@ -11,6 +11,7 @@ const constants = require('../comm/constants.js');
 const setting = require('../setting/setting.js');
 const contentCheckHelper = require('../helper/content_check_helper.js');
 const pageHelper = require('../helper/page_helper.js');
+const NetworkHelper = require('./network_helper.js');
 
 const CODE = {
 	SUCC: 200,
@@ -89,6 +90,69 @@ async function callCloudData(route, params = {}, options) {
 		}
 
 	}
+	return result;
+}
+
+// 云函数获取数据请求(带 stale-while-revalidate 缓存)
+// cacheKey: 缓存键，应包含用户标识以隔离
+// ttl: 缓存有效时间毫秒，默认 30s
+async function callCloudCached(route, params = {}, cacheKey, ttl = 30000, options) {
+	if (!cacheKey) {
+		// 无缓存键时回退到普通调用
+		return await callCloudData(route, params, options);
+	}
+
+	let now = Date.now();
+	let cache = null;
+	try {
+		cache = wx.getStorageSync(cacheKey);
+	} catch (e) {
+		console.warn('[CloudCache] read error', e);
+	}
+
+	let cacheValid = cache && cache._data && cache._ts && (now - cache._ts < ttl);
+
+	if (cacheValid) {
+		// 缓存有效，直接返回
+		return cache._data;
+	}
+
+	if (!NetworkHelper.isConnected()) {
+		// 离线：返回过期缓存（如果有）
+		if (cache && cache._data) {
+			wx.showToast({ title: '当前为离线数据', icon: 'none', duration: 2000 });
+			return cache._data;
+		}
+		throw new Error('无网络连接且无缓存数据');
+	}
+
+	// 在线：正常请求
+	let opts = options || { hint: false };
+	if (!helper.isDefined(opts.title)) opts.title = '加载中..';
+
+	let result = await callCloud(route, params, opts).catch(err => {
+		return null;
+	});
+
+	// 提取数据，与 callCloudData 逻辑一致
+	if (result && helper.isDefined(result.data)) {
+		result = result.data;
+		if (Array.isArray(result)) {
+			// 数组处理
+		} else if (Object.keys(result).length === 0) {
+			result = null;
+		}
+	}
+
+	// 写入缓存
+	if (result !== null && result !== undefined) {
+		try {
+			wx.setStorageSync(cacheKey, { _data: result, _ts: now });
+		} catch (e) {
+			console.warn('[CloudCache] write error', e);
+		}
+	}
+
 	return result;
 }
 
@@ -518,6 +582,7 @@ module.exports = {
 	callCloudSumbit,
 	callCloudSubmit: callCloudSumbit, // deprecated spelling alias
 	callCloudData,
+	callCloudCached,
 	callCloudSumbitAsync,
 	callCloudSubmitAsync: callCloudSumbitAsync,
 	transTempPics,

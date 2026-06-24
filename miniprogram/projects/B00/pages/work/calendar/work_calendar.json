@@ -2,6 +2,7 @@
 	"navigationBarTitleText": "云屿摄影-档期",
 	"enablePullDownRefresh": true,
 	"usingComponents": {
-		"skeleton": "/cmpts/skeleton/skeleton"
+		"skeleton": "/cmpts/skeleton/skeleton",
+		"offline-bar": "/cmpts/offline_bar/offline_bar"
 	}
 }
