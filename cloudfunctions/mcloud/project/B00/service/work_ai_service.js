@@ -939,7 +939,6 @@ class WorkAiService extends WorkPermissionService {
 				role: 'user',
 				content: '你是云屿摄影小程序里的小猫 AI 助手。请用中文简洁回答，不要编造后台真实数据。用户问题：' + userText,
 			}],
-			stream: false,
 		};
 	}
 
@@ -2510,7 +2509,11 @@ class WorkAiService extends WorkPermissionService {
 	}
 
 	_httpSafeMessage(statusCode, parsed) {
-		let msg = parsed && parsed.error && parsed.error.message ? String(parsed.error.message) : '';
+		let msg = '';
+		if (parsed && parsed.error && parsed.error.message) msg = String(parsed.error.message);
+		else if (parsed && typeof parsed.error == 'string') msg = parsed.error;
+		else if (parsed && parsed.message) msg = String(parsed.message);
+		else if (parsed && parsed.msg) msg = String(parsed.msg);
 		if (statusCode == 401 || statusCode == 403) return 'AI 接口鉴权失败，请检查 API Key';
 		if (statusCode == 404) return 'AI 接口地址或模型不存在，请检查后台配置';
 		if (statusCode == 429) return 'AI 接口额度或频率受限，请稍后重试';

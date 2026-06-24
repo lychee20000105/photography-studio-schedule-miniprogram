@@ -30,11 +30,20 @@
 
 ### 验证结果
 
-- 待本轮本地校验、云函数增量部署和开发版上传后回填。
+- `node --check cloudfunctions/mcloud/project/B00/service/work_ai_service.js` 通过。
+- `node --check cloudfunctions/mcloud/work_ai_service_live_patch.js` 通过。
+- `node --check miniprogram/version.js` 通过。
+- `node --check miniprogram/setting/setting.js` 通过。
+- `miniprogram/app.json` 与 `project.config.json` JSON 解析通过。
+- `work_ai_service_live_patch.js` 解压后与当前 `work_ai_service.js` 一致，MiMo 兜底块确认不再包含 `stream` 字段。
+- 本轮涉及文件 `git diff --check` 通过，仅有既有 LF/CRLF 提示。
+- 敏感信息扫描未发现用户 API Key 片段。
 
 ### 部署状态
 
-- 待部署。
+- `work_ai_service_live_patch.js` 已通过微信开发者工具 CLI 增量部署到 `mcloud`，包体 `47.2 KB`。
+- 小程序开发版已通过微信开发者工具 CLI 上传，版本号 `2.00`，包体 `1.5 MB` / `1,601,017 Byte`。
+- 本次未提交审核、未发布上线。
 
 ### 未完成风险
 
