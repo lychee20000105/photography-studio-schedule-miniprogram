@@ -1,14 +1,26 @@
 ﻿module.exports = {
-	current: '2.13',
-	previous: '2.12',
+	current: '2.14',
+	previous: '2.13',
 	date: '2026-06-25',
-	time: '01:05 CST',
-	level: 'patch',
-	levelText: '组件代码清理',
-	name: 'v2.13: 组件代码清理 — cmpts console.log残留+死代码',
-	summary: 'B22: 清理 checkbox/editor/poster/canvas 组件 6 处 console.log 残留、2 处注释代码，poster fail 改为 console.error。',
+	time: '01:10 CST',
+	level: 'minor',
+	levelText: 'setData优化+预加载',
+	name: 'v2.14: setData精确路径优化 + preloadRule',
+	summary: 'B23: 日历滑动节流、order_edit精确setData、preloadRule预加载、performance rank延迟加载。',
 	changeLog: '/docs/version-change-diary.md',
 	history: [
+		{
+			version: '2.14',
+			date: '2026-06-25',
+			name: 'v2.14-b23: setData精确路径优化+preloadRule',
+			summary: 'B23: 减少 setData 频率和数据量，新增页面预加载规则。',
+			items: [
+				'日历 touchMove 添加 50ms 时间戳节流，避免每像素触发 setData。',
+				'order_edit 的 bindPaymentInput 和 bindPartManualInput 改为精确路径 setData。',
+				'app.json 新增 preloadRule，日历 tab 预加载 day_detail/order_edit/add。',
+				'performance 页 rank 数据延迟加载，展开排行榜时才请求。',
+			],
+		},
 		{
 			version: '2.13',
 			date: '2026-06-25',
