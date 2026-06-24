@@ -538,6 +538,13 @@ class WorkPayrollService extends BaseProjectService {
 		let commissionIds = this._uniqueTexts(preview.commissionIds);
 		let paymentIds = this._uniqueTexts(preview.paymentIds);
 
+		// H-01: Double-check for concurrent payroll (close TOCTOU gap)
+		let recheckPayroll = await WorkPayrollModel.getOne({
+			PAYROLL_LOCK_KEY: lockKey,
+			PAYROLL_STATUS: ['in', this._payrollBlockingStatuses()],
+		}, '_id,PAYROLL_STATUS');
+		if (recheckPayroll) this.AppError('该员工该月份工资已在发放中（并发检测），请勿重复操作');
+
 		try {
 			payrollId = await WorkPayrollModel.insert(this._buildPayrollData(preview, lockKey, operator, options));
 			let payroll = await WorkPayrollModel.getOne(payrollId);
