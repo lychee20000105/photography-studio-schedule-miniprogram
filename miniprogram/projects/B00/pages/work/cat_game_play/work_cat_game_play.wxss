@@ -193,6 +193,54 @@ page {
   text-shadow: 0 2rpx 12rpx rgba(255,107,107,0.4);
 }
 
+/* 修图挑战选项 */
+.retouch-canvas { height: 320rpx; }
+.retouch-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+  padding: 0 24rpx;
+  margin-bottom: 16rpx;
+}
+.retouch-option {
+  flex: 1;
+  min-width: 40%;
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 20rpx;
+  text-align: center;
+  border: 3rpx solid #eee;
+  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.04);
+  transition: transform 0.12s ease, border-color 0.2s ease;
+}
+.retouch-option:active { transform: scale(0.93); }
+.option-emoji { font-size: 36rpx; display: block; margin-bottom: 6rpx; }
+.option-name { font-size: 26rpx; font-weight: 600; }
+
+/* 小红书爆款选择 */
+.post-area { padding: 0 24rpx; }
+.post-section { margin-bottom: 20rpx; }
+.post-section-title { font-size: 28rpx; font-weight: 600; color: #333; display: block; margin-bottom: 12rpx; }
+.post-options { display: flex; flex-direction: column; gap: 10rpx; }
+.post-option {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 16rpx 20rpx;
+  border: 2rpx solid #eee;
+  box-shadow: 0 2rpx 6rpx rgba(0,0,0,0.03);
+  transition: transform 0.12s ease, border-color 0.2s;
+}
+.post-option:active { transform: scale(0.97); }
+.post-option.selected { border-color: #ff6b6b; background: #fff5f5; }
+.post-option-text { font-size: 26rpx; color: #333; }
+.post-option.cover {
+  flex-direction: row;
+  align-items: center;
+  gap: 12rpx;
+}
+.cover-emoji { font-size: 36rpx; }
+.cover-name { font-size: 26rpx; color: #333; }
+
 /* 结算弹窗 */
 .result-modal {
   position: fixed;

@@ -62,14 +62,54 @@
     <text class="combo-text">{{comboText}}</text>
   </view>
 
-  <!-- Canvas游戏区域 -->
-  <canvas type="2d" id="gameCanvas" class="game-canvas" bind:tap="onCanvasTap"></canvas>
+  <!-- 接单快拍: Canvas游戏区域 -->
+  <block wx:if="{{gameId === 'photo'}}">
+    <canvas type="2d" id="gameCanvas" class="game-canvas" bind:tap="onCanvasTap"></canvas>
+    <view class="play-tip">点击屏幕拍照 📷</view>
+  </block>
 
-  <view class="play-tip">
-    <text wx:if="{{gameId === 'photo'}}">点击屏幕拍照 &#x1F4F7;</text>
-    <text wx:if="{{gameId === 'retouch'}}">点击屏幕修图 &#x1F3A8;</text>
-    <text wx:if="{{gameId === 'post'}}">点击屏幕发帖 &#x1F4F0;</text>
-  </view>
+  <!-- 修图挑战: Canvas + 滤镜选项 -->
+  <block wx:if="{{gameId === 'retouch'}}">
+    <canvas type="2d" id="gameCanvas" class="game-canvas retouch-canvas"></canvas>
+    <view class="retouch-options" wx:if="{{retouchChallenge}}">
+      <view class="retouch-option"
+        wx:for="{{retouchChallenge.options}}" wx:key="id"
+        data-idx="{{index}}" bind:tap="onRetouchOptionTap"
+        style="border-color: {{item.color}};">
+        <text class="option-emoji">{{item.emoji}}</text>
+        <text class="option-name" style="color: {{item.color}};">{{item.name}}</text>
+      </view>
+    </view>
+    <view class="play-tip">选对滤镜得分! 选错扣3秒 ⏰</view>
+  </block>
+
+  <!-- 小红书爆款: 标题+封面选择 -->
+  <block wx:if="{{gameId === 'post'}}">
+    <view class="post-area" wx:if="{{postChallenge}}">
+      <view class="post-section">
+        <text class="post-section-title">📰 选爆款标题</text>
+        <view class="post-options">
+          <view class="post-option {{postChallenge.selectedTitle === index ? 'selected' : ''}}"
+            wx:for="{{postChallenge.titles}}" wx:key="text"
+            data-idx="{{index}}" bind:tap="onPostTitleTap">
+            <text class="post-option-text">{{item.text}}</text>
+          </view>
+        </view>
+      </view>
+      <view class="post-section">
+        <text class="post-section-title">🖼️ 选封面</text>
+        <view class="post-options">
+          <view class="post-option cover {{postChallenge.selectedCover === index ? 'selected' : ''}}"
+            wx:for="{{postChallenge.covers}}" wx:key="emoji"
+            data-idx="{{index}}" bind:tap="onPostCoverTap">
+            <text class="cover-emoji">{{item.emoji}}</text>
+            <text class="cover-name">{{item.name}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+    <view class="play-tip">好标题+好封面=爆款! 📱</view>
+  </block>
 </view>
 
 <!-- 结算 -->
