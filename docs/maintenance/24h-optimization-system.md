@@ -52,10 +52,17 @@
 - [x] B19: AI 聊天流式渲染 — enableChunked + 缓冲节流 ✅ (v2.11)
 - [x] B20: 长列表优化 — 触底加载 + 分页 ✅ (v2.10)
 
-### 下一批次队列 (v2.12)
-- [ ] B21: 性能监控扩展 — perf_util 接入更多页面 onLoad + setData 耗时统计
-- [ ] B22: 小游戏性能优化 — Canvas 渲染帧率 + 资源预加载
-- [ ] B23: 页面预加载 — 关键页面 onInit 提前加载 + 骨架屏覆盖更多页面
+### 下一批次队列 (v2.12-v2.16)
+- [x] B21: 性能监控扩展 — perf_helper + 6页面接入 ✅ (v2.12)
+- [x] B22: 组件代码清理 — cmpts console.log残留+死代码 ✅ (v2.13)
+- [x] B23: setData精确路径优化 + preloadRule ✅ (v2.14)
+- [x] B24: Canvas游戏性能优化 — setData合并+内存泄漏 ✅ (v2.15)
+- [ ] B25: 图片优化 — mode+lazy-load覆盖率 ⏳ 执行中
+
+### 下一批次队列 (v2.17+)
+- [ ] B26: WXS 过滤器 — 日期/金额格式化从 JS 移到 WXS 减少 setData
+- [ ] B27: 安全加固 H-03 — Token 暴力破解防护（失败计数+锁定）
+- [ ] B28: 安全加固 H-01 — 工资发放竞态防护（唯一索引+分布式锁）
 
 ### HanaAgent 迁移队列 (v3.00+)
 - [ ] Phase 1: 工具注册表 + Agent Manager + 会话后端化
@@ -66,10 +73,11 @@
 
 ## 循环节奏
 
-每个循环约 20-30 分钟：
+每个循环约 10-15 分钟：
 1. 从队列取下一个任务
-2. 创建 worktree
-3. 启动 agent 执行
-4. 收集结果 → 审查 → commit → push → merge
-5. 更新队列和日志
-6. 进入下一循环
+2. 创建 worktree (`git worktree add .claude/worktrees/v2.XX-bN -b opt/v2.XX-bN main`)
+3. 启动 agent 执行（后台异步）
+4. 收集结果 → cherry-pick 到 main → 更新 version.js
+5. `git push origin main` 推送 GitHub
+6. 上传体验版 (`node-18.exe cli.js upload -v "X.XX" -d "desc"`)
+7. 清理 worktree → 更新队列 → 进入下一循环
