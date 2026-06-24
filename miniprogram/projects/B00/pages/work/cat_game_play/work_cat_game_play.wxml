@@ -52,7 +52,17 @@
     </view>
   </view>
 
-  <!-- 点击游戏区域 -->
+  <!-- 命中反馈 -->
+  <view class="hit-feedback {{hitFeedbackShow ? 'show' : ''}}" wx:if="{{hitFeedbackShow}}">
+    <text class="hit-text">{{hitFeedback}}</text>
+  </view>
+
+  <!-- 连击显示 -->
+  <view class="combo-bar {{comboShow ? 'show' : ''}}" wx:if="{{comboShow}}">
+    <text class="combo-text">{{comboText}}</text>
+  </view>
+
+  <!-- Canvas游戏区域 -->
   <canvas type="2d" id="gameCanvas" class="game-canvas" bind:tap="onCanvasTap"></canvas>
 
   <view class="play-tip">
