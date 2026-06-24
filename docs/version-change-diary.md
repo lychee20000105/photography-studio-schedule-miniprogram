@@ -1,6 +1,71 @@
 ﻿# 版本修改日记
 
 
+## v1.95 - 2026-06-24 20:34 CST
+
+### 改动级别
+
+小改修复，v1.94 -> v1.95。
+
+### 本次目标
+
+继续参考 Hanako/HanaAgent 方案里的“动作可追踪、可复盘、可治理”逻辑，把小猫 Agent 的审计流水从纯文本留痕升级为“文本 + 脱敏结构化摘要”。这一步不扩大任何写入权限，但让后续自动复盘、高风险确认队列和管理统计有更稳定的数据基础。
+
+### 主要修改
+
+- `work_agent_audit_model.js` 新增 `AGENTAUDIT_ACTION_SUMMARY` 对象字段。
+- `work_ai_service.js` 在 `_addAgentAuditLog` 写入时自动生成结构化摘要，包含动作、风险等级、是否建议管理员复查、关联对象、标题、脱敏内容预览、关键信号、风险标签和安全决策。
+- 结构化摘要会掩码手机号、邮箱和疑似 Key/Token 片段，只保留有限内容预览和业务线索。
+- `work_agent_audit_service.js` 详情接口返回 `AGENTAUDIT_ACTION_SUMMARY`；旧记录没有摘要时，会根据现有标题、内容、风险和关联对象临时生成兼容摘要。
+- AI 审计详情页新增“结构化摘要”区块，展示摘要版本、复查建议、安全决策、关联对象、内容预览、信号和标签。
+- 重新生成 `work_ai_service_live_patch.js` 与 `work_admin_controller_live_patch.js`，确保云端 mcloud 使用最新 AI 写入源头、审计模型、审计服务和详情接口。
+- `miniprogram/version.js`、`miniprogram/setting/setting.js`、`CHANGELOG.md`、`README.md` 和本文档同步升级到 v1.95。
+
+### 涉及文件
+
+- `cloudfunctions/mcloud/project/B00/model/work_agent_audit_model.js`
+- `cloudfunctions/mcloud/project/B00/service/work_ai_service.js`
+- `cloudfunctions/mcloud/project/B00/service/work_agent_audit_service.js`
+- `cloudfunctions/mcloud/work_ai_service_live_patch.js`
+- `cloudfunctions/mcloud/work_admin_controller_live_patch.js`
+- `miniprogram/projects/B00/pages/work/admin_agent_audit_detail/work_admin_agent_audit_detail.js`
+- `miniprogram/projects/B00/pages/work/admin_agent_audit_detail/work_admin_agent_audit_detail.wxml`
+- `miniprogram/projects/B00/pages/work/admin_agent_audit_detail/work_admin_agent_audit_detail.wxss`
+- `miniprogram/version.js`
+- `miniprogram/setting/setting.js`
+- `CHANGELOG.md`
+- `README.md`
+- `docs/version-change-diary.md`
+
+### 验证结果
+
+- `node --check cloudfunctions/mcloud/project/B00/model/work_agent_audit_model.js` 通过。
+- `node --check cloudfunctions/mcloud/project/B00/service/work_ai_service.js` 通过。
+- `node --check cloudfunctions/mcloud/project/B00/service/work_agent_audit_service.js` 通过。
+- `node --check cloudfunctions/mcloud/work_ai_service_live_patch.js` 通过。
+- `node --check cloudfunctions/mcloud/work_admin_controller_live_patch.js` 通过。
+- `node --check miniprogram/projects/B00/pages/work/admin_agent_audit_detail/work_admin_agent_audit_detail.js` 通过。
+- `node --check miniprogram/version.js` 与 `node --check miniprogram/setting/setting.js` 通过。
+- `miniprogram/app.json`、`work_admin_agent_audit_detail.json` 和 `project.config.json` JSON 解析通过，版本源确认当前为 `1.95`。
+- AI 审计详情页 WXML view 标签数量 sanity check 通过，未发现异常 `/view>` 闭合。
+- `work_ai_service_live_patch.js` 解压后与 `work_ai_service.js`、`work_ai_agent_registry.js`、`work_ai_agent_memory.js`、`work_agent_audit_model.js` 源码一致。
+- `work_admin_controller_live_patch.js` 解压后与 `work_agent_audit_service.js`、`work_agent_audit_model.js`、`work_admin_controller.js` 源码一致。
+- live patch 实际加载检查通过；仅出现项目既有 `ws` 依赖提示，不影响本次 patch 注入。
+- 本轮涉及文件 `git diff --check` 通过，仅有既有 LF/CRLF 提示。
+- 敏感信息扫描未发现新增 API Key、Token 或 Secret。
+
+### 部署状态
+
+- `work_ai_service_live_patch.js` 已通过微信开发者工具 CLI 增量部署到 `mcloud`，包体 `41.2 KB`。
+- `work_admin_controller_live_patch.js` 已通过微信开发者工具 CLI 增量部署到 `mcloud`，包体 `7.1 KB`。
+- 小程序开发版已通过微信开发者工具 CLI 上传，版本号 `1.95`，包体 `1.5 MB` / `1,568,838 Byte`。
+- 本次未提交审核、未发布上线。
+
+### 未完成风险
+
+- 本轮只保存结构化摘要，不改变写入执行流程；高风险动作“先入队、后人工确认”的机制仍需后续单独设计，避免直接改动工资、收款、审核等现有业务闭环。
+- 历史流水不会回填真实动作参数，只能由详情接口基于旧文本生成兼容摘要。
+
 ## v1.94 - 2026-06-24 20:17 CST
 
 ### 改动级别

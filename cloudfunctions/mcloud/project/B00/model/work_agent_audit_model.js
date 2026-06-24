@@ -20,6 +20,7 @@ WorkAgentAuditModel.DB_STRUCTURE = {
 	AGENTAUDIT_REF_TYPE: 'string|false',
 	AGENTAUDIT_REF_ID: 'string|false',
 	AGENTAUDIT_RISK_LEVEL: 'string|true|default=normal',
+	AGENTAUDIT_ACTION_SUMMARY: 'object|false|default={}',
 	AGENTAUDIT_STATUS: 'int|true|default=1',
 	AGENTAUDIT_ADD_TIME: 'int|true',
 	AGENTAUDIT_EDIT_TIME: 'int|true',

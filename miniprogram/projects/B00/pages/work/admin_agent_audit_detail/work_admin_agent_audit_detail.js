@@ -48,6 +48,16 @@ function buildRows(detail) {
 	];
 }
 
+function buildSummaryRows(summary) {
+	summary = summary || {};
+	return [
+		{ label: '摘要版本', value: summary.schemaVersion ? 'v' + summary.schemaVersion : 'v1' },
+		{ label: '复查建议', value: summary.requiresAdminReview ? '建议管理员复查' : '普通留痕' },
+		{ label: '安全决策', value: summary.safetyDecision || 'normal_audited_write' },
+		{ label: '关联对象', value: [summary.refType, summary.refId].filter(Boolean).join(' / ') || '无' },
+	].filter(item => item.value);
+}
+
 Page({
 	data: {
 		isLoad: false,
@@ -85,6 +95,10 @@ Page({
 		detail.actionText = optionLabel(ACTION_OPTIONS, detail.AGENTAUDIT_ACTION, '未知动作');
 		detail.riskText = optionLabel(RISK_OPTIONS, detail.AGENTAUDIT_RISK_LEVEL, '普通');
 		detail.safetyLines = detail.safety && Array.isArray(detail.safety.lines) ? detail.safety.lines : [];
+		detail.actionSummary = detail.AGENTAUDIT_ACTION_SUMMARY || {};
+		detail.summaryRows = buildSummaryRows(detail.actionSummary);
+		detail.summarySignals = Array.isArray(detail.actionSummary.signals) ? detail.actionSummary.signals : [];
+		detail.summaryTags = Array.isArray(detail.actionSummary.tags) ? detail.actionSummary.tags : [];
 
 		this.setData({
 			isLoad: true,

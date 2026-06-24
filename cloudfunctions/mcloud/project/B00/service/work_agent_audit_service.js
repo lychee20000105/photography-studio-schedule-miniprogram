@@ -157,8 +157,42 @@ class WorkAgentAuditService extends BaseProjectService {
 		let detail = this._cleanAudit(item);
 		detail.AGENTAUDIT_CONTENT = asText(item.AGENTAUDIT_CONTENT, 3000);
 		detail.AGENTAUDIT_EDIT_TIME = item.AGENTAUDIT_EDIT_TIME || 0;
+		detail.AGENTAUDIT_ACTION_SUMMARY = this._cleanActionSummary(item.AGENTAUDIT_ACTION_SUMMARY, detail);
 		detail.safety = this._buildSafetySummary(detail);
 		return detail;
+	}
+
+	_cleanActionSummary(summary = {}, item = {}) {
+		if (!summary || typeof summary != 'object') summary = {};
+		let fallbackSignals = [];
+		if (item.AGENTAUDIT_REF_ID) fallbackSignals.push({ label: '关联ID', value: asText(item.AGENTAUDIT_REF_ID, 80) });
+		let contentPreview = asText(summary.contentPreview || item.AGENTAUDIT_CONTENT || '', 260);
+		return {
+			schemaVersion: Number(summary.schemaVersion || 1),
+			action: asText(summary.action || item.AGENTAUDIT_ACTION || '', 40),
+			riskLevel: asText(summary.riskLevel || item.AGENTAUDIT_RISK_LEVEL || 'normal', 40),
+			requiresAdminReview: summary.requiresAdminReview !== undefined ? !!summary.requiresAdminReview : (item.AGENTAUDIT_RISK_LEVEL == 'high' || item.AGENTAUDIT_RISK_LEVEL == 'finance'),
+			refType: asText(summary.refType || item.AGENTAUDIT_REF_TYPE || '', 40),
+			refId: asText(summary.refId || item.AGENTAUDIT_REF_ID || '', 120),
+			title: asText(summary.title || item.AGENTAUDIT_TITLE || '', 120),
+			contentPreview,
+			signals: this._cleanSignalList(summary.signals || fallbackSignals),
+			tags: this._cleanStringList(summary.tags),
+			safetyDecision: asText(summary.safetyDecision || '', 80),
+		};
+	}
+
+	_cleanSignalList(list = []) {
+		if (!Array.isArray(list)) return [];
+		return list.slice(0, 8).map(item => ({
+			label: asText(item && item.label, 40),
+			value: asText(item && item.value, 100),
+		})).filter(item => item.label || item.value);
+	}
+
+	_cleanStringList(list = []) {
+		if (!Array.isArray(list)) return [];
+		return list.slice(0, 12).map(item => asText(item, 40)).filter(Boolean);
 	}
 
 	_buildSafetySummary(item = {}) {
@@ -183,6 +217,10 @@ class WorkAgentAuditService extends BaseProjectService {
 
 		if (/pay_payroll|void_payment|cancel_order|audit_order/.test(action)) {
 			summary.lines.push('该动作属于工资、收款、取消或审核类敏感动作，不能仅凭 AI 回复判定业务已完成。');
+		}
+
+		if (item.AGENTAUDIT_ACTION_SUMMARY && item.AGENTAUDIT_ACTION_SUMMARY.schemaVersion) {
+			summary.lines.push('本条已保存脱敏结构化动作摘要，可用于后续自动复盘和高风险确认队列。');
 		}
 
 		return summary;

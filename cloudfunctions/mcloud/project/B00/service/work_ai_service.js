@@ -1528,6 +1528,8 @@ class WorkAiService extends WorkPermissionService {
 		try {
 			let staff = await WorkStaffModel.getOne({ STAFF_OPENID: openId }, '_id,STAFF_NAME');
 			let action = this._inferAgentAuditAction(title);
+			let riskLevel = this._inferAgentAuditRisk(title, content);
+			let actionSummary = this._buildAgentAuditActionSummary(action, riskLevel, title, content, meta);
 			await WorkAgentAuditModel.insert({
 				AGENTAUDIT_ACTION: action,
 				AGENTAUDIT_TITLE: asText(title, 120) || 'AI操作记录',
@@ -1537,12 +1539,68 @@ class WorkAiService extends WorkPermissionService {
 				AGENTAUDIT_STAFF_NAME: staff && staff.STAFF_NAME ? staff.STAFF_NAME : '',
 				AGENTAUDIT_REF_TYPE: asText(meta.refType, 40),
 				AGENTAUDIT_REF_ID: asText(meta.refId, 120),
-				AGENTAUDIT_RISK_LEVEL: this._inferAgentAuditRisk(title, content),
+				AGENTAUDIT_RISK_LEVEL: riskLevel,
+				AGENTAUDIT_ACTION_SUMMARY: actionSummary,
 				AGENTAUDIT_STATUS: 1,
 			});
 		} catch (err) {
 			console.error('AI agent audit log failed:', err && err.message ? err.message : err);
 		}
+	}
+
+	_buildAgentAuditActionSummary(action, riskLevel, title, content, meta = {}) {
+		let contentText = asText(content, 2000);
+		let refType = asText(meta.refType, 40);
+		let refId = asText(meta.refId, 120);
+		let tags = [];
+		if (riskLevel == 'high') tags.push('high_risk');
+		if (riskLevel == 'finance') tags.push('finance');
+		if (refType || refId) tags.push('has_ref');
+		if (/金额|收款|退款|工资|提成|转账|红包/.test(contentText)) tags.push('money_related');
+		if (/取消|作废|不通过|发放|审核/.test(contentText)) tags.push('sensitive_write');
+
+		return {
+			schemaVersion: 1,
+			action: asText(action, 40),
+			riskLevel: asText(riskLevel, 40),
+			requiresAdminReview: riskLevel == 'high' || riskLevel == 'finance',
+			refType,
+			refId,
+			title: asText(title, 120),
+			contentPreview: this._maskAgentAuditText(contentText, 260),
+			signals: this._extractAgentAuditSignals(contentText),
+			tags,
+			safetyDecision: this._agentAuditSafetyDecision(action, riskLevel),
+		};
+	}
+
+	_maskAgentAuditText(text, max = 260) {
+		text = asText(text, max);
+		text = text.replace(/1[3-9]\d{9}/g, match => match.slice(0, 3) + '****' + match.slice(-4));
+		text = text.replace(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g, '[email]');
+		text = text.replace(/(sk-|key-|token-)[A-Za-z0-9_\-]{8,}/ig, '[secret]');
+		return text;
+	}
+
+	_extractAgentAuditSignals(text) {
+		text = asText(text, 600);
+		let signals = [];
+		let recordId = text.match(/记录ID[:：]\s*([A-Za-z0-9_\-]+)/);
+		if (recordId) signals.push({ label: '记录ID', value: asText(recordId[1], 80) });
+		let orderId = text.match(/订单(?:ID)?[:：]?\s*([A-Za-z0-9_\-]{6,})/);
+		if (orderId) signals.push({ label: '订单线索', value: asText(orderId[1], 80) });
+		let amount = text.match(/(?:金额|实收|工资)[:：]?\s*([\-]?\d+(?:\.\d{1,2})?)/);
+		if (amount) signals.push({ label: '金额线索', value: asText(amount[1], 40) });
+		let date = text.match(/\d{4}[-/.年]\d{1,2}[-/.月]\d{1,2}/);
+		if (date) signals.push({ label: '日期线索', value: asText(date[0], 40) });
+		return signals.slice(0, 6);
+	}
+
+	_agentAuditSafetyDecision(action, riskLevel) {
+		if (/pay_payroll|void_payment|cancel_order|audit_order/.test(action)) return 'sensitive_write_executed';
+		if (riskLevel == 'finance') return 'finance_write_or_finance_semantic';
+		if (riskLevel == 'high') return 'high_risk_write';
+		return 'normal_audited_write';
 	}
 
 	_inferAgentAuditAction(title) {

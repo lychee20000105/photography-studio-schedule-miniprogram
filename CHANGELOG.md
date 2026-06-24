@@ -1,5 +1,36 @@
 # Changelog
 
+## v1.95 - 2026-06-24
+
+AI审计结构化摘要版本。本次按小改修复 `+0.01` 从 v1.94 升级为 v1.95，让新生成的 AI 审计流水除可读文本外，也保存脱敏结构化动作摘要，为后续自动复盘和高风险确认队列打底。
+
+### 新增
+
+- `work_agent_audit_model.js` 新增 `AGENTAUDIT_ACTION_SUMMARY` 对象字段。
+- `work_ai_service.js` 在写入 Agent 审计流水时自动生成结构化摘要，包含动作、风险等级、复查建议、关联对象、内容预览、风险标签和关键信号。
+- `work_agent_audit_service.js` 详情接口返回结构化摘要；历史流水没有摘要时，会基于现有内容生成兼容摘要。
+- AI 审计详情页新增“结构化摘要”区块，展示复查建议、安全决策、关联对象、内容预览、信号和标签。
+
+### 安全
+
+- 结构化摘要只保存脱敏预览和有限信号，不保存 API Key、Token、openid、原始模型全文或完整图片内容。
+
+### 验证
+
+- `node --check` 覆盖本轮触达的审计模型、AI 服务、审计服务、live patch、审计详情页 JS、版本源和设置文件，均通过。
+- `miniprogram/app.json`、审计详情页 JSON 和 `project.config.json` JSON 解析通过，版本源确认当前为 `1.95`。
+- AI 审计详情页 WXML view 标签数量 sanity check 通过，未发现异常 `/view>` 闭合。
+- `work_ai_service_live_patch.js` 与 `work_admin_controller_live_patch.js` 解压后与源文件一致，实际加载检查通过。
+- 本轮涉及文件 `git diff --check` 通过，仅有既有 LF/CRLF 提示。
+- 敏感信息扫描未发现新增 API Key、Token 或 Secret。
+
+### 部署
+
+- `work_ai_service_live_patch.js` 已通过微信开发者工具 CLI 增量部署到 `mcloud`，包体 `41.2 KB`。
+- `work_admin_controller_live_patch.js` 已通过微信开发者工具 CLI 增量部署到 `mcloud`，包体 `7.1 KB`。
+- 小程序开发版已通过微信开发者工具 CLI 上传，版本号 `1.95`，包体 `1.5 MB` / `1,568,838 Byte`。
+- 本次未提交审核、未发布上线。
+
 ## v1.94 - 2026-06-24
 
 AI审计详情页版本。本次按小改修复 `+0.01` 从 v1.93 升级为 v1.94，让管理员可以从 AI 审计流水列表点开单条记录，查看完整审计内容、关联对象和安全复盘摘要。

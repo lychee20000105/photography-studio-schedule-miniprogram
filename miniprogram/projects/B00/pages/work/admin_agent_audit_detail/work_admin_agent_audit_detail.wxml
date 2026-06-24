@@ -25,6 +25,23 @@
 		</view>
 
 		<view class="section">
+			<view class="section-title">结构化摘要</view>
+			<view class="row" wx:for="{{detail.summaryRows}}" wx:key="label">
+				<view class="row-label">{{item.label}}</view>
+				<view class="row-value">{{item.value}}</view>
+			</view>
+			<view wx:if="{{detail.actionSummary.contentPreview}}" class="preview">{{detail.actionSummary.contentPreview}}</view>
+			<view wx:if="{{detail.summarySignals.length>0}}" class="signal-wrap">
+				<view wx:for="{{detail.summarySignals}}" wx:key="label" class="signal">
+					<text>{{item.label}}</text>{{item.value}}
+				</view>
+			</view>
+			<view wx:if="{{detail.summaryTags.length>0}}" class="tag-wrap">
+				<text wx:for="{{detail.summaryTags}}" wx:key="*this">{{item}}</text>
+			</view>
+		</view>
+
+		<view class="section">
 			<view class="section-title">安全复盘</view>
 			<view wx:for="{{detail.safetyLines}}" wx:key="*this" class="safety-line">{{item}}</view>
 			<view wx:if="{{detail.safetyLines.length==0}}" class="safety-line">暂无额外安全摘要。</view>

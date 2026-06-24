@@ -136,6 +136,55 @@ page {
 	word-break: break-all;
 }
 
+.preview {
+	margin-top: 14rpx;
+	padding: 18rpx;
+	background: rgba(216, 207, 190, .25);
+	border: 1rpx solid rgba(216, 207, 190, .72);
+	border-radius: 8rpx;
+	color: #303846;
+	font-size: 24rpx;
+	line-height: 1.6;
+	word-break: break-all;
+}
+
+.signal-wrap,
+.tag-wrap {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10rpx;
+	margin-top: 14rpx;
+}
+
+.signal,
+.tag-wrap text {
+	max-width: 100%;
+	box-sizing: border-box;
+	border-radius: 6rpx;
+	padding: 7rpx 12rpx;
+	font-size: 22rpx;
+	line-height: 1.35;
+	word-break: break-all;
+}
+
+.signal {
+	background: rgba(83, 125, 150, .10);
+	border: 1rpx solid rgba(83, 125, 150, .22);
+	color: #303846;
+}
+
+.signal text {
+	margin-right: 8rpx;
+	color: #537d96;
+	font-weight: 900;
+}
+
+.tag-wrap text {
+	background: rgba(216, 207, 190, .32);
+	border: 1rpx solid rgba(216, 207, 190, .72);
+	color: #6b6158;
+}
+
 .safety-line {
 	position: relative;
 	padding-left: 22rpx;
