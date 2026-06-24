@@ -1,12 +1,12 @@
 ﻿module.exports = {
-	current: '2.10',
-	previous: '2.07',
+	current: '2.07',
+	previous: '2.06',
 	date: '2026-06-25',
 	time: '10:00 CST',
 	level: 'minor',
-	levelText: '长列表优化',
-	name: 'v2.10-b20: 长列表优化 — 触底加载+分页+懒加载',
-	summary: 'B20: 管理后台工单列表和收款列表新增触底加载分页，避免一次性加载大量数据；新增通用 ListHelper 分页工具。',
+	levelText: '三款游戏全面重写',
+	name: 'v2.07: 三款小游戏全面重写 — 打地鼠/记忆翻牌/合成2048',
+	summary: '替换自创小游戏为GitHub热门成熟玩法：打地鼠/记忆翻牌/合成2048，完全重写CSS解决前端排版问题。',
 	changeLog: '/docs/version-change-diary.md',
 	history: [
 		{
@@ -21,12 +21,16 @@
 				'两个列表页底部新增"加载中..."和"没有更多了"提示，list-footer 样式统一。',
 			],
 		},
-				'新增 cmpts/theme/theme.wxss，定义亮色/暗色两套CSS变量（背景、文字、品牌色、边框、阴影等15个变量）。',
-				'app.wxss 引入主题变量，page 背景色和 .paper-card 改用 CSS 变量引用；暗黑模式下去掉纸纹背景。',
-				'app.js onLaunch 监听 wx.onThemeChange，系统切换暗黑时自动通知当前页面。',
-				'app.json 新增 darkmode: true 和 themeLocation，新建 theme.json 定义导航栏和背景色双主题。',
-				'日历页 work_calendar.wxss 全部暖纸色改为 CSS 变量，暗黑模式下卡片、日格、标签、按钮完整适配。',
-				'我的页 work_my.wxss 同步适配暗黑模式，包括个人信息、菜单、宠物面板和角色标签。',
+		{
+			version: '2.07',
+			date: '2026-06-25',
+			name: 'v2.07: 三款小游戏全面重写',
+			summary: '替换自创小游戏为GitHub热门成熟玩法：打地鼠/记忆翻牌/合成2048，修复前端排版。',
+			items: [
+				'猫咪快抓(打地鼠): Canvas 2D九宫格地鼠洞，角色冒头快速点击，金色角色+5分，猫咪-5秒。',
+				'记忆翻牌(配对消除): 4x4网格CSS 3D翻转动画，8对摄影装备配对。',
+				'合成2048(滑动合成): 触摸手势滑动合并，经典2048玩法，最高分记录。',
+				'完全重写CSS：统一设计变量、grid布局、规范间距，解决前端乱码和排版不整齐。',
 			],
 		},
 		{
