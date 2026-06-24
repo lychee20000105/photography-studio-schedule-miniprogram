@@ -947,7 +947,10 @@
 	border-bottom-color: rgba(216, 207, 190, .72);
 }
 
-.pet-chat-title,
+.pet-chat-title {
+	color: #2a2622;
+}
+
 .chat-msg.assistant .chat-bubble {
 	color: #2a2622;
 }
@@ -970,15 +973,17 @@
 	background-size: 48rpx 48rpx;
 }
 
+/* B11: User bubble — brand gradient handled by .chat-msg.user .chat-bubble above */
 .chat-msg.user .chat-bubble {
-	background: #537d96;
+	background: linear-gradient(135deg, #537d96, #476d83);
 	color: #fff;
 }
 
+/* B11: Assistant bubble — warm paper style */
 .chat-msg.assistant .chat-bubble {
-	background: #fbf7ee;
-	border: 1rpx solid #d8cfbe;
-	box-shadow: 0 6rpx 18rpx rgba(42, 38, 34, .06);
+	background: rgba(255, 255, 255, .92);
+	border: 1rpx solid rgba(216, 207, 190, .6);
+	box-shadow: 0 4rpx 16rpx rgba(42, 38, 34, .06);
 }
 
 .quick-chip {
@@ -993,11 +998,11 @@
 }
 
 .chat-send-btn {
-	background: #537d96;
+	background: linear-gradient(135deg, #537d96, #476d83);
 }
 
 .chat-send-btn.is-disabled {
-	background: #b8b0a3;
+	opacity: .45;
 }
 
 .agent-info-mask {
@@ -1128,4 +1133,260 @@
 	font-size: 27rpx;
 	font-weight: 900;
 	color: #537d96;
+}
+
+/* ========== B11: Chat Bubble UI Upgrade ========== */
+
+/* AI avatar beside assistant messages */
+.chat-avatar-wrap {
+	flex-shrink: 0;
+	margin-right: 12rpx;
+	display: flex;
+	align-items: flex-start;
+	padding-top: 4rpx;
+}
+
+.chat-avatar-ai {
+	width: 52rpx;
+	height: 52rpx;
+	line-height: 52rpx;
+	text-align: center;
+	border-radius: 50%;
+	background: linear-gradient(135deg, #537d96, #6a9ab5);
+	color: #fff;
+	font-size: 22rpx;
+	font-weight: 900;
+	box-shadow: 0 4rpx 12rpx rgba(83, 125, 150, .2);
+}
+
+/* Bubble entrance animation */
+.chat-msg-enter {
+	animation: msg-enter .25s ease-out both;
+}
+
+@keyframes msg-enter {
+	from {
+		opacity: 0;
+		transform: translateY(16rpx);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+/* Stagger animation for sequential messages */
+.chat-msg-enter:nth-child(1) { animation-delay: 0s; }
+.chat-msg-enter:nth-child(2) { animation-delay: .03s; }
+.chat-msg-enter:nth-child(3) { animation-delay: .06s; }
+.chat-msg-enter:nth-child(4) { animation-delay: .09s; }
+.chat-msg-enter:nth-child(5) { animation-delay: .12s; }
+
+/* B11 user bubble: brand color bg, white text */
+.chat-msg.user .chat-bubble {
+	background: linear-gradient(135deg, #537d96, #476d83);
+	color: #fff;
+	border-bottom-right-radius: 8rpx;
+	border-bottom-left-radius: 20rpx;
+	border-top-left-radius: 20rpx;
+	border-top-right-radius: 20rpx;
+}
+
+/* B11 assistant bubble: light warm bg */
+.chat-msg.assistant .chat-bubble {
+	background: rgba(255, 255, 255, .92);
+	color: #2a2622;
+	border: 1rpx solid rgba(216, 207, 190, .6);
+	border-bottom-left-radius: 8rpx;
+	border-bottom-right-radius: 20rpx;
+	border-top-left-radius: 20rpx;
+	border-top-right-radius: 20rpx;
+	box-shadow: 0 4rpx 16rpx rgba(42, 38, 34, .06);
+}
+
+/* B11: Bubble spacing */
+.chat-msg {
+	display: flex;
+	margin-bottom: 20rpx;
+	align-items: flex-start;
+}
+
+.chat-msg.assistant {
+	justify-content: flex-start;
+}
+
+.chat-msg.user {
+	justify-content: flex-end;
+}
+
+/* Load older messages button */
+.chat-load-older {
+	display: flex;
+	justify-content: center;
+	margin-bottom: 20rpx;
+}
+
+.chat-load-older-text {
+	display: inline-block;
+	padding: 10rpx 28rpx;
+	border-radius: 999rpx;
+	background: rgba(83, 125, 150, .1);
+	color: #537d96;
+	font-size: 23rpx;
+	font-weight: 700;
+}
+
+/* ========== B11: Markdown Rendering Styles ========== */
+
+/* Heading styles */
+.md-heading {
+	font-weight: 900;
+	color: #2a2622;
+	margin-bottom: 4rpx;
+}
+
+.md-h1 { font-size: 34rpx; }
+.md-h2 { font-size: 31rpx; }
+.md-h3 { font-size: 29rpx; }
+
+/* Bold text */
+.md-bold {
+	font-weight: 800;
+	color: #1a2a34;
+}
+
+.md-inline-wrap {
+	display: inline;
+}
+
+/* Bullet / numbered list */
+.md-list-item {
+	display: flex;
+	align-items: flex-start;
+	padding-left: 16rpx;
+	margin-bottom: 4rpx;
+}
+
+.md-bullet {
+	flex-shrink: 0;
+	width: 28rpx;
+	color: #537d96;
+	font-weight: 900;
+}
+
+.md-number {
+	flex-shrink: 0;
+	width: 40rpx;
+	color: #537d96;
+	font-weight: 800;
+}
+
+.md-bullet-text {
+	flex: 1;
+	word-break: break-word;
+}
+
+/* Code block */
+.md-code-wrap {
+	position: relative;
+	margin: 8rpx 0;
+	border-radius: 12rpx;
+	background: rgba(42, 38, 34, .06);
+	border: 1rpx solid rgba(216, 207, 190, .5);
+	overflow: hidden;
+}
+
+.md-code-block {
+	display: block;
+	padding: 16rpx 18rpx;
+	font-family: 'Courier New', Courier, monospace;
+	font-size: 24rpx;
+	line-height: 1.6;
+	color: #2a2622;
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.md-code-copy {
+	position: absolute;
+	top: 8rpx;
+	right: 12rpx;
+	padding: 4rpx 14rpx;
+	border-radius: 8rpx;
+	background: rgba(83, 125, 150, .12);
+	color: #537d96;
+	font-size: 20rpx;
+	font-weight: 700;
+}
+
+/* Inline code */
+.md-code-inline {
+	padding: 2rpx 10rpx;
+	border-radius: 6rpx;
+	background: rgba(42, 38, 34, .07);
+	font-family: 'Courier New', Courier, monospace;
+	font-size: 25rpx;
+	color: #c7254e;
+}
+
+/* Horizontal rule */
+.md-hr {
+	height: 1rpx;
+	background: rgba(216, 207, 190, .6);
+	margin: 12rpx 0;
+}
+
+/* Line break wrapper */
+.md-line {
+	display: block;
+	margin-bottom: 2rpx;
+}
+
+/* Plain text block */
+.md-text {
+	display: block;
+}
+
+/* ========== B11: Send Button & Input Upgrade ========== */
+
+.chat-send-btn {
+	width: 72rpx;
+	height: 72rpx;
+	border-radius: 50%;
+	background: linear-gradient(135deg, #537d96, #476d83);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	transition: opacity .2s ease, transform .15s ease;
+}
+
+.chat-send-btn.is-disabled {
+	opacity: .45;
+	pointer-events: none;
+}
+
+.send-arrow {
+	color: #fff;
+	font-size: 36rpx;
+	font-weight: 900;
+	line-height: 1;
+}
+
+.send-spinner {
+	width: 32rpx;
+	height: 32rpx;
+	border: 4rpx solid rgba(255, 255, 255, .3);
+	border-top-color: #fff;
+	border-radius: 50%;
+	animation: spin .7s linear infinite;
+}
+
+@keyframes spin {
+	to { transform: rotate(360deg); }
+}
+
+/* Sending state: gray out input area */
+.pet-chat-input.is-sending .chat-text-input {
+	opacity: .6;
 }

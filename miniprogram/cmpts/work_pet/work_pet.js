@@ -10,12 +10,13 @@ const VERSION_NOTICE_KEY = 'YUNYU_VERSION_NOTICE_CLOSED';
 const PET_BOX = { width: 84, height: 92 };
 const DEFAULT_CONTEXT_LIMIT = 128000;
 const LOCAL_IMAGE_DIR = 'work_pet_images';
+const CHAT_RENDER_LIMIT = 50; // B11: max messages rendered at once
 const AGENT_VERSION = {
 	version: '0.4.0',
 	date: '2026-06-24',
 	name: '管理员长期记忆',
 	items: [
-		'AI 配置页新增“长期记忆”开关和记忆文本，管理员可手动维护稳定的店内规则、报价口径和团队偏好。',
+		'AI 配置页新增”长期记忆”开关和记忆文本，管理员可手动维护稳定的店内规则、报价口径和团队偏好。',
 		'长期记忆会随小猫对话注入提示词，但只作为参考；订单、金额、收款、工资和审核仍以后台数据校验为准。',
 		'小猫继续沿用技能注册表、动作白名单和 Agent 审计流水，避免把未执行动作说成已经完成。',
 	],
@@ -424,6 +425,147 @@ function buildNoticeItems(items) {
 	return list.length ? list.slice(0, 8) : ['小程序已更新。'];
 }
 
+// B11: Markdown pre-processor — converts AI reply text into renderable block array
+function parseMarkdownBlocks(text) {
+	if (!text) return [];
+	let lines = String(text).split('\n');
+	let blocks = [];
+	let codeBuf = [];
+	let inCode = false;
+
+	for (let i = 0; i < lines.length; i++) {
+		let line = lines[i];
+
+		// Fenced code block
+		if (/^```/.test(line.trim())) {
+			if (inCode) {
+				blocks.push({ type: 'code', text: codeBuf.join('\n'), raw: codeBuf.join('\n'), idx: blocks.length });
+				codeBuf = [];
+				inCode = false;
+			} else {
+				inCode = true;
+			}
+			continue;
+		}
+		if (inCode) {
+			codeBuf.push(line);
+			continue;
+		}
+
+		let trimmed = line.trim();
+		if (!trimmed) {
+			blocks.push({ type: 'line', text: '', idx: blocks.length });
+			continue;
+		}
+
+		// Horizontal rule
+		if (/^[-*_]{3,}$/.test(trimmed)) {
+			blocks.push({ type: 'hr', idx: blocks.length });
+			continue;
+		}
+
+		// Heading
+		let headingMatch = trimmed.match(/^(#{1,3})\s+(.+)/);
+		if (headingMatch) {
+			blocks.push({ type: 'heading', level: headingMatch[1].length, text: headingMatch[2].replace(/\*\*/g, ''), idx: blocks.length });
+			continue;
+		}
+
+		// Bullet list
+		let bulletMatch = trimmed.match(/^[-*+]\s+(.+)/);
+		if (bulletMatch) {
+			let inner = bulletMatch[1];
+			let segments = parseInlineSegments(inner);
+			if (segments.length === 1 && !segments[0].bold) {
+				blocks.push({ type: 'bullet', text: segments[0].text, idx: blocks.length });
+			} else if (segments.some(s => s.bold)) {
+				blocks.push({ type: 'bold_segment', segments, listPrefix: 'bullet', idx: blocks.length });
+			} else {
+				blocks.push({ type: 'bullet', text: inner, idx: blocks.length });
+			}
+			continue;
+		}
+
+		// Numbered list
+		let numMatch = trimmed.match(/^(\d+)[.)]\s+(.+)/);
+		if (numMatch) {
+			let inner = numMatch[2];
+			let segments = parseInlineSegments(inner);
+			if (segments.length === 1 && !segments[0].bold) {
+				blocks.push({ type: 'numbered', num: numMatch[1], text: segments[0].text, idx: blocks.length });
+			} else if (segments.some(s => s.bold)) {
+				blocks.push({ type: 'bold_segment', segments, listPrefix: 'numbered', num: numMatch[1], idx: blocks.length });
+			} else {
+				blocks.push({ type: 'numbered', num: numMatch[1], text: inner, idx: blocks.length });
+			}
+			continue;
+		}
+
+		// Regular text with inline formatting
+		let segments = parseInlineSegments(trimmed);
+		if (segments.length === 1 && !segments[0].bold) {
+			blocks.push({ type: 'text', text: segments[0].text, idx: blocks.length });
+		} else if (segments.some(s => s.bold)) {
+			blocks.push({ type: 'bold_segment', segments, idx: blocks.length });
+		} else {
+			blocks.push({ type: 'text', text: trimmed, idx: blocks.length });
+		}
+	}
+
+	// Close unclosed code block
+	if (inCode && codeBuf.length) {
+		blocks.push({ type: 'code', text: codeBuf.join('\n'), raw: codeBuf.join('\n'), idx: blocks.length });
+	}
+
+	return blocks;
+}
+
+// Parse inline **bold** and `code` segments
+function parseInlineSegments(text) {
+	if (!text) return [{ text: '', bold: false }];
+	let segments = [];
+	let re = /(\*\*(.+?)\*\*)|(`(.+?)`)/g;
+	let lastIdx = 0;
+	let match;
+	while ((match = re.exec(text)) !== null) {
+		if (match.index > lastIdx) {
+			segments.push({ text: text.slice(lastIdx, match.index), bold: false });
+		}
+		if (match[2]) {
+			segments.push({ text: match[2], bold: true });
+		} else if (match[4]) {
+			segments.push({ text: match[4], bold: false, code: true });
+		}
+		lastIdx = match.index + match[0].length;
+	}
+	if (lastIdx < text.length) {
+		segments.push({ text: text.slice(lastIdx), bold: false });
+	}
+	return segments.length ? segments : [{ text, bold: false }];
+}
+
+// Process messages array: add blocks for markdown rendering
+function enrichMessagesWithBlocks(messages) {
+	if (!Array.isArray(messages)) return messages;
+	return messages.map(msg => {
+		if (!msg || msg.blocks) return msg;
+		let blocks = parseMarkdownBlocks(msg.content);
+		// Only use blocks if we found meaningful structure
+		if (blocks.length > 1 || (blocks.length === 1 && ['heading', 'code', 'bullet', 'numbered', 'bold_segment', 'hr'].includes(blocks[0].type))) {
+			return Object.assign({}, msg, { blocks });
+		}
+		return msg;
+	});
+}
+
+// B11: Split long AI reply into sentences for typewriter effect
+function splitIntoSentences(text) {
+	if (!text) return [];
+	// Split on sentence-ending punctuation, keeping the delimiter attached
+	let parts = text.split(/(?<=[。！？.!?\n])/);
+	return parts.filter(s => s.length > 0);
+}
+
 Component({
 	data: {
 		pet: defaultPet(),
@@ -444,7 +586,9 @@ Component({
 			chatAttachments: [],
 			uploadingAttachment: false,
 			chatLoading: false,
+			chatSending: false,
 			chatAnchor: 'chat-bottom',
+			chatHasOlder: false,
 			activeThread: decorateThread(makeThread()),
 			agentInfoVisible: false,
 			agentInfo: null,
@@ -521,6 +665,10 @@ Component({
 		},
 		openChat(bubble) {
 			let state = this._loadThreads();
+			let allMsgs = state.activeThread.messages || [];
+			let hasOlder = allMsgs.length > CHAT_RENDER_LIMIT;
+			let renderMsgs = hasOlder ? allMsgs.slice(-CHAT_RENDER_LIMIT) : allMsgs;
+			let enriched = enrichMessagesWithBlocks(renderMsgs);
 			this.setData({
 				chatVisible: true,
 				chatFullscreen: false,
@@ -528,7 +676,9 @@ Component({
 				chatThreads: state.threads,
 				activeChatId: state.activeId,
 				activeThread: state.activeThread,
-				chatMessages: state.activeThread.messages,
+				chatMessages: enriched,
+				chatHasOlder: hasOlder,
+				chatSending: false,
 				burst: true,
 				bubble: bubble || '',
 			});
@@ -576,6 +726,34 @@ Component({
 			});
 		},
 		noop() {},
+		// B11: Copy code block content
+		bindCopyCodeBlock(e) {
+			let content = e.currentTarget.dataset.content || '';
+			if (!content) return;
+			wx.setClipboardData({
+				data: content,
+				success: () => wx.showToast({ title: '已复制代码', icon: 'success', duration: 1200 }),
+			});
+		},
+		// B11: Load older messages beyond render limit
+		bindLoadOlderMessages() {
+			let thread = this.data.activeThread || {};
+			let allMsgs = thread.messages || [];
+			if (allMsgs.length <= CHAT_RENDER_LIMIT) {
+				this.setData({ chatHasOlder: false });
+				return;
+			}
+			// Show all messages
+			let enriched = enrichMessagesWithBlocks(allMsgs);
+			this.setData({
+				chatMessages: enriched,
+				chatHasOlder: false,
+			});
+		},
+		// B11: Auto-scroll on input focus
+		bindInputFocus() {
+			setTimeout(() => this._scrollChatToBottom(), 300);
+		},
 		bindChatInput(e) {
 			this.setData({ chatInput: e.detail.value });
 		},
@@ -728,7 +906,8 @@ Component({
 				if (guestHelper.isGuest()) {
 					let guestMsg = { role: 'assistant', content: '访客模式不支持截图 AI 识别。你可以直接用文字告诉我订单信息，例如：\n"6月20日10:00 罗雅 外景写真 金额299 定金150"\n\n绑定员工后可使用完整截图录单功能。' };
 					let messages = trimMessages((this.data.chatMessages || []).concat([guestMsg]));
-					this.setData({ chatMessages: messages });
+					let enriched = enrichMessagesWithBlocks(messages);
+					this.setData({ chatMessages: enriched });
 					this._saveChat(messages);
 					this._scrollChatToBottom();
 					return;
@@ -770,7 +949,8 @@ Component({
 				}));
 				let displayText = text + (attachments.length ? `\n[已附加${attachments.length}张图片]` : '');
 				let messages = trimMessages((this.data.chatMessages || []).concat([{ role: 'user', content: displayText, images: messageImages }]));
-				this.setData({ chatMessages: messages, chatInput: '', chatAttachments: [], chatLoading: true });
+				let enrichedMsgs = enrichMessagesWithBlocks(messages);
+				this.setData({ chatMessages: enrichedMsgs, chatInput: '', chatAttachments: [], chatLoading: true, chatSending: true });
 				this._saveChat(messages, _sendThreadId);
 				this._scrollChatToBottom();
 
@@ -820,10 +1000,11 @@ Component({
 				// otherwise only persist the messages to the original thread silently.
 				let _stillSameThread = !this.data.activeChatId || this.data.activeChatId === _sendThreadId;
 				if (_stillSameThread) {
-					this.setData({ chatMessages: messages, chatLoading: false });
+					let enrichedErr = enrichMessagesWithBlocks(messages);
+					this.setData({ chatMessages: enrichedErr, chatLoading: false, chatSending: false });
 					this._scrollChatToBottom();
 				} else {
-					this.setData({ chatLoading: false });
+					this.setData({ chatLoading: false, chatSending: false });
 				}
 				this._saveChat(messages, _sendThreadId);
 			} finally {
@@ -974,11 +1155,13 @@ Component({
 			threads = sortThreads([thread].concat(threads)).slice(0, 20);
 			wx.setStorageSync(CHAT_THREADS_KEY, threads);
 			wx.setStorageSync(ACTIVE_CHAT_KEY, thread.id);
+			let enriched = enrichMessagesWithBlocks(thread.messages);
 			this.setData({
 				chatThreads: threads,
 				activeChatId: thread.id,
 				activeThread: thread,
-				chatMessages: thread.messages,
+				chatMessages: enriched,
+				chatHasOlder: false,
 				chatInput: '',
 				chatAttachments: [],
 			});
@@ -991,10 +1174,15 @@ Component({
 			let thread = state.threads.find(item => item.id == id);
 			if (!thread) return;
 			wx.setStorageSync(ACTIVE_CHAT_KEY, id);
+			let allMsgs = thread.messages || [];
+			let hasOlder = allMsgs.length > CHAT_RENDER_LIMIT;
+			let renderMsgs = hasOlder ? allMsgs.slice(-CHAT_RENDER_LIMIT) : allMsgs;
+			let enriched = enrichMessagesWithBlocks(renderMsgs);
 			this.setData({
 				activeChatId: id,
 				activeThread: thread,
-				chatMessages: thread.messages,
+				chatMessages: enriched,
+				chatHasOlder: hasOlder,
 				chatInput: '',
 				chatAttachments: [],
 			});
@@ -1014,11 +1202,16 @@ Component({
 					let active = threads[0];
 					wx.setStorageSync(CHAT_THREADS_KEY, threads);
 					wx.setStorageSync(ACTIVE_CHAT_KEY, active.id);
+					let delMsgs = active.messages || [];
+					let hasOlder = delMsgs.length > CHAT_RENDER_LIMIT;
+					let renderMsgs = hasOlder ? delMsgs.slice(-CHAT_RENDER_LIMIT) : delMsgs;
+					let enriched = enrichMessagesWithBlocks(renderMsgs);
 					this.setData({
 						chatThreads: threads,
 						activeChatId: active.id,
 						activeThread: active,
-						chatMessages: active.messages,
+						chatMessages: enriched,
+						chatHasOlder: hasOlder,
 						chatInput: '',
 						chatAttachments: [],
 					});
@@ -1073,28 +1266,85 @@ Component({
 				this._scrollTimer1 = null;
 			}, 60);
 		},
-		// Phase 3: Typewriter effect - display reply character by character
+		// B11: Typewriter effect — sentence-based rendering with markdown enrichment
 		_typewriterDisplay(fullText, messages, threadId) {
 			if (this._typewriterTimer) { clearTimeout(this._typewriterTimer); this._typewriterTimer = null; }
 			let text = String(fullText || '');
 			// Fix #35: empty reply shows default text, not permanent loading
 			if (!text) text = 'AI 没有返回文字。';
+			// Short replies: display immediately with markdown
 			if (text.length < 30) {
 				let updated = trimMessages(messages.concat([{ role: 'assistant', content: text }]));
+				let enriched = enrichMessagesWithBlocks(updated);
 				let stillSame = !this.data.activeChatId || this.data.activeChatId === threadId;
 				if (stillSame) {
-					let lastIdx = updated.length - 1;
 					this.setData({
-						chatMessages: updated,
-						chatLoading: false
+						chatMessages: enriched,
+						chatLoading: false,
+						chatSending: false,
 					});
 					this._scrollChatToBottom();
 				} else {
-					this.setData({ chatLoading: false });
+					this.setData({ chatLoading: false, chatSending: false });
 				}
 				this._saveChat(updated, threadId);
 				return;
 			}
+			// B11: Sentence-based typewriter — split into sentences and reveal one at a time
+			let sentences = splitIntoSentences(text);
+			if (sentences.length <= 1) {
+				// Fallback to character-based for single-sentence replies
+				this._typewriterCharDisplay(text, messages, threadId);
+				return;
+			}
+			let placeholder = trimMessages(messages.concat([{ role: 'assistant', content: '▌' }]));
+			let stillSame = !this.data.activeChatId || this.data.activeChatId === threadId;
+			if (stillSame) this.setData({ chatMessages: placeholder });
+			let self = this;
+			let _capturedThreadId = threadId;
+			let _assistantIdx = placeholder.length - 1;
+			let sentIdx = 0;
+			let revealed = '';
+			let speed = typewriterSpeed(text);
+			function nextSentence() {
+				if (self._destroyed) { self._typewriterTimer = null; return; }
+				if (sentIdx >= sentences.length) {
+					// Done — set final with markdown blocks
+					let final = trimMessages(messages.concat([{ role: 'assistant', content: text }]));
+					let enriched = enrichMessagesWithBlocks(final);
+					let same = !self.data.activeChatId || self.data.activeChatId === _capturedThreadId;
+					if (same) {
+						self.setData({
+							chatMessages: enriched,
+							chatLoading: false,
+							chatSending: false,
+						});
+						self._scrollChatToBottom();
+					} else {
+						self.setData({ chatLoading: false, chatSending: false });
+					}
+					self._saveChat(final, _capturedThreadId);
+					self._typewriterTimer = null;
+					return;
+				}
+				revealed += sentences[sentIdx];
+				sentIdx++;
+				let partial = revealed + (sentIdx < sentences.length ? '▌' : '');
+				let same = !self.data.activeChatId || self.data.activeChatId === _capturedThreadId;
+				if (same) {
+					self.setData({ [`chatMessages[${_assistantIdx}].content`]: partial });
+					self._scrollChatToBottom();
+				}
+				// Delay: longer after punctuation-heavy sentences
+				let lastSent = sentences[sentIdx - 1] || '';
+				let delay = /[。！？\n]/.test(lastSent) ? speed * 3 : speed * 1.5;
+				delay = Math.max(80, Math.min(delay, 400));
+				self._typewriterTimer = setTimeout(nextSentence, delay);
+			}
+			this._typewriterTimer = setTimeout(nextSentence, speed);
+		},
+		// Character-based fallback for short single-sentence replies
+		_typewriterCharDisplay(text, messages, threadId) {
 			let placeholder = trimMessages(messages.concat([{ role: 'assistant', content: '▌' }]));
 			let stillSame = !this.data.activeChatId || this.data.activeChatId === threadId;
 			if (stillSame) this.setData({ chatMessages: placeholder });
@@ -1104,19 +1354,20 @@ Component({
 			let _capturedThreadId = threadId;
 			let _assistantIdx = placeholder.length - 1;
 			function tick() {
-				// Fix #6: stop if component destroyed
 				if (self._destroyed) { self._typewriterTimer = null; return; }
 				if (idx >= text.length) {
 					let final = trimMessages(messages.concat([{ role: 'assistant', content: text }]));
+					let enriched = enrichMessagesWithBlocks(final);
 					let same = !self.data.activeChatId || self.data.activeChatId === _capturedThreadId;
 					if (same) {
 						self.setData({
-							[`chatMessages[${_assistantIdx}].content`]: text,
-							chatLoading: false
+							chatMessages: enriched,
+							chatLoading: false,
+							chatSending: false,
 						});
 						self._scrollChatToBottom();
 					} else {
-						self.setData({ chatLoading: false });
+						self.setData({ chatLoading: false, chatSending: false });
 					}
 					self._saveChat(final, _capturedThreadId);
 					self._typewriterTimer = null;
@@ -1162,7 +1413,8 @@ Component({
 		},
 		bindClearChat() {
 			let messages = defaultMessages();
-			this.setData({ chatMessages: messages, chatInput: '', chatAttachments: [] });
+			let enriched = enrichMessagesWithBlocks(messages);
+			this.setData({ chatMessages: enriched, chatHasOlder: false, chatInput: '', chatAttachments: [] });
 			this._saveChat(messages);
 			this._scrollChatToBottom();
 		},
