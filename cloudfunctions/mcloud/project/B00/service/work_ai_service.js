@@ -22,6 +22,7 @@ const knowledgeService = require('./work_ai_knowledge.js');
 const agentRegistry = require('./work_ai_agent_registry.js');
 const agentMemory = require('./work_ai_agent_memory.js');
 const WorkAgentAuditModel = require('../model/work_agent_audit_model.js');
+const WorkAgentConfirmService = require('./work_agent_confirm_service.js');
 
 const SETUP_KEY = 'WORK_AI_CHAT_CONFIG';
 const LEGACY_OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
@@ -71,6 +72,14 @@ const LOCAL_APP_KNOWLEDGE = [
 	'AI写入规则：凡是AI执行写入动作，都要在团队小记自动追加一条全体可见的操作审查流水。',
 ];
 
+const AGENT_CONFIRM_ACTIONS = {
+	cancel_order: true,
+	save_payment: true,
+	void_payment: true,
+	pay_payroll: true,
+	audit_order: true,
+};
+
 // === Phase 1: Dynamic Prompt Layering ===
 
 // === Phase 2: Smart Model Routing ===
@@ -87,8 +96,11 @@ function getModelForTask(queryType, configModel) {
 }
 
 function getModelForRequest(queryType, config = {}, hasImages = false) {
-	if (hasImages) return asText(config.visionModel, 120) || asText(config.model, 120) || DEFAULT_CONFIG.model;
-	return getModelForTask(queryType, config.model);
+	let apiUrl = getApiUrlForRequest(config, hasImages);
+	let model = hasImages
+		? (asText(config.visionModel, 120) || asText(config.model, 120) || DEFAULT_CONFIG.model)
+		: getModelForTask(queryType, config.model);
+	return normalizeModelForApi(model, apiUrl, getProviderNameForRequest(config, hasImages));
 }
 
 function getApiUrlForRequest(config = {}, hasImages = false) {
@@ -246,6 +258,21 @@ function normalizeModelsApiUrl(url) {
 	return url + '/models';
 }
 
+function isMimoApi(apiUrl, providerName = '') {
+	let text = (asText(apiUrl, 400) + ' ' + asText(providerName, 80)).toLowerCase();
+	return text.indexOf('xiaomimimo.com') >= 0 || text.indexOf('mimo') >= 0 || text.indexOf('小米') >= 0;
+}
+
+function normalizeModelForApi(model, apiUrl, providerName = '') {
+	model = asText(model, 120);
+	if (!isMimoApi(apiUrl, providerName)) return model || DEFAULT_CONFIG.model;
+	let compact = model.toLowerCase().replace(/[\s_]+/g, '-');
+	if (compact == 'mimov2.5' || compact == 'mimo-v2.5') return 'mimo-v2.5';
+	if (compact == 'mimov2.5-pro' || compact == 'mimo-v2.5-pro') return 'mimo-v2.5-pro';
+	if (!compact || compact == 'gpt-4o-mini' || compact == 'deepseek-chat' || compact.indexOf('mimo') < 0) return DEFAULT_CONFIG.model;
+	return model;
+}
+
 function getEnvApiKey() {
 	if (typeof process == 'undefined' || !process.env) return '';
 	return asText(process.env.B00_WORK_AI_API_KEY || process.env.WORK_AI_API_KEY || '', 400);
@@ -276,9 +303,9 @@ class WorkAiService extends WorkPermissionService {
 			enabled: !!input.enabled,
 			providerName: asText(input.providerName, 60) || DEFAULT_CONFIG.providerName,
 			apiUrl: asText(input.apiUrl, 400) || DEFAULT_CONFIG.apiUrl,
-			model: asText(input.model, 120) || DEFAULT_CONFIG.model,
+			model: normalizeModelForApi(input.model, input.apiUrl, input.providerName),
 			visionApiUrl: asText(input.visionApiUrl, 400),
-			visionModel: asText(input.visionModel, 120),
+			visionModel: asText(input.visionModel, 120) ? normalizeModelForApi(input.visionModel, input.visionApiUrl || input.apiUrl, input.providerName) : '',
 			visionApiKey: options.clearVisionKey ? '' : (asText(input.visionApiKey, 400) || current.visionApiKey || ''),
 			apiKey: options.clearKey ? '' : (apiKey || current.apiKey || ''),
 			personality: PERSONALITY_MAP[input.personality] ? input.personality : DEFAULT_CONFIG.personality,
@@ -372,6 +399,25 @@ class WorkAiService extends WorkPermissionService {
 					err = minimalErr;
 				}
 			}
+			if (!hasImages && isMimoApi(selectedApiUrl, config.providerName) && this._shouldRetryWithMinimalBody(err, body)) {
+				try {
+					let mimoBody = this._mimoTextFallbackBody(body);
+					let mimoResult = await this._postJson(selectedApiUrl, mimoBody, {
+						Authorization: 'Bearer ' + selectedApiKey,
+					});
+					let mimoReply = this._pickReply(mimoResult);
+					if (mimoReply) {
+						let mimoConfig = Object.assign({}, config, {
+							model: mimoBody.model,
+							providerName: getProviderNameForRequest(config, hasImages),
+						});
+						return await this._handleAgentReply(openId, staff, mimoReply, mimoConfig, mimoResult, imageAttachments, pageContext);
+					}
+				} catch (mimoErr) {
+					console.error('AI Mimo text fallback failed:', mimoErr && mimoErr.message ? mimoErr.message : mimoErr);
+					err = mimoErr;
+				}
+			}
 			// If a separate vision model is unstable, try the text model once on
 			// the same request. Do not force a hard-coded model on custom APIs.
 			let fallbackModel = hasImages ? asText(config.model, 120) : '';
@@ -430,6 +476,8 @@ class WorkAiService extends WorkPermissionService {
 		let config = Object.assign({}, DEFAULT_CONFIG, saved || {});
 		if (!config.providerName || config.providerName == 'OpenAI兼容接口') config.providerName = DEFAULT_CONFIG.providerName;
 		if (!config.apiUrl || config.apiUrl == LEGACY_OPENAI_API_URL) config.apiUrl = DEFAULT_CONFIG.apiUrl;
+		config.model = normalizeModelForApi(config.model, config.apiUrl, config.providerName);
+		if (config.visionModel) config.visionModel = normalizeModelForApi(config.visionModel, config.visionApiUrl || config.apiUrl, config.providerName);
 		if (options.includeEnvKey !== false && !config.apiKey) config.apiKey = getEnvApiKey();
 		return config;
 	}
@@ -862,6 +910,35 @@ class WorkAiService extends WorkPermissionService {
 		return {
 			model: body.model,
 			messages: body.messages,
+			stream: false,
+		};
+	}
+
+	_plainTextFromMessageContent(content) {
+		if (typeof content == 'string') return content;
+		if (!Array.isArray(content)) return '';
+		return content
+			.filter(item => item && item.type == 'text' && item.text)
+			.map(item => item.text)
+			.join('\n');
+	}
+
+	_lastUserText(messages = []) {
+		if (!Array.isArray(messages)) return '';
+		for (let i = messages.length - 1; i >= 0; i--) {
+			if (messages[i] && messages[i].role == 'user') return asText(this._plainTextFromMessageContent(messages[i].content), 1200);
+		}
+		return '';
+	}
+
+	_mimoTextFallbackBody(body = {}) {
+		let userText = this._lastUserText(body.messages) || asText(this._agentUserMessage, 1200);
+		return {
+			model: normalizeModelForApi(body.model, DEFAULT_CONFIG.apiUrl, 'Mimo'),
+			messages: [{
+				role: 'user',
+				content: '你是云屿摄影小程序里的小猫 AI 助手。请用中文简洁回答，不要编造后台真实数据。用户问题：' + userText,
+			}],
 			stream: false,
 		};
 	}

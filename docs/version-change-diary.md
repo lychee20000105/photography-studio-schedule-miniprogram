@@ -1,6 +1,58 @@
 ﻿# 版本修改日记
 
 
+## v1.96 - 2026-06-24 20:52 CST
+
+### 改动级别
+
+小改修复，v1.95 -> v1.96。
+
+### 本次目标
+
+修复小李截图中“测试对话”仍返回 `Param Incorrect` 的问题。根因判断为云端实际请求仍可能携带旧模型 ID、非 MiMo 模型，或 MiMo 对完整 Agent 多段提示词请求结构不兼容；本次在后端做兜底，而不是继续让管理员反复手动改配置。
+
+### 主要修改
+
+- `work_ai_service.js` 新增 MiMo API 识别和模型 ID 规范化。
+- MiMo 地址下自动把 `mimov2.5` 规范为 `mimo-v2.5`，并把旧配置里的非 MiMo 模型回落到 `mimo-v2.5`。
+- 当 MiMo 对完整 Agent 请求和最小参数请求仍返回参数错误时，再发起单轮纯文本兜底请求，优先保证测试对话和普通问答可用。
+- 视觉模型留空仍保持留空，不强行写入默认视觉模型。
+- 重新生成并准备部署 `work_ai_service_live_patch.js`，确保云端 mcloud 使用新版 AI 服务逻辑。
+- `miniprogram/version.js`、`miniprogram/setting/setting.js`、`CHANGELOG.md`、`README.md` 和本文档同步升级到 v1.96。
+
+### 涉及文件
+
+- `cloudfunctions/mcloud/project/B00/service/work_ai_service.js`
+- `cloudfunctions/mcloud/work_ai_service_live_patch.js`
+- `miniprogram/version.js`
+- `miniprogram/setting/setting.js`
+- `CHANGELOG.md`
+- `README.md`
+- `docs/version-change-diary.md`
+
+### 验证结果
+
+- `node --check cloudfunctions/mcloud/project/B00/service/work_ai_service.js` 通过。
+- `node --check cloudfunctions/mcloud/work_ai_service_live_patch.js` 通过。
+- `node --check miniprogram/version.js` 通过。
+- `node --check miniprogram/setting/setting.js` 通过。
+- `miniprogram/app.json` 与 `project.config.json` JSON 解析通过。
+- `work_ai_service_live_patch.js` 解压后与 `work_ai_service.js`、`work_ai_agent_registry.js`、`work_ai_agent_memory.js`、`work_agent_audit_model.js` 源码一致。
+- live patch 实际加载检查通过；仅出现项目既有 `ws` 依赖提示，不影响本次 patch 注入。
+- 本轮涉及文件 `git diff --check` 通过，仅有既有 LF/CRLF 提示。
+- 敏感信息扫描未发现新增 API Key、Token 或 Secret。
+
+### 部署状态
+
+- `work_ai_service_live_patch.js` 已通过微信开发者工具 CLI 增量部署到 `mcloud`，包体 `41.9 KB`。
+- 小程序开发版已通过微信开发者工具 CLI 上传，版本号 `1.96`，包体 `1.5 MB` / `1,569,589 Byte`。
+- 本次未提交审核、未发布上线。
+
+### 未完成风险
+
+- MiMo 纯文本兜底保证测试对话和普通问答可用；如果要让复杂 Agent 写入动作也完全稳定，仍建议后续用更强的兼容模型或单独适配 MiMo 的 JSON 行为。
+- 本次仍不把用户提供的 Key 写入源码、日志或提交。
+
 ## v1.95 - 2026-06-24 20:34 CST
 
 ### 改动级别

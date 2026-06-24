@@ -1,5 +1,33 @@
 # Changelog
 
+## v1.96 - 2026-06-24
+
+MiMo参数错误兜底修复版本。本次按小改修复 `+0.01` 从 v1.95 升级为 v1.96，针对小米 MiMo 在小猫测试对话里仍返回 `Param Incorrect` 的问题，后端增加模型 ID 规范化和 MiMo 纯文本兜底请求。
+
+### 修复
+
+- 云函数识别小米 MiMo API 时，会把 `mimov2.5` 等常见错误写法自动规范为 `mimo-v2.5`。
+- 如果旧配置在 MiMo 地址下仍保存了 `gpt-4o-mini`、`deepseek-chat` 等非 MiMo 模型，后端会回落到 `mimo-v2.5`。
+- MiMo 在完整 Agent 提示词请求下返回 `Param Incorrect` 时，会自动再试一次单轮纯文本请求，优先保证测试对话和普通问答可用。
+- 继续保留管理员自由修改 Base URL、文本模型、视觉模型和 Key 的能力。
+
+### 验证
+
+- `node --check cloudfunctions/mcloud/project/B00/service/work_ai_service.js` 通过。
+- `node --check cloudfunctions/mcloud/work_ai_service_live_patch.js` 通过。
+- `node --check miniprogram/version.js` 与 `node --check miniprogram/setting/setting.js` 通过。
+- `miniprogram/app.json` 与 `project.config.json` JSON 解析通过。
+- `work_ai_service_live_patch.js` 解压后与 `work_ai_service.js`、`work_ai_agent_registry.js`、`work_ai_agent_memory.js`、`work_agent_audit_model.js` 源码一致。
+- live patch 实际加载检查通过；仅出现项目既有 `ws` 依赖提示，不影响本次 patch 注入。
+- 本轮涉及文件 `git diff --check` 通过，仅有既有 LF/CRLF 提示。
+- 敏感信息扫描未发现新增 API Key、Token 或 Secret。
+
+### 部署
+
+- `work_ai_service_live_patch.js` 已通过微信开发者工具 CLI 增量部署到 `mcloud`，包体 `41.9 KB`。
+- 小程序开发版已通过微信开发者工具 CLI 上传，版本号 `1.96`，包体 `1.5 MB` / `1,569,589 Byte`。
+- 本次未提交审核、未发布上线。
+
 ## v1.95 - 2026-06-24
 
 AI审计结构化摘要版本。本次按小改修复 `+0.01` 从 v1.94 升级为 v1.95，让新生成的 AI 审计流水除可读文本外，也保存脱敏结构化动作摘要，为后续自动复盘和高风险确认队列打底。

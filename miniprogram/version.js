@@ -1,14 +1,26 @@
 ﻿module.exports = {
-	current: '1.95',
-	previous: '1.94',
+	current: '1.96',
+	previous: '1.95',
 	date: '2026-06-24',
-	time: '20:34 CST',
+	time: '20:52 CST',
 	level: 'patch',
 	levelText: '小改修复',
-	name: 'AI审计结构化摘要',
-	summary: '新生成的 AI 审计流水会保存脱敏结构化动作摘要，详情页可查看复查建议、风险标签、关联对象和关键信号。',
+	name: 'MiMo参数错误兜底修复',
+	summary: '针对小米 MiMo 返回 Param Incorrect 的情况，后端自动规范模型 ID，并在复杂 Agent 请求不兼容时退到纯文本请求兜底。',
 	changeLog: '/docs/version-change-diary.md',
 	history: [
+		{
+			version: '1.96',
+			date: '2026-06-24',
+			name: 'MiMo参数错误兜底修复',
+			summary: '针对小米 MiMo 返回 Param Incorrect 的情况，后端自动规范模型 ID，并在复杂 Agent 请求不兼容时退到纯文本请求兜底。',
+			items: [
+				'云函数识别小米 MiMo API 时，会把 mimov2.5 等常见错误写法自动规范为 mimo-v2.5。',
+				'如果旧配置在 MiMo 地址下仍保存了 gpt-4o-mini、deepseek-chat 等非 MiMo 模型，后端会回落到 mimo-v2.5。',
+				'MiMo 在完整 Agent 提示词请求下返回 Param Incorrect 时，会自动再试一次单轮纯文本请求，至少保证测试对话和普通问答能跑通。',
+				'继续保留管理员自由修改 Base URL、文本模型、视觉模型和 Key 的能力。',
+			],
+		},
 		{
 			version: '1.95',
 			date: '2026-06-24',
