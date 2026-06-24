@@ -1,14 +1,25 @@
 ﻿module.exports = {
-	current: '2.15',
-	previous: '2.14',
+	current: '2.16',
+	previous: '2.15',
 	date: '2026-06-25',
-	time: '01:15 CST',
-	level: 'minor',
-	levelText: '小游戏性能优化',
-	name: 'v2.15: Canvas游戏性能优化 — setData合并+内存泄漏修复',
-	summary: 'B24: 2048滑动setData合并为单次调用、打地鼠_moles数组修剪、_tBgCells静态缓存。',
+	time: '01:20 CST',
+	level: 'patch',
+	levelText: '图片mode修复',
+	name: 'v2.16: 图片优化 — mode+lazy-load覆盖率审计',
+	summary: 'B25: 全量审计38个image标签，lazy-load已达100%覆盖，补充1处缺失mode属性。',
 	changeLog: '/docs/version-change-diary.md',
 	history: [
+		{
+			version: '2.16',
+			date: '2026-06-25',
+			name: 'v2.16-b25: 图片优化审计',
+			summary: 'B25: 审计全部 image 标签 mode/lazy-load 覆盖率。',
+			items: [
+				'审计 38 个 image 标签：lazy-load 100% 覆盖（B7 已完成）。',
+				'meet_my_join_detail 补充 mode="aspectFill" 防止二维码图片变形。',
+				'14 个小图标标签按规则跳过（<40rpx 的 UI 元素）。',
+			],
+		},
 		{
 			version: '2.15',
 			date: '2026-06-25',
