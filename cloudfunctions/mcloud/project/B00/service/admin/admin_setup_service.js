@@ -27,7 +27,6 @@ class AdminSetupService extends BaseProjectAdminService {
 
 		let PID = this.getProjectId();
 		let page = "projects/" + PID + "/pages/default/index/default_index";
-		console.log(page);
 
 		let rd = PID;
 		rd = rd.match(/\d+/g).join('');

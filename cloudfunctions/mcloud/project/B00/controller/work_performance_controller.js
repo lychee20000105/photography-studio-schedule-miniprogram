@@ -26,7 +26,7 @@ class WorkPerformanceController extends BaseProjectController {
 	async getRank() {
 		let input = this.validateData({
 			month: 'string|name=月份',
-			scope: 'string|name=范围',
+			scope: 'string|in:staff,team|name=范围',
 		});
 		let service = new WorkPerformanceService();
 		return await service.getRank(this._userId, input.month || '', input.scope || 'staff');
@@ -46,7 +46,7 @@ class WorkPerformanceController extends BaseProjectController {
 	async getMyCommissionList() {
 		let input = this.validateData({
 			month: 'string|name=月份',
-			kind: 'string|name=提成类型',
+			kind: 'string|in:advance,frozen,release,deduct,all|name=提成类型',
 			page: 'int|name=页码',
 			size: 'int|name=分页大小',
 			oldTotal: 'int|name=旧总数',

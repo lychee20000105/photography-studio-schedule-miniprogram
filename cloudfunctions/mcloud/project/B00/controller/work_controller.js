@@ -30,8 +30,8 @@ class WorkController extends BaseProjectController {
 	async getCalendar() {
 		let input = this.validateData({
 			month: 'string|name=月份',
-			scope: 'string|name=范围',
-			staffId: 'string|name=员工',
+			scope: 'string|in:all,mine,staff|name=范围',
+			staffId: 'string|max:50|name=员工',
 		});
 		let service = new WorkService();
 		return await service.getCalendar(this._userId, input.month, input.scope || 'all', input.staffId || '');
@@ -40,7 +40,7 @@ class WorkController extends BaseProjectController {
 	async getDayList() {
 		let input = this.validateData({
 			day: 'must|date|name=日期',
-			scope: 'string|name=范围',
+			scope: 'string|in:all,mine,staff|name=范围',
 		});
 		let service = new WorkService();
 		return await service.getDayList(this._userId, input.day, input.scope || 'all');
@@ -49,7 +49,7 @@ class WorkController extends BaseProjectController {
 	async getOrderList() {
 		let input = this.validateData({
 			month: 'string|name=月份',
-			scope: 'string|name=范围',
+			scope: 'string|in:all,mine,staff,month|name=范围',
 		});
 		let service = new WorkService();
 		return await service.getOrderList(this._userId, input.month || '', input.scope || 'month');
@@ -107,7 +107,7 @@ class WorkController extends BaseProjectController {
 
 	async getNoteList() {
 		let input = this.validateData({
-			type: 'string|name=类型',
+			type: 'string|in:all,mine,ai|name=类型',
 		});
 		let service = new WorkService();
 		return await service.getNoteList(this._userId, input.type || 'all');

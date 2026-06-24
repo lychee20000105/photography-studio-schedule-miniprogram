@@ -44,8 +44,8 @@ class AdminMeetController extends BaseProjectAdminController {
 		await this.isAdmin();
 
 		let rules = {
-			page: 'must|string',
-			timeMark: 'must|string',
+			page: 'must|string|max:200',
+			timeMark: 'must|string|max:50',
 		};
 
 		// 取得数据
@@ -93,7 +93,7 @@ class AdminMeetController extends BaseProjectAdminController {
 
 		let rules = {
 			meetId: 'must|id',
-			sort: 'must|int',
+			sort: 'must|int|min:-9999|max:9999',
 		};
 
 		// 取得数据
@@ -209,7 +209,7 @@ class AdminMeetController extends BaseProjectAdminController {
 			sortVal: 'name=搜索类型值',
 			orderBy: 'object|name=排序',
 			meetId: 'must|id',
-			mark: 'must|string',
+			mark: 'must|string|max:50',
 			page: 'must|int|default=1',
 			size: 'int|default=10',
 			isTotal: 'bool',
@@ -398,8 +398,8 @@ class AdminMeetController extends BaseProjectAdminController {
 		// 数据校验
 		let rules = {
 			meetId: 'must|id',
-			timeMark: 'must|string',
-			reason: 'string'
+			timeMark: 'must|string|max:50',
+			reason: 'string|max:200'
 		};
 
 		// 取得数据
@@ -435,7 +435,7 @@ class AdminMeetController extends BaseProjectAdminController {
 		let rules = {
 			id: 'must|id',
 			isLimit: 'must|bool|name=是否限制',
-			limit: 'must|int|name=人数上限',
+			limit: 'must|int|min:0|max:99999|name=人数上限',
 		};
 
 		// 取得数据
@@ -482,7 +482,7 @@ class AdminMeetController extends BaseProjectAdminController {
 
 		// 数据校验
 		let rules = {
-			isDel: 'int|must', //是否删除已有记录
+			isDel: 'int|must|in:0,1', //是否删除已有记录
 		};
 
 		// 取得数据
@@ -505,7 +505,7 @@ class AdminMeetController extends BaseProjectAdminController {
 			meetId: 'id|must',
 			startDay: 'date|must',
 			endDay: 'date|must',
-			status: 'int|must|default=1'
+			status: 'int|must|default=1|in:0,1,8,9,10'
 		};
 
 		// 取得数据
@@ -535,7 +535,7 @@ class AdminMeetController extends BaseProjectAdminController {
 
 		let rules = {
 			meetId: 'must|id',
-			timeMark: 'must|string',
+			timeMark: 'must|string|max:50',
 			forms: 'must|array',
 		};
 

@@ -104,7 +104,7 @@ class AdminUserController extends BaseProjectAdminController {
 
 		// 数据校验
 		let rules = {
-			isDel: 'int|must', //是否删除已有记录
+			isDel: 'int|must|in:0,1', //是否删除已有记录
 		};
 
 		// 取得数据

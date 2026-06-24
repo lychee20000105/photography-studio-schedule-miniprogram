@@ -156,6 +156,8 @@ class AdminMgrController extends BaseProjectAdminController {
 		// 取得数据
 		let input = this.validateData(rules);
 
+		if (input.password !== input.password2) this.AppError('两次输入的新密码不一致');
+
 		// 内容审核
 		await contentCheck.checkTextMultiAdmin(input);
 

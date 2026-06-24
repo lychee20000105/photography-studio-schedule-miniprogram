@@ -102,8 +102,6 @@ class BaseProjectService extends BaseService {
 			return;
 		}
 
-		console.log('### initSetup...');
-
 		let arr = COLLECTIONS.split('|');
 		for (let k in arr) {
 			if (!await dbUtil.isExistCollection(arr[k])) {
@@ -123,8 +121,6 @@ class BaseProjectService extends BaseService {
 				await AdminModel.insert(data);
 				if (initAdminPassword.source == 'generated') {
 					console.warn('### initSetup created admin with a generated temporary password. Set B00_ADMIN_INIT_PASSWORD before first deployment; the generated value is not printed.');
-				} else {
-					console.log('### initSetup created admin with password from ' + initAdminPassword.source + '.');
 				}
 			}
 		}

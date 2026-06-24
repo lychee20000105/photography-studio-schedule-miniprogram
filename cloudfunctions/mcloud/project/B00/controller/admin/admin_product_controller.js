@@ -21,7 +21,7 @@ class AdminProductController extends BaseProjectAdminController {
 
 		let rules = {
 			id: 'must|id',
-			sort: 'must|int',
+			sort: 'must|int|min:-9999|max:9999',
 		};
 
 		// 取得数据
@@ -37,7 +37,7 @@ class AdminProductController extends BaseProjectAdminController {
 
 		let rules = {
 			id: 'must|id',
-			home: 'must|int',
+			home: 'must|int|in:0,1',
 		};
 
 		// 取得数据
@@ -54,7 +54,7 @@ class AdminProductController extends BaseProjectAdminController {
 		// 数据校验
 		let rules = {
 			id: 'must|id',
-			status: 'must|int',
+			status: 'must|int|in:0,1',
 		};
 
 		// 取得数据

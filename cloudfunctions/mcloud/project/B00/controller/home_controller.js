@@ -12,7 +12,7 @@ class HomeController extends BaseProjectController {
 	async getSetup() {
 		// 数据校验
 		let rules = {
-			key: 'must|string|name=KEY',
+			key: 'must|string|max:50|name=KEY',
 		};
 
 		// 取得数据
