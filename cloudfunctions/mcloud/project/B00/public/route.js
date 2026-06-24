@@ -87,6 +87,9 @@ module.exports = {
 		'work/admin_ai_config_save': 'work_admin_controller@saveAiConfig#demo',
 		'work/admin_agent_audit_list': 'work_admin_controller@getAgentAuditList',
 		'work/admin_agent_audit_detail': 'work_admin_controller@getAgentAuditDetail',
+		'work/admin_agent_confirm_list': 'work_admin_controller@getAgentConfirmList',
+		'work/admin_agent_confirm_approve': 'work_admin_controller@approveAgentConfirm#demo',
+		'work/admin_agent_confirm_reject': 'work_admin_controller@rejectAgentConfirm#demo',
 
 		// 预约
 	'meet/list': 'meet_controller@getMeetList',

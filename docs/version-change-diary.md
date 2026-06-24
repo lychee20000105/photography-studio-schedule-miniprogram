@@ -1,6 +1,106 @@
 ﻿# 版本修改日记
 
 
+## v1.98 - 2026-06-24 21:24 CST
+
+### 改动级别
+
+小改修复，v1.97 -> v1.98。
+
+### 本次目标
+
+把小猫助手后台 AI 配置页改成更方便手机端操作的供应商配置界面：像 CC Switch 一样先选供应商卡片，再进入编辑面板填写 Base URL、API Key、文本模型和视觉模型。
+
+### 主要修改
+
+- 供应商区域从原来的长表单改为卡片式列表，展示 Agnes、DeepSeek、OpenAI、Mimo 和当前自定义配置。
+- 新增供应商编辑面板，集中填写供应商名称、备注、官网、API 请求地址、API Key、文本模型 ID、视觉模型 ID 和视觉接口地址。
+- 编辑面板支持 API Key 直接粘贴、显示/隐藏、清空输入，并保留“清空当前已保存主 Key”开关。
+- 应用供应商后同步更新当前表单、模型选择状态和上下文估算；保存成功后刷新供应商卡片状态。
+- 保持 Mimo 默认接口和 `mimo-v2.5` 默认模型，同时不锁死配置，管理员仍可切换 DeepSeek、自定义兼容接口和独立视觉模型。
+- `miniprogram/version.js`、`miniprogram/setting/setting.js`、`CHANGELOG.md`、`README.md` 和本文档同步升级到 v1.98。
+
+### 涉及文件
+
+- `miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.js`
+- `miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.wxml`
+- `miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.wxss`
+- `miniprogram/version.js`
+- `miniprogram/setting/setting.js`
+- `CHANGELOG.md`
+- `README.md`
+- `docs/version-change-diary.md`
+
+### 验证结果
+
+- 待本轮本地校验和开发版上传后回填。
+
+### 部署状态
+
+- 待上传开发版。
+
+### 未完成风险
+
+- 当前版本仍沿用后端单套 AI 配置保存模型：可自由编辑并保存当前默认供应商，但暂未把多个供应商各自的 Key 持久化成独立配置档案。
+
+## v1.97 - 2026-06-24 21:11 CST
+
+### 改动级别
+
+小改修复，v1.96 -> v1.97。
+
+### 本次目标
+
+继续补全小猫 Agent 的安全治理层：高风险业务动作不再由 AI 对话直接落库，而是先生成管理员确认申请，再由管理员在管理中心确认或驳回。
+
+### 主要修改
+
+- 新增 `bx_work_agent_confirm` 确认队列模型，记录动作、参数、发起人、关联对象、状态、处理人和执行结果。
+- 新增 `WorkAgentConfirmService`，提供创建待确认、列表筛选、开始确认、完成确认、执行失败记录和驳回能力。
+- `work_ai_service.js` 拦截 `cancel_order`、`save_payment`、`void_payment`、`pay_payroll`、`audit_order`，先写入确认队列，不直接修改订单、财务、工资或审核数据。
+- `work_admin_controller.js` 新增确认队列列表、确认执行、驳回接口；确认执行复用原小猫业务执行函数，并使用当前管理员身份。
+- 新增管理端页面 `admin_agent_confirm`，支持状态/动作筛选、确认执行、驳回、查看脱敏参数和执行结果。
+- 管理中心首页新增“AI确认队列”入口。
+- `miniprogram/version.js`、`miniprogram/setting/setting.js`、`CHANGELOG.md`、`README.md` 和本文档同步升级到 v1.97。
+
+### 涉及文件
+
+- `cloudfunctions/mcloud/project/B00/model/work_agent_confirm_model.js`
+- `cloudfunctions/mcloud/project/B00/service/work_agent_confirm_service.js`
+- `cloudfunctions/mcloud/project/B00/service/work_ai_service.js`
+- `cloudfunctions/mcloud/project/B00/controller/work_admin_controller.js`
+- `cloudfunctions/mcloud/project/B00/public/route.js`
+- `miniprogram/projects/B00/pages/work/admin_agent_confirm/*`
+- `miniprogram/app.json`
+- `miniprogram/version.js`
+- `miniprogram/setting/setting.js`
+- `CHANGELOG.md`
+- `README.md`
+- `docs/version-change-diary.md`
+
+### 验证结果
+
+- `node --check` 覆盖新增确认模型、确认服务、AI 服务、管理端控制器、路由、确认队列页面 JS、版本源、设置文件和三个 live patch，均通过。
+- `miniprogram/app.json`、确认队列页面 JSON 和 `project.config.json` JSON 解析通过，确认队列页面已注册。
+- 确认队列页面 WXML view 标签数量 sanity check 通过，未发现异常 `/view>` 闭合。
+- `work_ai_service_live_patch.js`、`work_admin_controller_live_patch.js`、`work_route_live_patch.js` 解压后与当前源文件一致。
+- live patch 实际加载检查通过；仅出现项目既有 `ws` 依赖提示，不影响本次 patch 注入。
+- 本轮涉及文件 `git diff --check` 通过，仅有既有 LF/CRLF 提示。
+- 敏感信息扫描未发现新增 API Key、Token 或 Secret；字段校验里的 `apiKey: string|max` 属于误报，已排除。
+
+### 部署状态
+
+- `work_ai_service_live_patch.js` 已通过微信开发者工具 CLI 增量部署到 `mcloud`，包体 `46.2 KB`。
+- `work_admin_controller_live_patch.js` 已通过微信开发者工具 CLI 增量部署到 `mcloud`，包体 `11.1 KB`。
+- `work_route_live_patch.js` 已通过微信开发者工具 CLI 增量部署到 `mcloud`，包体 `2.8 KB`。
+- 小程序开发版已通过微信开发者工具 CLI 上传，版本号 `1.97`，包体 `1.5 MB` / `1,598,534 Byte`。
+- 本次未提交审核、未发布上线。
+
+### 未完成风险
+
+- 本轮只把 AI 发起的高风险动作接入确认队列；人工管理端原有收款、工资、审核入口仍按原流程执行。
+- 确认队列的驳回备注当前为固定文本，后续可补一个输入弹窗或详情页。
+
 ## v1.96 - 2026-06-24 20:52 CST
 
 ### 改动级别

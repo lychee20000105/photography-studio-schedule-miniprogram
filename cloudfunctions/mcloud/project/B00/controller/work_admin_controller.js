@@ -15,6 +15,7 @@ const AdminWorkService = require('../service/admin/admin_work_service.js');
 const WorkService = require('../service/work_service.js');
 const WorkAiService = require('../service/work_ai_service.js');
 const WorkAgentAuditService = require('../service/work_agent_audit_service.js');
+const WorkAgentConfirmService = require('../service/work_agent_confirm_service.js');
 const WorkStaffModel = require('../model/work_staff_model.js');
 
 class WorkAdminController extends BaseProjectController {
@@ -72,6 +73,7 @@ class WorkAdminController extends BaseProjectController {
 				{ title: '订单审核', desc: '审核完成订单并触发释放', url: '/projects/B00/pages/work/admin_audit/work_admin_audit' },
 				{ title: '问题反馈', desc: '查看员工提交的问题和建议', url: '/projects/B00/pages/work/admin_feedback/work_admin_feedback' },
 				{ title: 'AI 小助手', desc: '配置猫咪对话的接口、模型和提示词', url: '/projects/B00/pages/work/admin_ai/work_admin_ai' },
+				{ title: 'AI确认队列', desc: '确认或驳回小猫发起的高风险动作', url: '/projects/B00/pages/work/admin_agent_confirm/work_admin_agent_confirm' },
 				{ title: 'AI 审计流水', desc: '查看小猫执行过的写入动作、风险等级和审查记录', url: '/projects/B00/pages/work/admin_agent_audit/work_admin_agent_audit' },
 			],
 		};
@@ -302,6 +304,49 @@ class WorkAdminController extends BaseProjectController {
 		await this._assertMiniAdmin();
 		let service = new WorkAgentAuditService();
 		return await service.getAuditDetail(input.id);
+	}
+
+	async getAgentConfirmList() {
+		let input = this.validateData({
+			action: 'string|max:40|name=AI动作',
+			status: 'string|max:20|name=确认状态',
+			keyword: 'string|max:80|name=关键词',
+			page: 'int|name=页码',
+			size: 'int|name=分页大小',
+			oldTotal: 'int|name=旧总数',
+		});
+		await this._assertMiniAdmin();
+		let service = new WorkAgentConfirmService();
+		return await service.listConfirms(input);
+	}
+
+	async approveAgentConfirm() {
+		let input = this.validateData({
+			id: 'must|id|name=确认记录ID',
+			note: 'string|max:200|name=确认备注',
+		});
+		let staff = await this._assertMiniAdmin();
+		let confirmService = new WorkAgentConfirmService();
+		let pending = await confirmService.startApprove(input.id, input.note || '', staff);
+		let aiService = new WorkAiService();
+		try {
+			let ret = await aiService.confirmPendingAction(this._userId, staff, pending);
+			await confirmService.finishApprove(input.id, ret || {});
+			return ret;
+		} catch (err) {
+			await confirmService.failApprove(input.id, err);
+			throw err;
+		}
+	}
+
+	async rejectAgentConfirm() {
+		let input = this.validateData({
+			id: 'must|id|name=确认记录ID',
+			note: 'string|max:200|name=驳回说明',
+		});
+		let staff = await this._assertMiniAdmin();
+		let service = new WorkAgentConfirmService();
+		return await service.rejectConfirm(input.id, input.note || '管理员驳回', staff);
 	}
 
 	async auditOrder() {

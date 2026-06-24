@@ -1,0 +1,82 @@
+<view class="page">
+	<view class="filter">
+		<view class="filter-row">
+			<input class="keyword" value="{{keyword}}" bindinput="bindKeywordInput" placeholder="搜员工、动作、关联ID" confirm-type="search" bindconfirm="bindSearchTap" />
+			<button class="search-btn" bindtap="bindSearchTap">搜索</button>
+		</view>
+		<view class="seg-row">
+			<picker mode="selector" range="{{actionOptions}}" range-key="name" value="{{actionIndex}}" bindchange="bindActionChange">
+				<view class="select">{{actionPickerText}}</view>
+			</picker>
+			<picker mode="selector" range="{{statusOptions}}" range-key="name" value="{{statusIndex}}" bindchange="bindStatusChange">
+				<view class="select">{{statusPickerText}}</view>
+			</picker>
+			<button class="reset-btn" bindtap="bindResetTap">重置</button>
+		</view>
+	</view>
+
+	<view wx:if="{{isLoad}}" class="stats-panel">
+		<view class="stat-grid">
+			<view class="stat-card pending">
+				<view class="stat-num">{{stats.pendingCount}}</view>
+				<view class="stat-label">待确认</view>
+			</view>
+			<view class="stat-card done">
+				<view class="stat-num">{{stats.doneCount}}</view>
+				<view class="stat-label">已执行</view>
+			</view>
+			<view class="stat-card reject">
+				<view class="stat-num">{{stats.rejectCount}}</view>
+				<view class="stat-label">已驳回</view>
+			</view>
+			<view class="stat-card failed">
+				<view class="stat-num">{{stats.failedCount}}</view>
+				<view class="stat-label">失败</view>
+			</view>
+		</view>
+	</view>
+
+	<view wx:if="{{!isLoad}}" class="empty">加载中...</view>
+	<view wx:if="{{isLoad && list.length==0}}" class="empty">暂无 AI 确认申请</view>
+
+	<view wx:for="{{list}}" wx:key="_id" class="card">
+		<view class="card-head">
+			<view class="title-wrap">
+				<view class="title">{{item.AGENTCONFIRM_TITLE || item.actionText}}</view>
+				<view class="meta">发起：{{item.AGENTCONFIRM_REQUEST_STAFF_NAME || '未知员工'}} · {{item.addTimeText}}</view>
+			</view>
+			<view class="status {{item.statusClass}}">{{item.statusText}}</view>
+		</view>
+
+		<view class="tags">
+			<text>{{item.actionText}}</text>
+			<text wx:if="{{item.AGENTCONFIRM_REF_TYPE}}">{{item.AGENTCONFIRM_REF_TYPE}}</text>
+			<text wx:if="{{item.AGENTCONFIRM_REF_ID}}">{{item.AGENTCONFIRM_REF_ID}}</text>
+		</view>
+
+		<view class="content">{{item.AGENTCONFIRM_CONTENT}}</view>
+
+		<view class="payload">
+			<view class="payload-title">参数摘要</view>
+			<view class="payload-text">{{item.payloadText}}</view>
+		</view>
+
+		<view wx:if="{{item.AGENTCONFIRM_REVIEW_STAFF_NAME || item.AGENTCONFIRM_RESULT.reply || item.AGENTCONFIRM_RESULT.error}}" class="review">
+			<view wx:if="{{item.AGENTCONFIRM_REVIEW_STAFF_NAME}}">处理人：{{item.AGENTCONFIRM_REVIEW_STAFF_NAME}} · {{item.reviewTimeText}}</view>
+			<view wx:if="{{item.AGENTCONFIRM_REVIEW_NOTE}}">说明：{{item.AGENTCONFIRM_REVIEW_NOTE}}</view>
+			<view wx:if="{{item.AGENTCONFIRM_RESULT.reply}}">结果：{{item.AGENTCONFIRM_RESULT.reply}}</view>
+			<view wx:if="{{item.AGENTCONFIRM_RESULT.error}}">错误：{{item.AGENTCONFIRM_RESULT.error}}</view>
+		</view>
+
+		<view wx:if="{{item.canReview}}" class="actions">
+			<button class="reject-btn" data-id="{{item._id}}" catchtap="bindRejectTap">驳回</button>
+			<button class="approve-btn" data-id="{{item._id}}" catchtap="bindApproveTap">确认执行</button>
+		</view>
+	</view>
+
+	<view wx:if="{{isLoad && list.length>0 && hasMore}}" class="more">上拉加载更多</view>
+	<view wx:if="{{isLoad && list.length>0 && !hasMore}}" class="more">已到底</view>
+</view>
+
+<tech-footer />
+<work-pet id="workPet" />

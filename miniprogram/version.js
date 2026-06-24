@@ -1,14 +1,38 @@
 ﻿module.exports = {
-	current: '1.96',
-	previous: '1.95',
+	current: '1.98',
+	previous: '1.97',
 	date: '2026-06-24',
-	time: '20:52 CST',
+	time: '21:24 CST',
 	level: 'patch',
 	levelText: '小改修复',
-	name: 'MiMo参数错误兜底修复',
-	summary: '针对小米 MiMo 返回 Param Incorrect 的情况，后端自动规范模型 ID，并在复杂 Agent 请求不兼容时退到纯文本请求兜底。',
+	name: '小猫AI供应商配置页',
+	summary: 'AI 配置页改成卡片式供应商列表和编辑面板，管理员可更方便地填写 Base URL、API Key、文本模型和视觉模型。',
 	changeLog: '/docs/version-change-diary.md',
 	history: [
+		{
+			version: '1.98',
+			date: '2026-06-24',
+			name: '小猫AI供应商配置页',
+			summary: 'AI 配置页改成卡片式供应商列表和编辑面板，管理员可更方便地填写 Base URL、API Key、文本模型和视觉模型。',
+			items: [
+				'供应商配置区改为卡片列表，展示当前默认、接口地址、模型 ID 和 Key 保存状态。',
+				'新增供应商编辑面板，可直接填写供应商名称、备注、官网、API 请求地址、API Key、文本模型和视觉模型。',
+				'API Key 支持从编辑面板直接粘贴、显示/隐藏、清空输入，并保留清空当前已保存主 Key 的开关。',
+				'保存成功后立即刷新供应商卡片状态，避免显示仍停留在旧配置。',
+			],
+		},
+		{
+			version: '1.97',
+			date: '2026-06-24',
+			name: '小猫高风险确认队列',
+			summary: '小猫识别到收款、取消订单、作废收款、发工资和审核订单等高风险动作时，先生成管理员确认申请，确认后才真实执行。',
+			items: [
+				'新增 `bx_work_agent_confirm` 确认队列模型和服务，保存动作、发起人、脱敏参数、关联对象、确认状态和执行结果。',
+				'小猫 Agent 对 `cancel_order`、`save_payment`、`void_payment`、`pay_payroll`、`audit_order` 先入队，不再直接修改业务数据。',
+				'管理中心新增“AI确认队列”入口，管理员可筛选待确认记录，并用当前管理员身份确认执行或驳回。',
+				'确认执行仍复用原订单、财务、工资和审核服务，执行成功后继续写入原有 AI 操作审计小记和 Agent 审计流水。',
+			],
+		},
 		{
 			version: '1.96',
 			date: '2026-06-24',

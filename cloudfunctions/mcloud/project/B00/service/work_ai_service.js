@@ -982,6 +982,37 @@ class WorkAiService extends WorkPermissionService {
 		return null;
 	}
 
+	_isConfirmRequiredAction(action) {
+		return !!AGENT_CONFIRM_ACTIONS[action];
+	}
+
+	async _agentCreatePendingConfirm(openId, staff, action, data = {}, pageContext = {}) {
+		let service = new WorkAgentConfirmService();
+		let pending = await service.createPending(openId, staff, action, data, pageContext);
+		return {
+			action: 'agent_confirm',
+			id: pending.id,
+			data: pending,
+			reply: `已生成高风险确认申请：${pending.title}。请管理员到“AI确认队列”确认后再执行，当前还没有改动业务数据。`,
+		};
+	}
+
+	async confirmPendingAction(openId, staff, pending = {}) {
+		let action = pending.AGENTCONFIRM_ACTION || '';
+		let data = pending.AGENTCONFIRM_PAYLOAD || {};
+		let pageContext = pending.AGENTCONFIRM_PAGE_CONTEXT || {};
+		return await this._executeConfirmedAgentAction(openId, staff, action, data, pageContext);
+	}
+
+	async _executeConfirmedAgentAction(openId, staff, action, data = {}, pageContext = {}) {
+		if (action == 'cancel_order') return await this._agentCancelOrder(openId, staff, data || {});
+		if (action == 'save_payment') return await this._agentSavePayment(openId, staff, data || {});
+		if (action == 'void_payment') return await this._agentVoidPayment(openId, staff, data || {});
+		if (action == 'pay_payroll') return await this._agentPayPayroll(openId, staff, data || {});
+		if (action == 'audit_order') return await this._agentAuditOrder(openId, staff, data || {});
+		this.AppError('该确认动作暂不支持执行：' + action);
+	}
+
 	async _handleAgentReply(openId, staff, reply, config, llmResult, attachments = [], pageContext = {}) {
 		let action = this._pickJsonObject(reply);
 		let validActions = agentRegistry.normalizeActionList(this._agentAllowedActions || []);
@@ -1011,7 +1042,8 @@ class WorkAiService extends WorkPermissionService {
 		if (!batchOrders.length) batchOrders = this._extractBatchOrders(action);
 		let batchPayload = batchOrders.length ? { orders: batchOrders } : (action.data || action);
 		if (action.action == 'create_note') action.action = 'add_note';
-		if (action.action == 'query_schedule') ret = await this._agentQuerySchedule(openId, staff, action.data || {});
+		if (this._isConfirmRequiredAction(action.action)) ret = await this._agentCreatePendingConfirm(openId, staff, action.action, action.data || {}, pageContext);
+		else if (action.action == 'query_schedule') ret = await this._agentQuerySchedule(openId, staff, action.data || {});
 		else if (action.action == 'create_orders' && batchOrders.length) ret = await this._agentCreateOrders(openId, staff, batchPayload, attachments, pageContext);
 		else if (action.action == 'create_orders') ret = { reply: 'AI返回了批量新增动作但没有包含订单列表，请重新描述或上传截图。' };
 		else if (action.action == 'create_order' && batchOrders.length) ret = await this._agentCreateOrders(openId, staff, batchPayload, attachments, pageContext);

@@ -1,5 +1,63 @@
 # Changelog
 
+## v1.98 - 2026-06-24
+
+小猫 AI 供应商配置页版本。本次按小改修复 `+0.01` 从 v1.97 升级为 v1.98，把后台 AI 配置页改成更接近 CC Switch 的供应商卡片和编辑面板，方便管理员自由切换 DeepSeek、MiMo、自定义兼容接口，以及单独配置文本模型和视觉模型。
+
+### 优化
+
+- 供应商配置区改为卡片列表，展示当前默认、接口地址、模型 ID 和 Key 保存状态。
+- 新增“新增 / 编辑供应商”面板，可填写供应商名称、备注、官网、API 请求地址、API Key、文本模型 ID、视觉模型 ID 和视觉接口地址。
+- API Key 支持在编辑面板内直接粘贴、显示/隐藏、清空输入，并保留清空当前已保存主 Key 的开关。
+- 保存配置成功后立即刷新供应商卡片状态，减少“保存了但界面还像没变”的误判。
+
+### 安全
+
+- API Key 仍只通过云函数配置保存流程提交，不写入源码、日志或版本记录。
+- 供应商卡片只展示脱敏 Key 状态，不展示明文 Key。
+
+### 验证
+
+- 待本轮本地校验和开发版上传后回填。
+
+### 部署
+
+- 待上传开发版。
+
+## v1.97 - 2026-06-24
+
+小猫高风险确认队列版本。本次按小改修复 `+0.01` 从 v1.96 升级为 v1.97，让小猫识别到收款、取消订单、作废收款、发工资和审核订单等高风险动作时，先生成管理员确认申请，确认后才真实执行。
+
+### 新增
+
+- 新增 `work_agent_confirm_model.js` 与 `work_agent_confirm_service.js`，保存确认动作、发起人、脱敏参数、关联对象、状态、处理人和执行结果。
+- 管理中心新增“AI确认队列”入口和 `admin_agent_confirm` 页面，支持按动作、状态、关键词筛选确认申请。
+- 新增 `work/admin_agent_confirm_list`、`work/admin_agent_confirm_approve`、`work/admin_agent_confirm_reject` 路由。
+
+### 安全
+
+- 小猫 Agent 对 `cancel_order`、`save_payment`、`void_payment`、`pay_payroll`、`audit_order` 不再直接执行，先进入确认队列。
+- 管理员确认时使用当前管理员 openId 和员工身份执行，原 AI 对话人只作为申请发起人留痕。
+- 确认队列前端展示脱敏参数摘要，不展示 openid、密钥、Token 或完整敏感字段。
+
+### 验证
+
+- `node --check` 覆盖新增确认模型、确认服务、AI 服务、管理端控制器、路由、确认队列页面 JS、版本源、设置文件和三个 live patch，均通过。
+- `miniprogram/app.json`、确认队列页面 JSON 和 `project.config.json` JSON 解析通过，确认队列页面已注册。
+- 确认队列页面 WXML view 标签数量 sanity check 通过，未发现异常 `/view>` 闭合。
+- live patch 解压后与 `work_ai_service.js`、`work_agent_confirm_model.js`、`work_agent_confirm_service.js`、`work_admin_controller.js`、`route.js` 等源文件一致。
+- live patch 实际加载检查通过；仅出现项目既有 `ws` 依赖提示，不影响本次 patch 注入。
+- 本轮涉及文件 `git diff --check` 通过，仅有既有 LF/CRLF 提示。
+- 敏感信息扫描未发现新增 API Key、Token 或 Secret；字段校验里的 `apiKey: string|max` 属于误报，已排除。
+
+### 部署
+
+- `work_ai_service_live_patch.js` 已通过微信开发者工具 CLI 增量部署到 `mcloud`，包体 `46.2 KB`。
+- `work_admin_controller_live_patch.js` 已通过微信开发者工具 CLI 增量部署到 `mcloud`，包体 `11.1 KB`。
+- `work_route_live_patch.js` 已通过微信开发者工具 CLI 增量部署到 `mcloud`，包体 `2.8 KB`。
+- 小程序开发版已通过微信开发者工具 CLI 上传，版本号 `1.97`，包体 `1.5 MB` / `1,598,534 Byte`。
+- 本次未提交审核、未发布上线。
+
 ## v1.96 - 2026-06-24
 
 MiMo参数错误兜底修复版本。本次按小改修复 `+0.01` 从 v1.95 升级为 v1.96，针对小米 MiMo 在小猫测试对话里仍返回 `Param Incorrect` 的问题，后端增加模型 ID 规范化和 MiMo 纯文本兜底请求。
