@@ -1083,7 +1083,6 @@ Component({
 				let updated = trimMessages(messages.concat([{ role: 'assistant', content: text }]));
 				let stillSame = !this.data.activeChatId || this.data.activeChatId === threadId;
 				if (stillSame) {
-					let lastIdx = updated.length - 1;
 					this.setData({
 						chatMessages: updated,
 						chatLoading: false
