@@ -1,5 +1,16 @@
+/* ===== CSS Custom Properties ===== */
 page {
-  background: #f5efe4;
+  --color-primary: #ff6b6b;
+  --color-primary-end: #ffa07a;
+  --color-bg: #f5efe4;
+  --color-card: #fff;
+  --color-text: #333;
+  --color-text-sub: #999;
+  --color-text-muted: #888;
+  --shadow-card: 0 4rpx 20rpx rgba(0,0,0,0.06);
+  --radius-card: 20rpx;
+  --radius-btn: 40rpx;
+  background: var(--color-bg);
   min-height: 100vh;
 }
 
@@ -19,17 +30,29 @@ page {
 .resource-bar { display: flex; gap: 16rpx; }
 .resource-item { display: flex; align-items: center; background: rgba(255,255,255,0.25); border-radius: 20rpx; padding: 4rpx 12rpx; }
 .res-icon { font-size: 24rpx; margin-right: 4rpx; }
-.res-value { font-size: 24rpx; color: #fff; font-weight: 600; }
+.res-value {
+  font-size: 24rpx;
+  color: #fff;
+  font-weight: 600;
+  display: inline-block;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.res-value.bump {
+  transform: scale(1.3);
+  color: #ffe066;
+}
 
 /* 离线收益弹窗 */
 .offline-modal {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(8rpx);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 999;
+  animation: fadeIn 0.3s ease-out;
 }
 .offline-card {
   background: #fff;
@@ -37,11 +60,18 @@ page {
   padding: 48rpx;
   width: 560rpx;
   text-align: center;
+  animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 8rpx 40rpx rgba(0,0,0,0.12);
 }
 .offline-title { font-size: 36rpx; font-weight: 600; color: #333; display: block; margin-bottom: 12rpx; }
 .offline-desc { font-size: 26rpx; color: #888; display: block; margin-bottom: 24rpx; }
 .offline-rewards { display: flex; flex-direction: column; gap: 12rpx; margin-bottom: 32rpx; }
-.offline-reward-item { font-size: 30rpx; color: #ff6b6b; }
+.offline-reward-item {
+  font-size: 30rpx;
+  color: #ff6b6b;
+  animation: scaleIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+.offline-reward-item:nth-child(2) { animation-delay: 0.15s; }
 .offline-btn {
   background: linear-gradient(135deg, #ff6b6b, #ffa07a);
   color: #fff;
@@ -49,7 +79,9 @@ page {
   padding: 16rpx 0;
   font-size: 30rpx;
   font-weight: 600;
+  transition: transform 0.12s ease;
 }
+.offline-btn:active { transform: scale(0.95); }
 
 /* 主场景 */
 .studio-scene {
@@ -75,6 +107,8 @@ page {
   align-items: center;
   justify-content: center;
   margin-bottom: 16rpx;
+  animation: catFloat 3s ease-in-out infinite;
+  box-shadow: 0 8rpx 24rpx rgba(0,0,0,0.1);
 }
 .cat-avatar.cloud { background: linear-gradient(135deg, #e8f4f8, #b8d8e8); }
 .cat-avatar.camera { background: linear-gradient(135deg, #fff3e0, #ffe0b2); }
@@ -90,6 +124,8 @@ page {
   border-radius: 20rpx;
   padding: 24rpx;
   box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.05);
+  animation: slideUp 0.5s ease-out both;
+  animation-delay: 0.2s;
 }
 .status-row {
   display: flex;
@@ -118,7 +154,7 @@ page {
   height: 100%;
   background: linear-gradient(90deg, #ff6b6b, #ffa07a);
   border-radius: 14rpx;
-  transition: width 0.3s ease;
+  transition: width 0.6s cubic-bezier(0.25, 1, 0.5, 1);
 }
 .exp-text {
   position: absolute;
@@ -140,6 +176,15 @@ page {
   display: flex;
   align-items: center;
   box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.04);
+  transition: transform 0.12s ease;
+  animation: slideUp 0.5s ease-out both;
+  animation-delay: 0.3s;
+}
+.checkin-bar:active { transform: scale(0.97); }
+.checkin-bar.checkin-glow {
+  animation: slideUp 0.5s ease-out both, checkinPulse 2s ease-in-out infinite;
+  animation-delay: 0.3s, 0s;
+  border: 2rpx solid rgba(255,107,107,0.3);
 }
 .checkin-icon { font-size: 36rpx; margin-right: 12rpx; }
 .checkin-text { font-size: 28rpx; color: #4f5368; }
@@ -150,6 +195,8 @@ page {
   font-size: 32rpx;
   font-weight: 600;
   color: #333;
+  animation: slideUp 0.5s ease-out both;
+  animation-delay: 0.35s;
 }
 .game-list { margin: 0 24rpx; }
 .game-card {
@@ -160,9 +207,13 @@ page {
   display: flex;
   align-items: center;
   box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.04);
-  transition: transform 0.15s ease;
+  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: slideUp 0.5s ease-out both;
 }
-.game-card:active { transform: scale(0.97); }
+.game-card:nth-child(1) { animation-delay: 0.4s; }
+.game-card:nth-child(2) { animation-delay: 0.5s; }
+.game-card:nth-child(3) { animation-delay: 0.6s; }
+.game-card:active { transform: scale(0.95); }
 .game-icon-wrap {
   width: 80rpx;
   height: 80rpx;
@@ -180,7 +231,12 @@ page {
 .game-info { flex: 1; }
 .game-name { font-size: 30rpx; font-weight: 600; color: #333; display: block; }
 .game-desc { font-size: 24rpx; color: #999; margin-top: 6rpx; display: block; }
-.game-arrow { font-size: 36rpx; color: #ccc; }
+.game-arrow {
+  font-size: 36rpx;
+  color: #ccc;
+  transition: transform 0.2s ease;
+}
+.game-card:active .game-arrow { transform: translateX(4rpx); }
 
 /* 底部功能 */
 .bottom-actions {
@@ -197,6 +253,66 @@ page {
   flex-direction: column;
   align-items: center;
   box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.04);
+  transition: transform 0.12s ease;
+  animation: slideUp 0.5s ease-out both;
+  animation-delay: 0.65s;
 }
+.action-btn:active { transform: scale(0.95); }
 .action-icon { font-size: 48rpx; margin-bottom: 8rpx; }
 .action-text { font-size: 26rpx; color: #4f5368; }
+
+/* ===== Shared Keyframe Animations ===== */
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(40rpx); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.7); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes catFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12rpx); }
+}
+@keyframes checkinPulse {
+  0%, 100% { box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.04); }
+  50% { box-shadow: 0 0 20rpx rgba(255,107,107,0.4), 0 0 40rpx rgba(255,107,107,0.15); }
+}
+@keyframes floatUp {
+  0% { opacity: 1; transform: translateY(0) scale(1); }
+  60% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-80rpx) scale(1.2); }
+}
+@keyframes shimmer {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(100%); }
+}
+
+/* 浮动数字弹出 */
+.float-popup {
+  position: fixed;
+  z-index: 888;
+  pointer-events: none;
+  opacity: 0;
+}
+.float-popup.show {
+  animation: floatUp 0.9s ease-out forwards;
+}
+.float-text {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #ff6b6b;
+  text-shadow: 0 2rpx 4rpx rgba(255,107,107,0.3);
+}
+
+/* Loading skeleton shimmer */
+.skeleton-block {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 12rpx;
+}

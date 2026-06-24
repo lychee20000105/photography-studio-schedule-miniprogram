@@ -20,6 +20,14 @@ Page({
     offlineReward: null,
     gameTypes: gameHelper.GAME_TYPES,
     loading: true,
+    // 动画相关
+    displayCoins: 0,
+    displayMaterials: 0,
+    displayInspiration: 0,
+    coinsBump: false,
+    materialsBump: false,
+    inspirationBump: false,
+    floatPopup: { show: false, text: '', x: 0, y: 0 },
   },
 
   onLoad() {
@@ -46,6 +54,9 @@ Page({
 
     const offlineReward = gameHelper.calcOfflineReward(state);
 
+    // 记录旧值用于 countUp
+    const oldState = this.data.gameState;
+
     this.setData({
       gameState: state,
       phaseInfo,
@@ -56,12 +67,72 @@ Page({
       showOfflineReward: !!offlineReward && offlineReward.coins > 0,
       loading: false,
     });
+
+    // countUp 动画
+    if (oldState) {
+      this._animateCountUp('displayCoins', 'coinsBump', oldState.coins, state.coins);
+      this._animateCountUp('displayMaterials', 'materialsBump', oldState.materials, state.materials);
+      this._animateCountUp('displayInspiration', 'inspirationBump', oldState.inspiration, state.inspiration);
+    } else {
+      this.setData({
+        displayCoins: state.coins,
+        displayMaterials: state.materials,
+        displayInspiration: state.inspiration,
+      });
+    }
+  },
+
+  _animateCountUp(displayKey, bumpKey, fromVal, toVal) {
+    if (fromVal === toVal) {
+      this.setData({ [displayKey]: toVal });
+      return;
+    }
+    const diff = toVal - fromVal;
+    const steps = Math.min(Math.abs(diff), 10);
+    const stepVal = diff / steps;
+    let step = 0;
+
+    // 触发 bump 动画
+    this.setData({ [bumpKey]: true });
+    setTimeout(() => this.setData({ [bumpKey]: false }), 400);
+
+    const tick = () => {
+      step++;
+      if (step >= steps) {
+        this.setData({ [displayKey]: toVal });
+        return;
+      }
+      this.setData({ [displayKey]: Math.round(fromVal + stepVal * step) });
+      setTimeout(tick, 50);
+    };
+    setTimeout(tick, 50);
+  },
+
+  _showFloatPopup(text) {
+    const query = wx.createSelectorQuery();
+    query.select('.status-panel').boundingClientRect();
+    query.exec((res) => {
+      if (!res || !res[0]) return;
+      const rect = res[0];
+      this.setData({
+        floatPopup: {
+          show: true,
+          text,
+          x: rect.left + rect.width / 2 - 30,
+          y: rect.top - 10,
+        }
+      });
+      setTimeout(() => {
+        this.setData({ 'floatPopup.show': false });
+      }, 900);
+    });
   },
 
   onClaimOffline() {
     const state = this.data.gameState;
     const reward = this.data.offlineReward;
     if (!reward) return;
+    try { wx.vibrateShort({ type: 'medium' }); } catch (e) {}
     gameHelper.addCoins(state, reward.coins);
     gameHelper.addExp(state, reward.exp);
     gameHelper.saveState(state);
@@ -74,6 +145,8 @@ Page({
     const state = this.data.gameState;
     const result = gameHelper.claimDailyCheckin(state);
     if (result.ok) {
+      try { wx.vibrateShort({ type: 'medium' }); } catch (e) {}
+      this._showFloatPopup('+20 金币');
       wx.showToast({ title: `签到成功 +${result.coins}金币`, icon: 'none' });
     } else {
       wx.showToast({ title: result.msg, icon: 'none' });
@@ -82,6 +155,7 @@ Page({
   },
 
   onGameTap(e) {
+    try { wx.vibrateShort({ type: 'light' }); } catch (e) {}
     const gameId = e.currentTarget.dataset.id;
     wx.navigateTo({
       url: `../cat_game_play/work_cat_game_play?id=${gameId}`,

@@ -10,15 +10,15 @@
     <view class="resource-bar">
       <view class="resource-item">
         <text class="res-icon coin-icon">&#x1F4B0;</text>
-        <text class="res-value">{{gameState.coins}}</text>
+        <text class="res-value {{coinsBump ? 'bump' : ''}}">{{displayCoins}}</text>
       </view>
       <view class="resource-item">
         <text class="res-icon mat-icon">&#x2728;</text>
-        <text class="res-value">{{gameState.materials}}</text>
+        <text class="res-value {{materialsBump ? 'bump' : ''}}">{{displayMaterials}}</text>
       </view>
       <view class="resource-item">
         <text class="res-icon ins-icon">&#x1F4A1;</text>
-        <text class="res-value">{{gameState.inspiration}}</text>
+        <text class="res-value {{inspirationBump ? 'bump' : ''}}">{{displayInspiration}}</text>
       </view>
     </view>
   </view>
@@ -68,9 +68,14 @@
 </view>
 
 <!-- 每日签到 -->
-<view class="checkin-bar" bind:tap="onCheckinTap">
+<view class="checkin-bar {{gameState.dailyCheckin ? '' : 'checkin-glow'}}" bind:tap="onCheckinTap">
   <text class="checkin-icon">&#x1F4C5;</text>
   <text class="checkin-text">{{gameState.dailyCheckin ? '今日已签到 &#x2705;' : '每日签到 +20金币'}}</text>
+</view>
+
+<!-- 浮动数字弹出 -->
+<view class="float-popup {{floatPopup.show ? 'show' : ''}}" wx:if="{{floatPopup.show}}" style="left: {{floatPopup.x}}px; top: {{floatPopup.y}}px;">
+  <text class="float-text">{{floatPopup.text}}</text>
 </view>
 
 <!-- 小游戏入口 -->

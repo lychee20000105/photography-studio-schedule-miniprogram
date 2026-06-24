@@ -3,10 +3,10 @@ module.exports = {
 	CLOUD_ID: 'yunyukeji-d4g7waei5d5d6cdeb', //云服务id ,本地测试环境
 
 	// #### 版本信息
-	VER: 'v2.02',
-	APP_VERSION: '2.02',
+	VER: 'v2.03',
+	APP_VERSION: '2.03',
 	APP_VERSION_DATE: '2026-06-24',
-	APP_VERSION_NAME: '小猫助手内置小游戏MVP',
+	APP_VERSION_NAME: '小猫助手游戏UX动画优化',
 	COMPANY: '云屿摄影｜技术由云屿科技支持',
 
 	// #### 系统参数
