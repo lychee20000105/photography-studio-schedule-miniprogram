@@ -1,14 +1,25 @@
 ﻿module.exports = {
-	current: '2.14',
-	previous: '2.13',
+	current: '2.15',
+	previous: '2.14',
 	date: '2026-06-25',
-	time: '01:10 CST',
+	time: '01:15 CST',
 	level: 'minor',
-	levelText: 'setData优化+预加载',
-	name: 'v2.14: setData精确路径优化 + preloadRule',
-	summary: 'B23: 日历滑动节流、order_edit精确setData、preloadRule预加载、performance rank延迟加载。',
+	levelText: '小游戏性能优化',
+	name: 'v2.15: Canvas游戏性能优化 — setData合并+内存泄漏修复',
+	summary: 'B24: 2048滑动setData合并为单次调用、打地鼠_moles数组修剪、_tBgCells静态缓存。',
 	changeLog: '/docs/version-change-diary.md',
 	history: [
+		{
+			version: '2.15',
+			date: '2026-06-25',
+			name: 'v2.15-b24: Canvas游戏性能优化',
+			summary: 'B24: 2048合并setData、打地鼠内存泄漏修复、静态数组缓存。',
+			items: [
+				'2048 四个方向 move 函数从循环内多次 setData 改为累积后单次调用。',
+				'打地鼠 _renderWhack 每帧修剪过期 _moles 元素，防止数组无限增长。',
+				'_tSyncToData 的 16 元素 tBgCells 静态数组改为懒初始化缓存。',
+			],
+		},
 		{
 			version: '2.14',
 			date: '2026-06-25',
