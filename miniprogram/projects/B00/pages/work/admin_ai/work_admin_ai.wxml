@@ -1,4 +1,4 @@
-<view class="page">
+<view class="page ai-config-page">
 	<view wx:if="{{!isLoad}}" class="empty">加载中...</view>
 
 	<view wx:if="{{isLoad}}">
@@ -138,10 +138,50 @@
 			</view>
 		</view>
 
+		<view class="block">
+			<view class="section-title">Agent 能力边界</view>
+			<view class="desc compact">这里只展示小猫当前内置的业务技能和受控动作；真正写入仍由后台按员工权限、字段完整度和审计规则校验。</view>
+			<view class="catalog-stats">
+				<view class="catalog-stat">
+					<view class="stat-num">{{form.agentCatalog.stats.skillCount || 0}}</view>
+					<view class="stat-label">技能</view>
+				</view>
+				<view class="catalog-stat">
+					<view class="stat-num">{{form.agentCatalog.stats.actionCount || 0}}</view>
+					<view class="stat-label">动作</view>
+				</view>
+				<view class="catalog-stat">
+					<view class="stat-num">{{form.agentCatalog.stats.writeActionCount || 0}}</view>
+					<view class="stat-label">写入</view>
+				</view>
+				<view class="catalog-stat danger">
+					<view class="stat-num">{{form.agentCatalog.stats.highRiskActionCount || 0}}</view>
+					<view class="stat-label">高风险</view>
+				</view>
+			</view>
+			<view class="skill-list">
+				<view wx:for="{{form.agentCatalog.skills}}" wx:key="key" class="skill-card">
+					<view class="skill-head">
+						<view class="skill-title">{{item.title}}</view>
+						<view class="skill-badges">
+							<text wx:if="{{item.image}}" class="badge">图片</text>
+							<text wx:if="{{item.writeCount}}" class="badge warn">写入 {{item.writeCount}}</text>
+							<text wx:if="{{item.highRiskCount}}" class="badge danger">高风险 {{item.highRiskCount}}</text>
+						</view>
+					</view>
+					<view class="skill-actions">{{item.actionTitleText}}</view>
+				</view>
+			</view>
+			<view class="action-list">
+				<view wx:for="{{form.agentCatalog.actions}}" wx:key="key" class="action-chip {{item.riskLevel}}">
+					<text>{{item.title}}</text>
+				</view>
+			</view>
+		</view>
+
 		<button class="submit" bindtap="bindSubmitTap">保存配置</button>
 		<button class="submit plain" bindtap="bindTestTap">测试对话</button>
 	</view>
 </view>
 
 <tech-footer />
-<work-pet id="workPet" />

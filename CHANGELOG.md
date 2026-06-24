@@ -1,6 +1,34 @@
 # Changelog
 
 
+## v1.91 - 2026-06-24
+
+AI配置体验与Agent能力目录版本。本次按小改修复 `+0.01` 从 v1.90 升级为 v1.91，重点处理小猫助手配置页在手机端被浮动小猫遮挡、字段标签挤压和 Key 操作按钮不够规整的问题，并补齐管理员可见的小猫 Agent 技能/动作边界；Mimo 默认接口和模型继续保留，且仍可自由修改。
+
+### 修复
+
+- AI 配置页移除浮动小猫组件，避免遮挡保存、测试、模型选择和 Key 粘贴区域。
+- 标签统一为块级显示，减少“模型 / API Key”等短标签在窄屏下挤成竖排。
+- Key 操作按钮保持三等分整行布局，粘贴、显示、清空入口更容易点中。
+- AI 配置页新增“Agent 能力边界”区块，展示小猫内置技能、受控动作、写入动作和高风险动作数量。
+- 后端从 `work_ai_agent_registry.js` 导出脱敏能力目录，只展示标题、动作和风险标签，不暴露触发规则、内部提示词或密钥。
+- 继续保留 v1.90 的 Mimo 默认：`https://api.xiaomimimo.com/v1` + `mimo-v2.5`，管理员仍可改成 DeepSeek、其他 Base URL 或视觉模型。
+
+### 验证
+
+- `node --check miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.js` 通过。
+- `node --check miniprogram/version.js` 通过。
+- `node --check miniprogram/setting/setting.js` 通过。
+- `miniprogram/app.json` 与 `project.config.json` JSON 解析通过。
+- 敏感信息片段扫描通过，用户提供的 Key 未写入仓库文件。
+- 本轮相关文件 `git diff --check` 通过；全仓库检查仍受既有无关脏文件 trailing whitespace 影响。
+
+### 部署
+
+- 小程序开发版已通过微信开发者工具 CLI 上传，版本号 `1.91`，包体 `1.5 MB` / `1,555,366 Byte`。
+- 本次未提交审核、未发布上线。
+
+
 ## v1.90 - 2026-06-24
 
 Mimo默认模型配置版本。本次按小改修复 `+0.01` 从 v1.89 升级为 v1.90，将小猫助手默认服务商切换到小米 MiMo OpenAI 兼容接口，默认模型使用 `mimo-v2.5`。默认值只作为新配置和快捷预设，不限制管理员继续修改 Base URL、模型或 Key。

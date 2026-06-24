@@ -1,6 +1,57 @@
 ﻿# 版本修改日记
 
 
+## v1.91 - 2026-06-24 19:17 CST
+
+### 改动级别
+
+小改修复，v1.90 -> v1.91。
+
+### 本次目标
+
+解决小李截图里 AI 配置页手机端不规整的问题：浮动小猫遮挡操作区、字段标签在窄屏下挤压、Key 粘贴和保存按钮不够顺手。继续参考 Hanako/HanaAgent 的分层逻辑，把小猫 Agent 已有技能注册表可视化给管理员查看，让“能做什么、哪些动作是写入/高风险”更透明。继续保留 v1.90 的 Mimo 默认值，默认不等于锁死，管理员仍可自由修改接口、模型和 Key。
+
+### 主要修改
+
+- `work_admin_ai.wxml` 移除配置页浮动小猫组件，避免遮挡保存、测试、模型选择和 Key 操作区域。
+- `work_admin_ai.wxss` 强化标签、Key 操作按钮和配置块布局，减少窄屏挤压和误触。
+- `work_ai_agent_registry.js` 新增脱敏能力目录导出，按技能、动作、写入动作和高风险动作生成只读摘要。
+- `work_ai_service.js` 在管理员 AI 配置接口返回 `agentCatalog`，不包含触发正则、内部提示词、Key 或会话内容。
+- `work_admin_ai.wxml` / `work_admin_ai.wxss` 新增“Agent 能力边界”区块，展示小猫内置技能、动作和风险标签。
+- `miniprogram/version.js`、`miniprogram/setting/setting.js`、`CHANGELOG.md`、`README.md` 和本文档同步升级到 v1.91。
+
+### 涉及文件
+
+- `cloudfunctions/mcloud/project/B00/service/work_ai_agent_registry.js`
+- `cloudfunctions/mcloud/project/B00/service/work_ai_service.js`
+- `cloudfunctions/mcloud/work_ai_service_live_patch.js`
+- `miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.wxml`
+- `miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.wxss`
+- `miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.js`
+- `miniprogram/version.js`
+- `miniprogram/setting/setting.js`
+- `CHANGELOG.md`
+- `README.md`
+- `docs/version-change-diary.md`
+
+### 验证结果
+
+- `node --check miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.js` 通过。
+- `node --check miniprogram/version.js` 通过。
+- `node --check miniprogram/setting/setting.js` 通过。
+- `miniprogram/app.json` 与 `project.config.json` JSON 解析通过。
+- 敏感信息片段扫描通过，用户提供的 Key 未写入仓库文件。
+- 本轮相关文件 `git diff --check` 通过；全仓库检查仍受既有无关脏文件 trailing whitespace 影响。
+
+### 部署状态
+
+- 小程序开发版已通过微信开发者工具 CLI 上传，版本号 `1.91`，包体 `1.5 MB` / `1,555,366 Byte`。
+- 本次未提交审核、未发布上线。
+
+### 未完成风险
+
+- 本次仍不把用户提供的 Key 写入源码、版本日志或提交；已有线上配置若仍保存旧 Key 或旧模型，需要在新版 AI 配置页保存一次配置后生效。
+
 ## v1.90 - 2026-06-24 18:57 CST
 
 ### 改动级别

@@ -1,14 +1,28 @@
 ﻿module.exports = {
-	current: '1.90',
-	previous: '1.89',
+	current: '1.91',
+	previous: '1.90',
 	date: '2026-06-24',
-	time: '18:57 CST',
+	time: '19:17 CST',
 	level: 'patch',
 	levelText: '小改修复',
-	name: 'Mimo默认模型配置',
-	summary: '将小猫助手默认服务商切换为 Mimo，默认接口为小米 MiMo OpenAI 兼容地址，默认模型为 mimo-v2.5，同时保留后台自由修改能力。',
+	name: 'AI配置体验与Agent能力目录',
+	summary: '移除 AI 配置页浮动小猫遮挡，优化手机端标签和 Key 操作按钮布局，并在后台展示小猫 Agent 内置技能、受控动作和风险边界。',
 	changeLog: '/docs/version-change-diary.md',
 	history: [
+		{
+			version: '1.91',
+			date: '2026-06-24',
+			name: 'AI配置体验与Agent能力目录',
+			summary: '移除 AI 配置页浮动小猫遮挡，优化手机端标签和 Key 操作按钮布局，并在后台展示小猫 Agent 内置技能、受控动作和风险边界。',
+			items: [
+				'AI 配置页不再挂载浮动小猫，避免遮挡保存、测试、模型选择和 Key 操作区域。',
+				'手机端标签改为稳定块级布局，减少“模型 / API Key”等短标签被挤成竖排的情况。',
+				'Key 操作按钮保持三等分整行布局，粘贴、显示、清空入口更容易点中。',
+				'AI 配置页新增 Agent 能力边界区块，展示内置业务技能、受控动作数量、写入动作和高风险动作。',
+				'后端从小猫技能注册表导出脱敏能力目录，只展示标题、动作和风险标签，不暴露触发规则、内部提示词或密钥。',
+				'Mimo 默认仍为 https://api.xiaomimimo.com/v1 + mimo-v2.5，管理员仍可改成 DeepSeek、其他 Base URL 或视觉模型。',
+			],
+		},
 		{
 			version: '1.90',
 			date: '2026-06-24',
