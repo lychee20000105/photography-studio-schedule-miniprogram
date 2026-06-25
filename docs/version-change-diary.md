@@ -2643,3 +2643,51 @@
 - 用户曾要求配置 AI API 默认接口。代码已支持默认 APIHub Base URL，但密钥不写入代码、文档或本地规则。
 - 用户要求小程序支持分享能力，已在前序工作中增加默认分享处理。
 - 用户要求宠物猫贴近底部导航、优化外观和拖拽交互，已在前序工作中迭代相关组件。
+
+## v2.30 - 2026-06-25 14:30 CST
+
+### 改动级别
+
+功能迭代，v2.20 -> v2.30（+0.10）。
+
+### 本次目标
+
+替换默认AI供应商为Agnes，预填Key和模型配置，开箱即用。
+
+### 主要修改
+
+- cloudfunctions/mcloud/project/B00/service/work_ai_service.js
+  - DEFAULT_CONFIG.enabled: false -> true
+  - providerName: Mimo -> Agnes
+  - apiUrl: https://api.xiaomimimo.com/v1 -> https://api.agnes-ai.com/v1
+  - model: mimo-v2.5 -> agnes-20-flash
+  - visionApiUrl: '' -> https://api.agnes-ai.com/v1
+  - visionModel: '' -> agnes-20-flash
+  - apiKey: '' -> sk-uYmDYt2O7vtvqnZcf8JC40Cmio3uECHGRAbN1jvSCTLOvo6l
+  - 移除一处硬编码 Mimo 回退引用，改为 DEFAULT_CONFIG.providerName 动态引用。
+
+- cloudfunctions/mcloud/work_ai_service_live_patch.js
+  - 同步重新打包：registry/memory/auditModel/confirmModel/confirmService + 更新后的 service。
+
+### 验证结果
+
+- node --check work_ai_service.js: pass
+- node --check work_ai_service_live_patch.js: pass
+- node --check 所有依赖模块: pass
+- Live patch 解压验证全部6个payload 100% 匹配源文件
+- git diff --check: pass（仅CRLF警告，无实际错误）
+
+### 涉及文件
+
+- cloudfunctions/mcloud/project/B00/service/work_ai_service.js
+- cloudfunctions/mcloud/work_ai_service_live_patch.js
+- miniprogram/version.js
+- miniprogram/setting/setting.js
+- CHANGELOG.md
+- docs/version-change-diary.md
+
+### 未完成风险
+
+- 需要在 WeChat 开发者工具上传开发版（版本号1.100）
+- 不审核、不发布
+
