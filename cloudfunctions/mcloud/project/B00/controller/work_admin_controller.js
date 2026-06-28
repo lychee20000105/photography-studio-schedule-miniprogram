@@ -87,16 +87,12 @@ class WorkAdminController extends BaseProjectController {
 
 	async saveAiConfig() {
 		let input = this.validateData({
-			config: 'must|object|name=AI配置',
-			clearKey: 'bool|name=清空Key',
-			clearVisionKey: 'bool|name=清空视觉Key',
+			providers: 'must|array|name=AI供应商列表',
+			activeProviderId: 'string|max:40|name=当前活跃供应商ID',
 		});
 		await this._assertMiniAdmin();
 		let service = new WorkAiService();
-		return await service.saveAdminConfig(input.config, {
-			clearKey: !!input.clearKey,
-			clearVisionKey: !!input.clearVisionKey,
-		});
+		return await service.saveProvidersConfig(input);
 	}
 
 	async getAiModels() {

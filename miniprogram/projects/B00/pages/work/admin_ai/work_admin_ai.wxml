@@ -16,9 +16,9 @@
 			<view class="section-head">
 				<view>
 					<view class="section-title">供应商</view>
-					<view class="desc compact">选择一套接口作为当前小猫默认配置，点编辑可改 Base URL、模型和 Key。</view>
+					<view class="desc compact">选择一套接口作为当前小猫默认配置，点编辑可填 Base URL、模型和 Key。</view>
 				</view>
-				<button class="icon-btn add-btn" bindtap="bindProviderAddTap">＋</button>
+				<button class="icon-btn add-btn" bindtap="bindProviderAddTap">+</button>
 			</view>
 
 			<view class="provider-list">
@@ -46,7 +46,7 @@
 
 			<view wx:if="{{providerEditorOpen}}" class="provider-editor">
 				<view class="editor-head">
-					<view class="editor-title">{{providerEditIndex>=0?'编辑供应商':'新增供应商'}}</view>
+					<view class="editor-title">{{providerEditIndex>=0?'编辑供应商:'新增供应商}}</view>
 					<button class="editor-close" bindtap="bindProviderEditorCancelTap">×</button>
 				</view>
 				<view class="editor-grid">
@@ -98,7 +98,7 @@
 				</view>
 				<view class="form-group">
 					<view class="label">视觉接口地址（可选）</view>
-					<input value="{{providerEditForm.visionApiUrl}}" data-field="visionApiUrl" bindinput="bindProviderEditInput" placeholder="留空沿用主 API 请求地址" />
+					<input value="{{providerEditForm.visionApiUrl}}" data-field="visionApiUrl" bindinput="bindProviderEditInput" placeholder="留空沿用文本 API 请求地址" />
 				</view>
 				<view class="editor-actions">
 					<button class="editor-action" bindtap="bindProviderEditorCancelTap">取消</button>
@@ -117,7 +117,7 @@
 				<picker wx:if="{{textModelOptions.length}}" mode="selector" range="{{textModelOptions}}" value="{{textModelIndex}}" data-target="text" bindchange="bindModelChange">
 					<view class="model-picker">
 						<text>{{textModelPickerText}}</text>
-						<text class="arrow">›</text>
+						<text class="arrow">▾</text>
 					</view>
 				</picker>
 				<input value="{{form.model}}" data-field="model" bindinput="bindInput" placeholder="deepseek-chat / gpt-4o-mini / mimo 等模型 ID" />
@@ -131,7 +131,7 @@
 			<view class="desc compact">聊天带图片时优先用这里的视觉模型；视觉地址和视觉 Key 留空时，会沿用上面的接口地址和 Key。</view>
 			<view class="form-group">
 				<view class="label">视觉接口地址（可选）</view>
-				<textarea value="{{form.visionApiUrl}}" data-field="visionApiUrl" bindinput="bindInput" maxlength="400" auto-height="{{true}}" placeholder="留空沿用主 Base URL"></textarea>
+				<textarea value="{{form.visionApiUrl}}" data-field="visionApiUrl" bindinput="bindInput" maxlength="400" auto-height="{{true}}" placeholder="留空沿用文本 Base URL"></textarea>
 			</view>
 			<view class="form-group">
 				<view class="label-line">
@@ -141,10 +141,10 @@
 				<picker wx:if="{{visionModelOptions.length}}" mode="selector" range="{{visionModelOptions}}" value="{{visionModelIndex}}" data-target="vision" bindchange="bindModelChange">
 					<view class="model-picker">
 						<text>{{visionModelPickerText}}</text>
-						<text class="arrow">›</text>
+						<text class="arrow">▾</text>
 					</view>
 				</picker>
-				<input value="{{form.visionModel}}" data-field="visionModel" bindinput="bindInput" placeholder="例如 gpt-4o-mini / qwen-vl-plus；留空沿用文本模型" />
+				<input value="{{form.visionModel}}" data-field="visionModel" bindinput="bindInput" placeholder="例如 gpt-4o-mini / qwen-vl-plus；留空沿用文本模型。" />
 				<view class="key-state">DeepSeek 等纯文本模型不一定能读图；要读图就填一个支持图片的兼容模型。</view>
 				<view class="key-state">预估上下文：{{form.visionContextLimit || form.contextLimit || 128000}} tokens</view>
 			</view>
@@ -173,7 +173,7 @@
 				<picker mode="selector" range="{{form.personalities}}" range-key="name" value="{{personalityIndex}}" bindchange="bindPersonalityChange">
 					<view class="model-picker">
 						<text>{{form.personalityName || '值班小猫'}}</text>
-						<text class="arrow">›</text>
+						<text class="arrow">▾</text>
 					</view>
 				</picker>
 				<view class="key-state">值班适合日常录单，温柔适合新员工和话术，审查适合财务/审核边界，成交适合客户跟进。</view>
@@ -190,21 +190,21 @@
 			</view>
 			<view class="form-group">
 				<view class="label">系统提示词</view>
-				<textarea value="{{form.systemPrompt}}" data-field="systemPrompt" bindinput="bindInput" maxlength="3000" auto-height="{{true}}" placeholder="告诉 AI 它是谁、怎么回答、不能做什么"></textarea>
+				<textarea value="{{form.systemPrompt}}" data-field="systemPrompt" bindinput="bindInput" maxlength="3000" auto-height="{{true}}" placeholder="告诉 AI 它是谁、怎么回答、不能做什么。</textarea>
 			</view>
 			<view class="form-group">
 				<view class="label-line">
 					<view class="label">长期记忆</view>
 					<switch checked="{{form.memoryEnabled}}" color="#537d96" bindchange="bindMemoryEnabledChange" />
 				</view>
-				<textarea value="{{form.memoryText}}" data-field="memoryText" bindinput="bindInput" maxlength="2000" auto-height="{{true}}" placeholder="只写稳定规则：店内偏好、报价口径、客户跟进原则、团队默认习惯。不要写 API Key、手机号、客户隐私或一次性聊天内容。"></textarea>
+				<textarea value="{{form.memoryText}}" data-field="memoryText" bindinput="bindInput" maxlength="2000" auto-height="{{true}}" placeholder="只写稳定规则：店内偏好、报价口径、客户跟进原则、团队默认习惯。不要写 API Key、手机号、客户隐私或一次性聊天内容。</textarea>
 				<view class="key-state">开启后，小猫会把这段作为管理员维护的店内规则参考；真实订单、金额、收款、工资和审核仍以后台数据为准。</view>
 			</view>
 		</view>
 
 		<view class="block">
 			<view class="section-title">Agent 能力边界</view>
-			<view class="desc compact">这里只展示小猫当前内置的业务技能和受控动作；真正写入仍由后台按员工权限、字段完整度和审计规则校验。</view>
+			<view class="desc compact">这里只展示小猫当前内置的业务技能和受控动作；真正写入仍由后台按员工权限、字段完整度和审计规则校验后写入。</view>
 			<view class="catalog-stats">
 				<view class="catalog-stat">
 					<view class="stat-num">{{form.agentCatalog.stats.skillCount || 0}}</view>
