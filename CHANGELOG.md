@@ -1,3 +1,19 @@
+## v2.43 - 2026-07-01
+
+B31 setData 路径优化 + 死代码清理批次。聚焦前端渲染性能微优化，减少无用 setData 调用。
+
+### 优化
+
+- editor_cmpt.js bindTextareaInput: 全量 setData({nodeList}) → 路径式 setData({[`nodeList[${idx}].val`]: val})，减少 WeChat diff 计算量。
+- calendar_lib.js listTouchEnd: 触屏方向 touchDirection 清除合并到 animation setData，减少 1 次 setData 调用。
+- calendar_lib.js bindToNowTap: animation: fade 合并到 month/year/fold setData，减少 1 次 setData。
+- tools.wxs: 移除死代码 module.exports.msg = "hello tools"。
+
+### 验证
+
+- `node --check` 覆盖 editor_cmpt.js、calendar_lib.js，语法通过。
+- tools.wxs 人工审查，WXS 格式正确无引用断裂。
+
 ## v2.42 - 2026-06-25
 
 全量编码修复版本。本次在 v2.41 基础上继续清理前端中文编码污染，保证 AI 配置页和版本文件均为 UTF-8 无 BOM。

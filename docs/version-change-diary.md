@@ -1,3 +1,41 @@
+## v2.43 - 2026-07-01
+
+### 改动级别
+
+小改优化，v2.42 -> v2.43，+0.01。
+
+### 本次目标
+
+editor_cmpt.js bindTextareaInput 改为路径式 setData 减少 diff 计算量；calendar_lib.js 合并 animation/touchDirection setData 减少无谓调用；tools.wxs 移除死代码。
+
+### 主要修改
+
+- `editor_cmpt.js` bindTextareaInput: 全量 setData({nodeList}) → 路径式 setData({[`nodeList[${idx}].val`]: val})，单字符输入时减少 diff 范围。
+- `calendar_lib.js` listTouchEnd: 触屏方向清除合并到 animation setData，消除一次独立 setData 调用。
+- `calendar_lib.js` bindToNowTap: animation: fade 合并到 month/year/fold setData，消除一次独立 setData。
+- `tools.wxs`: 移除死代码 `module.exports.msg = "hello tools"`。
+
+### 涉及文件
+
+- `miniprogram/cmpts/public/editor/editor_cmpt.js`
+- `miniprogram/cmpts/public/calendar/calendar_lib.js`
+- `miniprogram/tpls/wxs/tools.wxs`
+- `miniprogram/version.js`
+- `miniprogram/setting/setting.js`
+- `CHANGELOG.md`
+- `docs/version-change-diary.md`
+
+### 验证结果
+
+- `node --check` 覆盖 editor_cmpt.js、calendar_lib.js，语法通过。
+- tools.wxs 人工审查，WXS 格式正确。
+- git diff --check 无空白问题。
+
+### 部署状态
+
+- 本地修改完成，已推送到 GitHub opt/v2.43-b31 分支。
+- 未上传微信开发者工具、未部署 mcloud 云函数。
+
 ## v2.42 - 2026-06-25
 
 ### 改动级别

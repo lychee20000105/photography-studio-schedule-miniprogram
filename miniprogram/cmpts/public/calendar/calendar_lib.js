@@ -278,7 +278,8 @@ function createDay(that) {
 function listTouchEnd(that) {
 	if (that.data.touchDirection == 'left') {
 		that.setData({
-			animation: 'slide-left'
+			animation: 'slide-left',
+			touchDirection: null
 		});
 
 		setTimeout(function () {
@@ -289,7 +290,8 @@ function listTouchEnd(that) {
 		that.bindNextTap();
 	} else if (that.data.touchDirection == 'right') {
 		that.setData({
-			animation: 'slide-right'
+			animation: 'slide-right',
+			touchDirection: null
 		});
 
 		setTimeout(function () {
@@ -299,10 +301,6 @@ function listTouchEnd(that) {
 		}, 200);
 		that.bindLastTap();
 	}
-
-	that.setData({
-		touchDirection: null
-	});
 }
 
 // 回本月
@@ -314,10 +312,7 @@ function bindToNowTap(that) {
 	that.setData({
 		month,
 		year,
-		fold: false
-	});
-
-	that.setData({
+		fold: false,
 		animation: 'fade'
 	});
 

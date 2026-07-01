@@ -1,14 +1,26 @@
 module.exports = {
-	current: '2.42',
-	previous: '2.41',
-	date: '2026-06-25',
-	time: '14:30 CST',
+	current: '2.43',
+	previous: '2.42',
+	date: '2026-07-01',
+	time: '12:00 CST',
 	level: 'minor',
-	levelText: 'CC Switch + 乱码修复',
-	name: 'CC Switch + 乱码修复',
-	summary: '修复 WXML/WXSS/JS/version.js 中文编码乱码问题，Agnes 和 MiMo 双供应商云端配置完成。',
+	levelText: 'setData路径优化 + 死代码清理',
+	name: 'B31 setData 路径优化',
+	summary: 'editor_cmpt.js bindTextareaInput 改为路径式 setData、calendar_lib.js animation/touchDirection 合并 setData、tools.wxs 移除死代码。',
 	changeLog: '/docs/version-change-diary.md',
 	history: [
+	{
+		version: '2.43',
+		date: '2026-07-01',
+		name: 'B31 setData 路径优化',
+		summary: 'editor_cmpt.js bindTextareaInput 改为路径式 setData、calendar_lib.js animation/touchDirection 合并 setData、tools.wxs 移除死代码 msg。',
+		items: [
+			'editor_cmpt.js bindTextareaInput: 全量 setData({nodeList}) → 路径式 setData({[`nodeList[${idx}].val`]: val})，减少diff计算',
+			'calendar_lib.js listTouchEnd: 触屏方向清除合并到 animation setData，减少1次无谓 setData',
+			'calendar_lib.js bindToNowTap: animation: fade 合并到 month/year/fold setData，减少1次 setData',
+			'tools.wxs: 移除死代码 module.exports.msg = "hello tools"',
+		],
+	},
 	{
 		version: '2.42',
 		date: '2026-06-25',
