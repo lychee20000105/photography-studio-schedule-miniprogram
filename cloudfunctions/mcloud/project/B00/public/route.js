@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Notes: 路由配置文件
   * Ver : CCMiniCloud Framework 2.0.1 ALL RIGHTS RESERVED BY cclinux0730 (wechat)
  * User: CC
@@ -85,6 +85,7 @@ module.exports = {
 		'work/admin_ai_config_get': 'work_admin_controller@getAiConfig',
 		'work/admin_ai_models_get': 'work_admin_controller@getAiModels',
 		'work/admin_ai_config_save': 'work_admin_controller@saveAiConfig#demo',
+		'work/admin_ai_providers_save': 'work_admin_controller@saveAiConfig#demo',
 		'work/admin_agent_audit_list': 'work_admin_controller@getAgentAuditList',
 		'work/admin_agent_audit_detail': 'work_admin_controller@getAgentAuditDetail',
 		'work/admin_agent_confirm_list': 'work_admin_controller@getAgentConfirmList',

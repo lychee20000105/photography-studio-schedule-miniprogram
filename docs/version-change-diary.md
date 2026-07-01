@@ -1,89 +1,311 @@
-﻿# 版本修改日记
+## v2.43 - 2026-07-01
+
+### 改动级别
+
+小改优化，v2.42 -> v2.43，+0.01。
+
+### 本次目标
+
+editor_cmpt.js bindTextareaInput 改为路径式 setData 减少 diff 计算量；calendar_lib.js 合并 animation/touchDirection setData 减少无谓调用；tools.wxs 移除死代码。
+
+### 主要修改
+
+- `editor_cmpt.js` bindTextareaInput: 全量 setData({nodeList}) → 路径式 setData({[`nodeList[${idx}].val`]: val})，单字符输入时减少 diff 范围。
+- `calendar_lib.js` listTouchEnd: 触屏方向清除合并到 animation setData，消除一次独立 setData 调用。
+- `calendar_lib.js` bindToNowTap: animation: fade 合并到 month/year/fold setData，消除一次独立 setData。
+- `tools.wxs`: 移除死代码 `module.exports.msg = "hello tools"`。
+
+### 涉及文件
+
+- `miniprogram/cmpts/public/editor/editor_cmpt.js`
+- `miniprogram/cmpts/public/calendar/calendar_lib.js`
+- `miniprogram/tpls/wxs/tools.wxs`
+- `miniprogram/version.js`
+- `miniprogram/setting/setting.js`
+- `CHANGELOG.md`
+- `docs/version-change-diary.md`
+
+### 验证结果
+
+- `node --check` 覆盖 editor_cmpt.js、calendar_lib.js，语法通过。
+- tools.wxs 人工审查，WXS 格式正确。
+- git diff --check 无空白问题。
+
+### 部署状态
+
+- 本地修改完成，已推送到 GitHub opt/v2.43-b31 分支。
+- 未上传微信开发者工具、未部署 mcloud 云函数。
+
+## v2.42 - 2026-06-25
+
+### 改动级别
+
+小改修复，v2.41 -> v2.42，+0.01。
+
+### 本次目标
+
+清理 AI 配置页和版本文件的中文编码污染，确保本地源码、前端文件和 live patch 可验证一致。
+
+### 主要修改
+
+- 修复 `work_admin_ai.js`、`work_admin_ai.wxml`、`work_admin_ai.wxss` 的乱码和 BOM 问题。
+- 同步 `miniprogram/version.js`，当前版本升级为 `2.42`。
+- 保留 `tools/fix_admin_ai_encoding.js`、`tools/gen_live_patch.js`、`tools/verify_live_patch.js` 作为本地复核脚本。
+- 重新验证 `work_route_live_patch.js`、`work_admin_controller_live_patch.js`、`work_ai_service_live_patch.js` 解压后与源码一致。
+
+### 涉及文件
+
+- `miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.js`
+- `miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.wxml`
+- `miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.wxss`
+- `miniprogram/version.js`
+- `CHANGELOG.md`
+- `README.md`
+- `docs/version-change-diary.md`
+- `tools/fix_admin_ai_encoding.js`
+- `tools/gen_live_patch.js`
+- `tools/verify_live_patch.js`
+
+### 验证结果
+
+- `node tools/verify_live_patch.js` 通过。
+- AI 配置页 JS/WXML/WXSS 均为 UTF-8 无 BOM，FFFD 数量为 0。
+- 本次未提交审核、未发布上线。
+
+## v2.41 - 2026-06-25
+
+### 改动级别
+
+小改修复，v2.40 -> v2.41，+0.01。
+
+### 本次目标
+
+修复 CC Switch 多供应商配置页落地过程中的中文乱码和版本源不一致问题。
+
+### 主要修改
+
+- 修复 AI 配置页中文文案显示异常。
+- 同步 `miniprogram/version.js` 和版本历史。
+- 文档只记录供应商入口和模型名称，不记录任何密钥明文。
+
+### 部署状态
+
+- 本地修复与验证完成。
+- 未提交审核、未发布上线。
+
+## v2.40 - 2026-06-25
+
+### 改动级别
+
+功能迭代，v2.30 -> v2.40，+0.10。
+
+### 本次目标
+
+将 AI 供应商配置改为 CC Switch 风格的多供应商管理：后端支持 `providers[]` 列表存储，前端提供卡片式供应商切换和独立编辑。
+
+### 主要修改
+
+- 后端存储从单配置改为 `PROVIDERS_STORE_KEY`，维护 `providers[] + activeProviderId`。
+- 新增 `_getProvidersConfig`、`_getActiveProviderConfig`、`saveProvidersConfig`、`_getDefaultProviders`。
+- 旧 `SETUP_KEY` 单供应商格式自动迁移。
+- `chat()` 运行时改为获取活跃供应商配置。
+- 前端页面重构：活跃供应商卡、供应商列表、内联编辑器、折叠高级设置。
+- 预置 Agnes (`agnes-20-flash`) 和 MiMo (`mimo-v2.5`) 两条供应商入口。
+- 路由新增 `work/admin_ai_providers_save`。
+
+### 涉及文件
+
+- `cloudfunctions/mcloud/project/B00/controller/work_admin_controller.js`
+- `cloudfunctions/mcloud/project/B00/public/route.js`
+- `cloudfunctions/mcloud/project/B00/service/work_ai_service.js`
+- `cloudfunctions/mcloud/work_admin_controller_live_patch.js`
+- `cloudfunctions/mcloud/work_ai_service_live_patch.js`
+- `cloudfunctions/mcloud/work_route_live_patch.js`
+- `miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.js`
+- `miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.wxml`
+- `miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.wxss`
+- `miniprogram/version.js`
+- `CHANGELOG.md`
+- `README.md`
+- `docs/version-change-diary.md`
+
+### 验证结果
+
+- `node --check` 覆盖所有修改文件，语法通过。
+- live patch 解压后与源文件 100% 匹配。
+
+### 部署状态
+
+- 三个 live patch 已增量部署到 `mcloud`。
+- 小程序开发版已上传。
+- 未提交审核、未发布上线。
+## v2.40 - 2026-06-25
+
+### ????
+
+?????v2.30 -> v2.40?+0.10?
+
+### ????
+
+? AI ??????? CC Switch ?????????????? `providers[]` ???????????????????????
+
+### ????
+
+- ?????????? `PROVIDERS_STORE_KEY`??? `providers[] + activeProviderId`?
+- ?? `_getProvidersConfig`?`_getActiveProviderConfig`?`saveProvidersConfig`?`_getDefaultProviders`?
+- ? `SETUP_KEY` ???????????
+- `chat()` ???????????????
+- ?????????????????????????????????
+- ?? Agnes (`agnes-20-flash`) ? MiMo (`mimo-v2.5`) ????????
+- ???? `work/admin_ai_providers_save`?
+
+### ????
+
+- `cloudfunctions/mcloud/project/B00/controller/work_admin_controller.js`
+- `cloudfunctions/mcloud/project/B00/public/route.js`
+- `cloudfunctions/mcloud/project/B00/service/work_ai_service.js`
+- `cloudfunctions/mcloud/work_admin_controller_live_patch.js`
+- `cloudfunctions/mcloud/work_ai_service_live_patch.js`
+- `cloudfunctions/mcloud/work_route_live_patch.js`
+- `miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.js`
+- `miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.wxml`
+- `miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.wxss`
+- `miniprogram/version.js`
+- `CHANGELOG.md`
+- `README.md`
+- `docs/version-change-diary.md`
+
+### ????
+
+- `node --check` ??????????????
+- live patch ??????? 100% ???
+
+### ????
+
+- ?? live patch ?????? `mcloud`?
+- ??????????
+- ????????????
+
+## v2.40 - 2026-06-25
+
+### �Ķ�����
+
+���ܵ�����v2.30 -> v2.40��+0.10��
+
+### ����Ŀ��
+
+�� AI ��Ӧ�����ø�Ϊ CC Switch ���Ķ๩Ӧ�̹��������֧�� providers[] �б��洢��ǰ���ṩ��Ƭʽ��Ӧ���л��Ͷ����༭��
+
+### ��Ҫ�޸�
+
+- ��˴洢�ӵ����ø�Ϊ PROVIDERS_STORE_KEY��ά�� providers[] + activeProviderId
+- ���� _getProvidersConfig / _getActiveProviderConfig / saveProvidersConfig / _getDefaultProviders
+- �� SETUP_KEY ����Ӧ�̸�ʽ�Զ�Ǩ��
+- chat() ����ʱ��Ϊ��ȡ��Ծ��Ӧ������
+- ǰ��ҳ���ع�����Ծ��Ӧ�̿�����Ӧ���б��������༭�����۵��߼�����
+- Ԥ�� Agnes (agnes-20-flash) �� MiMo (mimo-v2.5) ������Ӧ��
+- ·������ work/admin_ai_providers_save
+
+### �漰�ļ�
+
+(�г� 3 ����� + 3 ��ǰ�� + 3 �� live patch + �汾�ļ�)
+
+### ��֤���
+
+- node --check ���������޸��ļ����﷨ͨ��
+- live patch ��ѹ����Դ�ļ� 100% ƥ��
+
+### ����״̬
+
+- ���� live patch ���������� mcloud
+- С���򿪷������ϴ�
+- δ�ύ��ˡ�δ��������
+# �汾�޸��ռ�
 
 
 ## v2.03 - 2026-06-24
 
-### 改动级别
+### �Ķ�����
 
-新功能+Bug修复，v2.02 -> v2.03。
+�¹���+Bug�޸���v2.02 -> v2.03��
 
-### 本次目标
+### ����Ŀ��
 
-前端交互动画优化、后端Bug扫描修复。
+ǰ�˽��������Ż������Bugɨ���޸���
 
-### 主要修改
+### ��Ҫ�޸�
 
-- 养成主页卡片入场动画、签到按钮呼吸光效、资源数字滚动效果
-- 游戏页3-2-1开赛倒计时、点击闪光反馈、得分粒子特效
-- 倒计时低于30秒红色脉冲提示、结算页撒花庆祝动画
-- 计时器泄漏修复、快速点击防护、存储异常边界处理
-- 资源数值上限校验、页面切换状态恢复
+- ������ҳ��Ƭ�볡������ǩ����ť������Ч����Դ���ֹ���Ч��
+- ��Ϸҳ3-2-1��������ʱ��������ⷴ�����÷�������Ч
+- ����ʱ����30���ɫ������ʾ������ҳ������ף����
+- ��ʱ��й©�޸������ٵ���������洢�쳣�߽紦��
+- ��Դ��ֵ����У�顢ҳ���л�״̬�ָ�
 
 
 ## v2.02 - 2026-06-24 12:00 CST
 
-### 改动级别
+### �Ķ�����
 
-新功能，v2.01 -> v2.02。
+�¹��ܣ�v2.01 -> v2.02��
 
-### 本次目标
+### ����Ŀ��
 
-在小猫助手宠物系统基础上，新增内置小游戏功能。用户从"我的"页面宠物面板的"小猫助手"按钮进入养成游戏主页，融合长期养成 + 短效小游戏（3分钟一局），以"小云为云屿工作室努力工作"为核心形象。
+��Сè���ֳ���ϵͳ�����ϣ���������С��Ϸ���ܡ��û���"�ҵ�"ҳ���������"Сè����"��ť����������Ϸ��ҳ���ںϳ������� + ��ЧС��Ϸ��3����һ�֣�����"С��Ϊ���칤����Ŭ������"Ϊ��������
 
-### 主要修改
+### ��Ҫ�޸�
 
-- 新增 `helper/game_helper.js` 游戏数据管理模块：Storage Key 定义、默认状态、读写方法、资源增减、经验升级、每日签到、离线收益计算、游戏日志、宠物状态双向同步。
-- 新增 `work_cat_game` 养成主页：自定义导航栏、资源显示（金币/素材/灵感）、离线收益弹窗、猫咪状态面板（等级/阶段/经验条）、每日签到、三款小游戏入口、商店/装修占位。
-- 新增 `work_cat_game_play` 游戏执行页：游戏介绍、玩法说明、3分钟倒计时、点击得分、结算弹窗（金币/素材/灵感/经验奖励）、游戏日志写入。
-- 我的页宠物面板"定制"按钮改为"小猫助手"，跳转到 `cat_game` 页面。
-- `app.json` 注册两个新页面路由。
+- ���� `helper/game_helper.js` ��Ϸ���ݹ���ģ�飺Storage Key ���塢Ĭ��״̬����д��������Դ����������������ÿ��ǩ��������������㡢��Ϸ��־������״̬˫��ͬ����
+- ���� `work_cat_game` ������ҳ���Զ��嵼��������Դ��ʾ�����/�ز�/��У����������浯����è��״̬��壨�ȼ�/�׶�/����������ÿ��ǩ��������С��Ϸ��ڡ��̵�/װ��ռλ��
+- ���� `work_cat_game_play` ��Ϸִ��ҳ����Ϸ���ܡ��淨˵����3���ӵ���ʱ������÷֡����㵯�������/�ز�/���/���齱��������Ϸ��־д�롣
+- �ҵ�ҳ�������"����"��ť��Ϊ"Сè����"����ת�� `cat_game` ҳ�档
+- `app.json` ע��������ҳ��·�ɡ�
 
-### 涉及文件
+### �漰�ļ�
 
-- 新增：`miniprogram/helper/game_helper.js`
-- 新增：`miniprogram/projects/B00/pages/work/cat_game/work_cat_game.js`
-- 新增：`miniprogram/projects/B00/pages/work/cat_game/work_cat_game.wxml`
-- 新增：`miniprogram/projects/B00/pages/work/cat_game/work_cat_game.wxss`
-- 新增：`miniprogram/projects/B00/pages/work/cat_game/work_cat_game.json`
-- 新增：`miniprogram/projects/B00/pages/work/cat_game_play/work_cat_game_play.js`
-- 新增：`miniprogram/projects/B00/pages/work/cat_game_play/work_cat_game_play.wxml`
-- 新增：`miniprogram/projects/B00/pages/work/cat_game_play/work_cat_game_play.wxss`
-- 新增：`miniprogram/projects/B00/pages/work/cat_game_play/work_cat_game_play.json`
-- 修改：`miniprogram/app.json`
-- 修改：`miniprogram/projects/B00/pages/work/my/work_my.js`
-- 修改：`miniprogram/projects/B00/pages/work/my/work_my.wxml`
-- 修改：`miniprogram/setting/setting.js`
-- 修改：`miniprogram/version.js`
-- 修改：`CHANGELOG.md`
-- 修改：`docs/version-change-diary.md`
+- ������`miniprogram/helper/game_helper.js`
+- ������`miniprogram/projects/B00/pages/work/cat_game/work_cat_game.js`
+- ������`miniprogram/projects/B00/pages/work/cat_game/work_cat_game.wxml`
+- ������`miniprogram/projects/B00/pages/work/cat_game/work_cat_game.wxss`
+- ������`miniprogram/projects/B00/pages/work/cat_game/work_cat_game.json`
+- ������`miniprogram/projects/B00/pages/work/cat_game_play/work_cat_game_play.js`
+- ������`miniprogram/projects/B00/pages/work/cat_game_play/work_cat_game_play.wxml`
+- ������`miniprogram/projects/B00/pages/work/cat_game_play/work_cat_game_play.wxss`
+- ������`miniprogram/projects/B00/pages/work/cat_game_play/work_cat_game_play.json`
+- �޸ģ�`miniprogram/app.json`
+- �޸ģ�`miniprogram/projects/B00/pages/work/my/work_my.js`
+- �޸ģ�`miniprogram/projects/B00/pages/work/my/work_my.wxml`
+- �޸ģ�`miniprogram/setting/setting.js`
+- �޸ģ�`miniprogram/version.js`
+- �޸ģ�`CHANGELOG.md`
+- �޸ģ�`docs/version-change-diary.md`
 
-### 验证结果
+### ��֤���
 
-- 微信开发者工具中"我的"页面宠物面板显示"小猫助手"按钮。
-- 点击进入养成主页，显示猫咪状态、资源、签到、小游戏入口。
-- 点击小游戏进入执行页，倒计时和点击得分正常。
-- 结算弹窗显示正确奖励并写入本地存储。
-- 返回养成主页后资源/经验已更新。
+- ΢�ſ����߹�����"�ҵ�"ҳ����������ʾ"Сè����"��ť��
+- �������������ҳ����ʾè��״̬����Դ��ǩ����С��Ϸ��ڡ�
+- ���С��Ϸ����ִ��ҳ������ʱ�͵���÷�������
+- ���㵯����ʾ��ȷ������д�뱾�ش洢��
+- ����������ҳ����Դ/�����Ѹ��¡�
 
 
 ## v2.00 - 2026-06-24 21:46 CST
 
-### 改动级别
+### �Ķ�����
 
-小改修复，v1.99 -> v2.00。
+С���޸���v1.99 -> v2.00��
 
-### 本次目标
+### ����Ŀ��
 
-继续修复小猫后台测试对话里 MiMo 返回 `Param Incorrect` 的问题。截图显示云端仍把参数错误原样返回，说明 MiMo 对请求体字段更敏感；本次把 MiMo 最终兜底请求压缩到最小字段，先保证普通测试对话能跑通。
+�����޸�Сè��̨���ԶԻ��� MiMo ���� `Param Incorrect` �����⡣��ͼ��ʾ�ƶ��԰Ѳ�������ԭ�����أ�˵�� MiMo ���������ֶθ����У����ΰ� MiMo ���ն�������ѹ������С�ֶΣ��ȱ�֤��ͨ���ԶԻ�����ͨ��
 
-### 主要修改
+### ��Ҫ�޸�
 
-- `work_ai_service.js` 的 MiMo 文本兜底请求移除 `stream:false`，只保留 `model` 和 `messages`。
-- 后端错误解析新增 `message`、`msg` 和字符串型 `error` 兼容，减少第三方接口错误形态差异带来的误判。
-- 重新生成 `work_ai_service_live_patch.js`，只替换其中的 AI 服务 payload，不把当前工作区其它未提交改动打入补丁。
-- `miniprogram/version.js`、`miniprogram/setting/setting.js`、`CHANGELOG.md`、`README.md` 和本文档同步升级到 v2.00。
+- `work_ai_service.js` �� MiMo �ı����������Ƴ� `stream:false`��ֻ���� `model` �� `messages`��
+- ��˴���������� `message`��`msg` ���ַ����� `error` ���ݣ����ٵ������ӿڴ�����̬������������С�
+- �������� `work_ai_service_live_patch.js`��ֻ�滻���е� AI ���� payload�����ѵ�ǰ����������δ�ύ�Ķ����벹����
+- `miniprogram/version.js`��`miniprogram/setting/setting.js`��`CHANGELOG.md`��`README.md` �ͱ��ĵ�ͬ�������� v2.00��
 
-### 涉及文件
+### �漰�ļ�
 
 - `cloudfunctions/mcloud/project/B00/service/work_ai_service.js`
 - `cloudfunctions/mcloud/work_ai_service_live_patch.js`
@@ -93,48 +315,48 @@
 - `README.md`
 - `docs/version-change-diary.md`
 
-### 验证结果
+### ��֤���
 
-- `node --check cloudfunctions/mcloud/project/B00/service/work_ai_service.js` 通过。
-- `node --check cloudfunctions/mcloud/work_ai_service_live_patch.js` 通过。
-- `node --check miniprogram/version.js` 通过。
-- `node --check miniprogram/setting/setting.js` 通过。
-- `miniprogram/app.json` 与 `project.config.json` JSON 解析通过。
-- `work_ai_service_live_patch.js` 解压后与当前 `work_ai_service.js` 一致，MiMo 兜底块确认不再包含 `stream` 字段。
-- 本轮涉及文件 `git diff --check` 通过，仅有既有 LF/CRLF 提示。
-- 敏感信息扫描未发现用户 API Key 片段。
+- `node --check cloudfunctions/mcloud/project/B00/service/work_ai_service.js` ͨ����
+- `node --check cloudfunctions/mcloud/work_ai_service_live_patch.js` ͨ����
+- `node --check miniprogram/version.js` ͨ����
+- `node --check miniprogram/setting/setting.js` ͨ����
+- `miniprogram/app.json` �� `project.config.json` JSON ����ͨ����
+- `work_ai_service_live_patch.js` ��ѹ���뵱ǰ `work_ai_service.js` һ�£�MiMo ���׿�ȷ�ϲ��ٰ��� `stream` �ֶΡ�
+- �����漰�ļ� `git diff --check` ͨ�������м��� LF/CRLF ��ʾ��
+- ������Ϣɨ��δ�����û� API Key Ƭ�Ρ�
 
-### 部署状态
+### ����״̬
 
-- `work_ai_service_live_patch.js` 已通过微信开发者工具 CLI 增量部署到 `mcloud`，包体 `47.2 KB`。
-- 小程序开发版已通过微信开发者工具 CLI 上传，版本号 `2.00`，包体 `1.5 MB` / `1,601,017 Byte`。
-- 本次未提交审核、未发布上线。
+- `work_ai_service_live_patch.js` ��ͨ��΢�ſ����߹��� CLI �������� `mcloud`������ `47.2 KB`��
+- С���򿪷�����ͨ��΢�ſ����߹��� CLI �ϴ����汾�� `2.00`������ `1.5 MB` / `1,601,017 Byte`��
+- ����δ�ύ��ˡ�δ�������ߡ�
 
-### 未完成风险
+### δ��ɷ���
 
-- 如果 MiMo 仍返回参数错误，需要进一步抓取其真实响应结构；本次已避免记录或输出任何 API Key。
+- ��� MiMo �Է��ز���������Ҫ��һ��ץȡ����ʵ��Ӧ�ṹ�������ѱ����¼������κ� API Key��
 
 ## v1.99 - 2026-06-24 21:37 CST
 
-### 改动级别
+### �Ķ�����
 
-小改修复，v1.98 -> v1.99。
+С���޸���v1.98 -> v1.99��
 
-### 本次目标
+### ����Ŀ��
 
-继续补全小猫 Agent 的安全治理层：高风险动作进入确认队列后，待确认、人工确认执行、驳回和执行失败都要进入 AI 审计流水，方便管理员按时间线复盘。
+������ȫСè Agent �İ�ȫ�����㣺�߷��ն�������ȷ�϶��к󣬴�ȷ�ϡ��˹�ȷ��ִ�С����غ�ִ��ʧ�ܶ�Ҫ���� AI �����ˮ���������Ա��ʱ���߸��̡�
 
-### 主要修改
+### ��Ҫ�޸�
 
-- `WorkAgentConfirmService` 创建待确认记录后，追加写入 `agent_confirm_pending` 生命周期审计。
-- 管理员确认执行成功后，追加写入 `agent_confirm_approved` 生命周期审计。
-- 管理员驳回确认申请后，追加写入 `agent_confirm_rejected` 生命周期审计。
-- 确认执行失败时，追加写入 `agent_confirm_failed` 生命周期审计，并保留脱敏错误摘要。
-- 生命周期审计摘要统一保存确认记录 ID、原动作、关联对象、发起人、处理人、风险标签和脱敏参数预览。
-- AI 审计流水列表页和详情页新增确认生命周期筛选项，详情复盘文案会提示记录来源于确认队列生命周期。
-- `miniprogram/version.js`、`miniprogram/setting/setting.js`、`CHANGELOG.md`、`README.md` 和本文档同步升级到 v1.99。
+- `WorkAgentConfirmService` ������ȷ�ϼ�¼��׷��д�� `agent_confirm_pending` ����������ơ�
+- ����Աȷ��ִ�гɹ���׷��д�� `agent_confirm_approved` ����������ơ�
+- ����Ա����ȷ�������׷��д�� `agent_confirm_rejected` ����������ơ�
+- ȷ��ִ��ʧ��ʱ��׷��д�� `agent_confirm_failed` ����������ƣ���������������ժҪ��
+- �����������ժҪͳһ����ȷ�ϼ�¼ ID��ԭ�������������󡢷����ˡ������ˡ����ձ�ǩ����������Ԥ����
+- AI �����ˮ�б�ҳ������ҳ����ȷ����������ɸѡ����鸴���İ�����ʾ��¼��Դ��ȷ�϶����������ڡ�
+- `miniprogram/version.js`��`miniprogram/setting/setting.js`��`CHANGELOG.md`��`README.md` �ͱ��ĵ�ͬ�������� v1.99��
 
-### 涉及文件
+### �漰�ļ�
 
 - `cloudfunctions/mcloud/project/B00/service/work_agent_confirm_service.js`
 - `cloudfunctions/mcloud/project/B00/service/work_agent_audit_service.js`
@@ -146,46 +368,46 @@
 - `README.md`
 - `docs/version-change-diary.md`
 
-### 验证结果
+### ��֤���
 
-- `node --check` 覆盖确认服务、审计服务、审计列表页、审计详情页、版本源、设置文件和两个 live patch，均通过。
-- `miniprogram/app.json`、审计列表/详情页 JSON 与 `project.config.json` JSON 解析通过。
-- `work_ai_service_live_patch.js` 解压后确认服务等本轮依赖与当前源文件一致，`work_ai_service.js` 使用已提交 HEAD 版本以隔离无关未提交改动；`work_admin_controller_live_patch.js` 解压后与当前源文件一致。
-- live patch 实际加载检查通过；仅出现项目既有 `ws` 依赖提示，不影响本轮 patch 注入。
-- 本轮涉及文件 `git diff --check` 通过，仅有既有 LF/CRLF 提示。
-- 敏感信息扫描未发现新增 API Key、Token 或 Secret。
+- `node --check` ����ȷ�Ϸ�����Ʒ�������б�ҳ���������ҳ���汾Դ�������ļ������� live patch����ͨ����
+- `miniprogram/app.json`������б�/����ҳ JSON �� `project.config.json` JSON ����ͨ����
+- `work_ai_service_live_patch.js` ��ѹ��ȷ�Ϸ���ȱ��������뵱ǰԴ�ļ�һ�£�`work_ai_service.js` ʹ�����ύ HEAD �汾�Ը����޹�δ�ύ�Ķ���`work_admin_controller_live_patch.js` ��ѹ���뵱ǰԴ�ļ�һ�¡�
+- live patch ʵ�ʼ��ؼ��ͨ������������Ŀ���� `ws` ������ʾ����Ӱ�챾�� patch ע�롣
+- �����漰�ļ� `git diff --check` ͨ�������м��� LF/CRLF ��ʾ��
+- ������Ϣɨ��δ�������� API Key��Token �� Secret��
 
-### 部署状态
+### ����״̬
 
-- `work_ai_service_live_patch.js` 已通过微信开发者工具 CLI 增量部署到 `mcloud`，包体 `47.1 KB`。
-- `work_admin_controller_live_patch.js` 已通过微信开发者工具 CLI 增量部署到 `mcloud`，包体 `12.2 KB`。
-- 小程序开发版已通过微信开发者工具 CLI 上传，版本号 `1.99`，包体 `1.5 MB` / `1,600,436 Byte`。
-- 本次未提交审核、未发布上线。
+- `work_ai_service_live_patch.js` ��ͨ��΢�ſ����߹��� CLI �������� `mcloud`������ `47.1 KB`��
+- `work_admin_controller_live_patch.js` ��ͨ��΢�ſ����߹��� CLI �������� `mcloud`������ `12.2 KB`��
+- С���򿪷�����ͨ��΢�ſ����߹��� CLI �ϴ����汾�� `1.99`������ `1.5 MB` / `1,600,436 Byte`��
+- ����δ�ύ��ˡ�δ�������ߡ�
 
-### 未完成风险
+### δ��ɷ���
 
-- 本轮只补确认队列生命周期审计，不新增桌面、浏览器、文件或终端控制能力；确认后的业务动作仍沿用现有受控后端服务。
+- ����ֻ��ȷ�϶�������������ƣ����������桢��������ļ����ն˿���������ȷ�Ϻ��ҵ���������������ܿغ�˷���
 
 ## v1.98 - 2026-06-24 21:24 CST
 
-### 改动级别
+### �Ķ�����
 
-小改修复，v1.97 -> v1.98。
+С���޸���v1.97 -> v1.98��
 
-### 本次目标
+### ����Ŀ��
 
-把小猫助手后台 AI 配置页改成更方便手机端操作的供应商配置界面：像 CC Switch 一样先选供应商卡片，再进入编辑面板填写 Base URL、API Key、文本模型和视觉模型。
+��Сè���ֺ�̨ AI ����ҳ�ĳɸ������ֻ��˲����Ĺ�Ӧ�����ý��棺�� CC Switch һ����ѡ��Ӧ�̿�Ƭ���ٽ���༭�����д Base URL��API Key���ı�ģ�ͺ��Ӿ�ģ�͡�
 
-### 主要修改
+### ��Ҫ�޸�
 
-- 供应商区域从原来的长表单改为卡片式列表，展示 Agnes、DeepSeek、OpenAI、Mimo 和当前自定义配置。
-- 新增供应商编辑面板，集中填写供应商名称、备注、官网、API 请求地址、API Key、文本模型 ID、视觉模型 ID 和视觉接口地址。
-- 编辑面板支持 API Key 直接粘贴、显示/隐藏、清空输入，并保留“清空当前已保存主 Key”开关。
-- 应用供应商后同步更新当前表单、模型选择状态和上下文估算；保存成功后刷新供应商卡片状态。
-- 保持 Mimo 默认接口和 `mimo-v2.5` 默认模型，同时不锁死配置，管理员仍可切换 DeepSeek、自定义兼容接口和独立视觉模型。
-- `miniprogram/version.js`、`miniprogram/setting/setting.js`、`CHANGELOG.md`、`README.md` 和本文档同步升级到 v1.98。
+- ��Ӧ�������ԭ���ĳ�������Ϊ��Ƭʽ�б���չʾ Agnes��DeepSeek��OpenAI��Mimo �͵�ǰ�Զ������á�
+- ������Ӧ�̱༭��壬������д��Ӧ�����ơ���ע��������API �����ַ��API Key���ı�ģ�� ID���Ӿ�ģ�� ID ���Ӿ��ӿڵ�ַ��
+- �༭���֧�� API Key ֱ��ճ������ʾ/���ء�������룬����������յ�ǰ�ѱ����� Key�����ء�
+- Ӧ�ù�Ӧ�̺�ͬ�����µ�ǰ������ģ��ѡ��״̬�������Ĺ��㣻����ɹ���ˢ�¹�Ӧ�̿�Ƭ״̬��
+- ���� Mimo Ĭ�Ͻӿں� `mimo-v2.5` Ĭ��ģ�ͣ�ͬʱ���������ã�����Ա�Կ��л� DeepSeek���Զ�����ݽӿںͶ����Ӿ�ģ�͡�
+- `miniprogram/version.js`��`miniprogram/setting/setting.js`��`CHANGELOG.md`��`README.md` �ͱ��ĵ�ͬ�������� v1.98��
 
-### 涉及文件
+### �漰�ļ�
 
 - `miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.js`
 - `miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.wxml`
@@ -196,46 +418,46 @@
 - `README.md`
 - `docs/version-change-diary.md`
 
-### 验证结果
+### ��֤���
 
-- `node --check miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.js` 通过。
-- `node --check miniprogram/version.js` 通过。
-- `node --check miniprogram/setting/setting.js` 通过。
-- `miniprogram/app.json` 与 `project.config.json` JSON 解析通过。
-- AI 配置页 WXML `view` 与 `button` 标签数量 sanity check 通过。
-- 本轮涉及文件 `git diff --check` 通过，仅有既有 LF/CRLF 提示。
-- 敏感信息扫描未发现用户 API Key 片段。
+- `node --check miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.js` ͨ����
+- `node --check miniprogram/version.js` ͨ����
+- `node --check miniprogram/setting/setting.js` ͨ����
+- `miniprogram/app.json` �� `project.config.json` JSON ����ͨ����
+- AI ����ҳ WXML `view` �� `button` ��ǩ���� sanity check ͨ����
+- �����漰�ļ� `git diff --check` ͨ�������м��� LF/CRLF ��ʾ��
+- ������Ϣɨ��δ�����û� API Key Ƭ�Ρ�
 
-### 部署状态
+### ����״̬
 
-- 小程序开发版已通过微信开发者工具 CLI 上传，版本号 `1.98`，包体 `1.5 MB` / `1,599,214 Byte`。
-- 本次未提交审核、未发布上线。
+- С���򿪷�����ͨ��΢�ſ����߹��� CLI �ϴ����汾�� `1.98`������ `1.5 MB` / `1,599,214 Byte`��
+- ����δ�ύ��ˡ�δ�������ߡ�
 
-### 未完成风险
+### δ��ɷ���
 
-- 当前版本仍沿用后端单套 AI 配置保存模型：可自由编辑并保存当前默认供应商，但暂未把多个供应商各自的 Key 持久化成独立配置档案。
+- ��ǰ�汾�����ú�˵��� AI ���ñ���ģ�ͣ������ɱ༭�����浱ǰĬ�Ϲ�Ӧ�̣�����δ�Ѷ����Ӧ�̸��Ե� Key �־û��ɶ������õ�����
 
 ## v1.97 - 2026-06-24 21:11 CST
 
-### 改动级别
+### �Ķ�����
 
-小改修复，v1.96 -> v1.97。
+С���޸���v1.96 -> v1.97��
 
-### 本次目标
+### ����Ŀ��
 
-继续补全小猫 Agent 的安全治理层：高风险业务动作不再由 AI 对话直接落库，而是先生成管理员确认申请，再由管理员在管理中心确认或驳回。
+������ȫСè Agent �İ�ȫ�����㣺�߷���ҵ���������� AI �Ի�ֱ����⣬���������ɹ���Աȷ�����룬���ɹ���Ա�ڹ�������ȷ�ϻ򲵻ء�
 
-### 主要修改
+### ��Ҫ�޸�
 
-- 新增 `bx_work_agent_confirm` 确认队列模型，记录动作、参数、发起人、关联对象、状态、处理人和执行结果。
-- 新增 `WorkAgentConfirmService`，提供创建待确认、列表筛选、开始确认、完成确认、执行失败记录和驳回能力。
-- `work_ai_service.js` 拦截 `cancel_order`、`save_payment`、`void_payment`、`pay_payroll`、`audit_order`，先写入确认队列，不直接修改订单、财务、工资或审核数据。
-- `work_admin_controller.js` 新增确认队列列表、确认执行、驳回接口；确认执行复用原小猫业务执行函数，并使用当前管理员身份。
-- 新增管理端页面 `admin_agent_confirm`，支持状态/动作筛选、确认执行、驳回、查看脱敏参数和执行结果。
-- 管理中心首页新增“AI确认队列”入口。
-- `miniprogram/version.js`、`miniprogram/setting/setting.js`、`CHANGELOG.md`、`README.md` 和本文档同步升级到 v1.97。
+- ���� `bx_work_agent_confirm` ȷ�϶���ģ�ͣ���¼�����������������ˡ���������״̬�������˺�ִ�н����
+- ���� `WorkAgentConfirmService`���ṩ������ȷ�ϡ��б�ɸѡ����ʼȷ�ϡ����ȷ�ϡ�ִ��ʧ�ܼ�¼�Ͳ���������
+- `work_ai_service.js` ���� `cancel_order`��`save_payment`��`void_payment`��`pay_payroll`��`audit_order`����д��ȷ�϶��У���ֱ���޸Ķ��������񡢹��ʻ�������ݡ�
+- `work_admin_controller.js` ����ȷ�϶����б���ȷ��ִ�С����ؽӿڣ�ȷ��ִ�и���ԭСèҵ��ִ�к�������ʹ�õ�ǰ����Ա���ݡ�
+- ����������ҳ�� `admin_agent_confirm`��֧��״̬/����ɸѡ��ȷ��ִ�С����ء��鿴����������ִ�н����
+- ����������ҳ������AIȷ�϶��С���ڡ�
+- `miniprogram/version.js`��`miniprogram/setting/setting.js`��`CHANGELOG.md`��`README.md` �ͱ��ĵ�ͬ�������� v1.97��
 
-### 涉及文件
+### �漰�ļ�
 
 - `cloudfunctions/mcloud/project/B00/model/work_agent_confirm_model.js`
 - `cloudfunctions/mcloud/project/B00/service/work_agent_confirm_service.js`
@@ -250,49 +472,49 @@
 - `README.md`
 - `docs/version-change-diary.md`
 
-### 验证结果
+### ��֤���
 
-- `node --check` 覆盖新增确认模型、确认服务、AI 服务、管理端控制器、路由、确认队列页面 JS、版本源、设置文件和三个 live patch，均通过。
-- `miniprogram/app.json`、确认队列页面 JSON 和 `project.config.json` JSON 解析通过，确认队列页面已注册。
-- 确认队列页面 WXML view 标签数量 sanity check 通过，未发现异常 `/view>` 闭合。
-- `work_ai_service_live_patch.js`、`work_admin_controller_live_patch.js`、`work_route_live_patch.js` 解压后与当前源文件一致。
-- live patch 实际加载检查通过；仅出现项目既有 `ws` 依赖提示，不影响本次 patch 注入。
-- 本轮涉及文件 `git diff --check` 通过，仅有既有 LF/CRLF 提示。
-- 敏感信息扫描未发现新增 API Key、Token 或 Secret；字段校验里的 `apiKey: string|max` 属于误报，已排除。
+- `node --check` ��������ȷ��ģ�͡�ȷ�Ϸ���AI ���񡢹����˿�������·�ɡ�ȷ�϶���ҳ�� JS���汾Դ�������ļ������� live patch����ͨ����
+- `miniprogram/app.json`��ȷ�϶���ҳ�� JSON �� `project.config.json` JSON ����ͨ����ȷ�϶���ҳ����ע�ᡣ
+- ȷ�϶���ҳ�� WXML view ��ǩ���� sanity check ͨ����δ�����쳣 `/view>` �պϡ�
+- `work_ai_service_live_patch.js`��`work_admin_controller_live_patch.js`��`work_route_live_patch.js` ��ѹ���뵱ǰԴ�ļ�һ�¡�
+- live patch ʵ�ʼ��ؼ��ͨ������������Ŀ���� `ws` ������ʾ����Ӱ�챾�� patch ע�롣
+- �����漰�ļ� `git diff --check` ͨ�������м��� LF/CRLF ��ʾ��
+- ������Ϣɨ��δ�������� API Key��Token �� Secret���ֶ�У����� `apiKey: string|max` �����󱨣����ų���
 
-### 部署状态
+### ����״̬
 
-- `work_ai_service_live_patch.js` 已通过微信开发者工具 CLI 增量部署到 `mcloud`，包体 `46.2 KB`。
-- `work_admin_controller_live_patch.js` 已通过微信开发者工具 CLI 增量部署到 `mcloud`，包体 `11.1 KB`。
-- `work_route_live_patch.js` 已通过微信开发者工具 CLI 增量部署到 `mcloud`，包体 `2.8 KB`。
-- 小程序开发版已通过微信开发者工具 CLI 上传，版本号 `1.97`，包体 `1.5 MB` / `1,598,534 Byte`。
-- 本次未提交审核、未发布上线。
+- `work_ai_service_live_patch.js` ��ͨ��΢�ſ����߹��� CLI �������� `mcloud`������ `46.2 KB`��
+- `work_admin_controller_live_patch.js` ��ͨ��΢�ſ����߹��� CLI �������� `mcloud`������ `11.1 KB`��
+- `work_route_live_patch.js` ��ͨ��΢�ſ����߹��� CLI �������� `mcloud`������ `2.8 KB`��
+- С���򿪷�����ͨ��΢�ſ����߹��� CLI �ϴ����汾�� `1.97`������ `1.5 MB` / `1,598,534 Byte`��
+- ����δ�ύ��ˡ�δ�������ߡ�
 
-### 未完成风险
+### δ��ɷ���
 
-- 本轮只把 AI 发起的高风险动作接入确认队列；人工管理端原有收款、工资、审核入口仍按原流程执行。
-- 确认队列的驳回备注当前为固定文本，后续可补一个输入弹窗或详情页。
+- ����ֻ�� AI ����ĸ߷��ն�������ȷ�϶��У��˹�������ԭ���տ���ʡ��������԰�ԭ����ִ�С�
+- ȷ�϶��еĲ��ر�ע��ǰΪ�̶��ı��������ɲ�һ�����뵯��������ҳ��
 
 ## v1.96 - 2026-06-24 20:52 CST
 
-### 改动级别
+### �Ķ�����
 
-小改修复，v1.95 -> v1.96。
+С���޸���v1.95 -> v1.96��
 
-### 本次目标
+### ����Ŀ��
 
-修复小李截图中“测试对话”仍返回 `Param Incorrect` 的问题。根因判断为云端实际请求仍可能携带旧模型 ID、非 MiMo 模型，或 MiMo 对完整 Agent 多段提示词请求结构不兼容；本次在后端做兜底，而不是继续让管理员反复手动改配置。
+�޸�С���ͼ�С����ԶԻ����Է��� `Param Incorrect` �����⡣�����ж�Ϊ�ƶ�ʵ�������Կ���Я����ģ�� ID���� MiMo ģ�ͣ��� MiMo ������ Agent �����ʾ������ṹ�����ݣ������ں�������ף������Ǽ����ù���Ա�����ֶ������á�
 
-### 主要修改
+### ��Ҫ�޸�
 
-- `work_ai_service.js` 新增 MiMo API 识别和模型 ID 规范化。
-- MiMo 地址下自动把 `mimov2.5` 规范为 `mimo-v2.5`，并把旧配置里的非 MiMo 模型回落到 `mimo-v2.5`。
-- 当 MiMo 对完整 Agent 请求和最小参数请求仍返回参数错误时，再发起单轮纯文本兜底请求，优先保证测试对话和普通问答可用。
-- 视觉模型留空仍保持留空，不强行写入默认视觉模型。
-- 重新生成并准备部署 `work_ai_service_live_patch.js`，确保云端 mcloud 使用新版 AI 服务逻辑。
-- `miniprogram/version.js`、`miniprogram/setting/setting.js`、`CHANGELOG.md`、`README.md` 和本文档同步升级到 v1.96。
+- `work_ai_service.js` ���� MiMo API ʶ���ģ�� ID �淶����
+- MiMo ��ַ���Զ��� `mimov2.5` �淶Ϊ `mimo-v2.5`�����Ѿ�������ķ� MiMo ģ�ͻ��䵽 `mimo-v2.5`��
+- �� MiMo ������ Agent �������С���������Է��ز�������ʱ���ٷ����ִ��ı������������ȱ�֤���ԶԻ�����ͨ�ʴ���á�
+- �Ӿ�ģ�������Ա������գ���ǿ��д��Ĭ���Ӿ�ģ�͡�
+- �������ɲ�׼������ `work_ai_service_live_patch.js`��ȷ���ƶ� mcloud ʹ���°� AI �����߼���
+- `miniprogram/version.js`��`miniprogram/setting/setting.js`��`CHANGELOG.md`��`README.md` �ͱ��ĵ�ͬ�������� v1.96��
 
-### 涉及文件
+### �漰�ļ�
 
 - `cloudfunctions/mcloud/project/B00/service/work_ai_service.js`
 - `cloudfunctions/mcloud/work_ai_service_live_patch.js`
@@ -302,50 +524,50 @@
 - `README.md`
 - `docs/version-change-diary.md`
 
-### 验证结果
+### ��֤���
 
-- `node --check cloudfunctions/mcloud/project/B00/service/work_ai_service.js` 通过。
-- `node --check cloudfunctions/mcloud/work_ai_service_live_patch.js` 通过。
-- `node --check miniprogram/version.js` 通过。
-- `node --check miniprogram/setting/setting.js` 通过。
-- `miniprogram/app.json` 与 `project.config.json` JSON 解析通过。
-- `work_ai_service_live_patch.js` 解压后与 `work_ai_service.js`、`work_ai_agent_registry.js`、`work_ai_agent_memory.js`、`work_agent_audit_model.js` 源码一致。
-- live patch 实际加载检查通过；仅出现项目既有 `ws` 依赖提示，不影响本次 patch 注入。
-- 本轮涉及文件 `git diff --check` 通过，仅有既有 LF/CRLF 提示。
-- 敏感信息扫描未发现新增 API Key、Token 或 Secret。
+- `node --check cloudfunctions/mcloud/project/B00/service/work_ai_service.js` ͨ����
+- `node --check cloudfunctions/mcloud/work_ai_service_live_patch.js` ͨ����
+- `node --check miniprogram/version.js` ͨ����
+- `node --check miniprogram/setting/setting.js` ͨ����
+- `miniprogram/app.json` �� `project.config.json` JSON ����ͨ����
+- `work_ai_service_live_patch.js` ��ѹ���� `work_ai_service.js`��`work_ai_agent_registry.js`��`work_ai_agent_memory.js`��`work_agent_audit_model.js` Դ��һ�¡�
+- live patch ʵ�ʼ��ؼ��ͨ������������Ŀ���� `ws` ������ʾ����Ӱ�챾�� patch ע�롣
+- �����漰�ļ� `git diff --check` ͨ�������м��� LF/CRLF ��ʾ��
+- ������Ϣɨ��δ�������� API Key��Token �� Secret��
 
-### 部署状态
+### ����״̬
 
-- `work_ai_service_live_patch.js` 已通过微信开发者工具 CLI 增量部署到 `mcloud`，包体 `41.9 KB`。
-- 小程序开发版已通过微信开发者工具 CLI 上传，版本号 `1.96`，包体 `1.5 MB` / `1,569,589 Byte`。
-- 本次未提交审核、未发布上线。
+- `work_ai_service_live_patch.js` ��ͨ��΢�ſ����߹��� CLI �������� `mcloud`������ `41.9 KB`��
+- С���򿪷�����ͨ��΢�ſ����߹��� CLI �ϴ����汾�� `1.96`������ `1.5 MB` / `1,569,589 Byte`��
+- ����δ�ύ��ˡ�δ�������ߡ�
 
-### 未完成风险
+### δ��ɷ���
 
-- MiMo 纯文本兜底保证测试对话和普通问答可用；如果要让复杂 Agent 写入动作也完全稳定，仍建议后续用更强的兼容模型或单独适配 MiMo 的 JSON 行为。
-- 本次仍不把用户提供的 Key 写入源码、日志或提交。
+- MiMo ���ı����ױ�֤���ԶԻ�����ͨ�ʴ���ã����Ҫ�ø��� Agent д�붯��Ҳ��ȫ�ȶ����Խ�������ø�ǿ�ļ���ģ�ͻ򵥶����� MiMo �� JSON ��Ϊ��
+- �����Բ����û��ṩ�� Key д��Դ�롢��־���ύ��
 
 ## v1.95 - 2026-06-24 20:34 CST
 
-### 改动级别
+### �Ķ�����
 
-小改修复，v1.94 -> v1.95。
+С���޸���v1.94 -> v1.95��
 
-### 本次目标
+### ����Ŀ��
 
-继续参考 Hanako/HanaAgent 方案里的“动作可追踪、可复盘、可治理”逻辑，把小猫 Agent 的审计流水从纯文本留痕升级为“文本 + 脱敏结构化摘要”。这一步不扩大任何写入权限，但让后续自动复盘、高风险确认队列和管理统计有更稳定的数据基础。
+�����ο� Hanako/HanaAgent ������ġ�������׷�١��ɸ��̡����������߼�����Сè Agent �������ˮ�Ӵ��ı���������Ϊ���ı� + �����ṹ��ժҪ������һ���������κ�д��Ȩ�ޣ����ú����Զ����̡��߷���ȷ�϶��к͹���ͳ���и��ȶ������ݻ�����
 
-### 主要修改
+### ��Ҫ�޸�
 
-- `work_agent_audit_model.js` 新增 `AGENTAUDIT_ACTION_SUMMARY` 对象字段。
-- `work_ai_service.js` 在 `_addAgentAuditLog` 写入时自动生成结构化摘要，包含动作、风险等级、是否建议管理员复查、关联对象、标题、脱敏内容预览、关键信号、风险标签和安全决策。
-- 结构化摘要会掩码手机号、邮箱和疑似 Key/Token 片段，只保留有限内容预览和业务线索。
-- `work_agent_audit_service.js` 详情接口返回 `AGENTAUDIT_ACTION_SUMMARY`；旧记录没有摘要时，会根据现有标题、内容、风险和关联对象临时生成兼容摘要。
-- AI 审计详情页新增“结构化摘要”区块，展示摘要版本、复查建议、安全决策、关联对象、内容预览、信号和标签。
-- 重新生成 `work_ai_service_live_patch.js` 与 `work_admin_controller_live_patch.js`，确保云端 mcloud 使用最新 AI 写入源头、审计模型、审计服务和详情接口。
-- `miniprogram/version.js`、`miniprogram/setting/setting.js`、`CHANGELOG.md`、`README.md` 和本文档同步升级到 v1.95。
+- `work_agent_audit_model.js` ���� `AGENTAUDIT_ACTION_SUMMARY` �����ֶΡ�
+- `work_ai_service.js` �� `_addAgentAuditLog` д��ʱ�Զ����ɽṹ��ժҪ���������������յȼ����Ƿ������Ա���顢�������󡢱��⡢��������Ԥ�����ؼ��źš����ձ�ǩ�Ͱ�ȫ���ߡ�
+- �ṹ��ժҪ�������ֻ��š���������� Key/Token Ƭ�Σ�ֻ������������Ԥ����ҵ��������
+- `work_agent_audit_service.js` ����ӿڷ��� `AGENTAUDIT_ACTION_SUMMARY`���ɼ�¼û��ժҪʱ����������б��⡢���ݡ����պ͹���������ʱ���ɼ���ժҪ��
+- AI �������ҳ�������ṹ��ժҪ�����飬չʾժҪ�汾�����齨�顢��ȫ���ߡ�������������Ԥ�����źźͱ�ǩ��
+- �������� `work_ai_service_live_patch.js` �� `work_admin_controller_live_patch.js`��ȷ���ƶ� mcloud ʹ������ AI д��Դͷ�����ģ�͡���Ʒ��������ӿڡ�
+- `miniprogram/version.js`��`miniprogram/setting/setting.js`��`CHANGELOG.md`��`README.md` �ͱ��ĵ�ͬ�������� v1.95��
 
-### 涉及文件
+### �漰�ļ�
 
 - `cloudfunctions/mcloud/project/B00/model/work_agent_audit_model.js`
 - `cloudfunctions/mcloud/project/B00/service/work_ai_service.js`
@@ -361,58 +583,58 @@
 - `README.md`
 - `docs/version-change-diary.md`
 
-### 验证结果
+### ��֤���
 
-- `node --check cloudfunctions/mcloud/project/B00/model/work_agent_audit_model.js` 通过。
-- `node --check cloudfunctions/mcloud/project/B00/service/work_ai_service.js` 通过。
-- `node --check cloudfunctions/mcloud/project/B00/service/work_agent_audit_service.js` 通过。
-- `node --check cloudfunctions/mcloud/work_ai_service_live_patch.js` 通过。
-- `node --check cloudfunctions/mcloud/work_admin_controller_live_patch.js` 通过。
-- `node --check miniprogram/projects/B00/pages/work/admin_agent_audit_detail/work_admin_agent_audit_detail.js` 通过。
-- `node --check miniprogram/version.js` 与 `node --check miniprogram/setting/setting.js` 通过。
-- `miniprogram/app.json`、`work_admin_agent_audit_detail.json` 和 `project.config.json` JSON 解析通过，版本源确认当前为 `1.95`。
-- AI 审计详情页 WXML view 标签数量 sanity check 通过，未发现异常 `/view>` 闭合。
-- `work_ai_service_live_patch.js` 解压后与 `work_ai_service.js`、`work_ai_agent_registry.js`、`work_ai_agent_memory.js`、`work_agent_audit_model.js` 源码一致。
-- `work_admin_controller_live_patch.js` 解压后与 `work_agent_audit_service.js`、`work_agent_audit_model.js`、`work_admin_controller.js` 源码一致。
-- live patch 实际加载检查通过；仅出现项目既有 `ws` 依赖提示，不影响本次 patch 注入。
-- 本轮涉及文件 `git diff --check` 通过，仅有既有 LF/CRLF 提示。
-- 敏感信息扫描未发现新增 API Key、Token 或 Secret。
+- `node --check cloudfunctions/mcloud/project/B00/model/work_agent_audit_model.js` ͨ����
+- `node --check cloudfunctions/mcloud/project/B00/service/work_ai_service.js` ͨ����
+- `node --check cloudfunctions/mcloud/project/B00/service/work_agent_audit_service.js` ͨ����
+- `node --check cloudfunctions/mcloud/work_ai_service_live_patch.js` ͨ����
+- `node --check cloudfunctions/mcloud/work_admin_controller_live_patch.js` ͨ����
+- `node --check miniprogram/projects/B00/pages/work/admin_agent_audit_detail/work_admin_agent_audit_detail.js` ͨ����
+- `node --check miniprogram/version.js` �� `node --check miniprogram/setting/setting.js` ͨ����
+- `miniprogram/app.json`��`work_admin_agent_audit_detail.json` �� `project.config.json` JSON ����ͨ�����汾Դȷ�ϵ�ǰΪ `1.95`��
+- AI �������ҳ WXML view ��ǩ���� sanity check ͨ����δ�����쳣 `/view>` �պϡ�
+- `work_ai_service_live_patch.js` ��ѹ���� `work_ai_service.js`��`work_ai_agent_registry.js`��`work_ai_agent_memory.js`��`work_agent_audit_model.js` Դ��һ�¡�
+- `work_admin_controller_live_patch.js` ��ѹ���� `work_agent_audit_service.js`��`work_agent_audit_model.js`��`work_admin_controller.js` Դ��һ�¡�
+- live patch ʵ�ʼ��ؼ��ͨ������������Ŀ���� `ws` ������ʾ����Ӱ�챾�� patch ע�롣
+- �����漰�ļ� `git diff --check` ͨ�������м��� LF/CRLF ��ʾ��
+- ������Ϣɨ��δ�������� API Key��Token �� Secret��
 
-### 部署状态
+### ����״̬
 
-- `work_ai_service_live_patch.js` 已通过微信开发者工具 CLI 增量部署到 `mcloud`，包体 `41.2 KB`。
-- `work_admin_controller_live_patch.js` 已通过微信开发者工具 CLI 增量部署到 `mcloud`，包体 `7.1 KB`。
-- 小程序开发版已通过微信开发者工具 CLI 上传，版本号 `1.95`，包体 `1.5 MB` / `1,568,838 Byte`。
-- 本次未提交审核、未发布上线。
+- `work_ai_service_live_patch.js` ��ͨ��΢�ſ����߹��� CLI �������� `mcloud`������ `41.2 KB`��
+- `work_admin_controller_live_patch.js` ��ͨ��΢�ſ����߹��� CLI �������� `mcloud`������ `7.1 KB`��
+- С���򿪷�����ͨ��΢�ſ����߹��� CLI �ϴ����汾�� `1.95`������ `1.5 MB` / `1,568,838 Byte`��
+- ����δ�ύ��ˡ�δ�������ߡ�
 
-### 未完成风险
+### δ��ɷ���
 
-- 本轮只保存结构化摘要，不改变写入执行流程；高风险动作“先入队、后人工确认”的机制仍需后续单独设计，避免直接改动工资、收款、审核等现有业务闭环。
-- 历史流水不会回填真实动作参数，只能由详情接口基于旧文本生成兼容摘要。
+- ����ֻ����ṹ��ժҪ�����ı�д��ִ�����̣��߷��ն���������ӡ����˹�ȷ�ϡ��Ļ����������������ƣ�����ֱ�ӸĶ����ʡ��տ��˵�����ҵ��ջ���
+- ��ʷ��ˮ���������ʵ����������ֻ��������ӿڻ��ھ��ı����ɼ���ժҪ��
 
 ## v1.94 - 2026-06-24 20:17 CST
 
-### 改动级别
+### �Ķ�����
 
-小改修复，v1.93 -> v1.94。
+С���޸���v1.93 -> v1.94��
 
-### 本次目标
+### ����Ŀ��
 
-继续补齐小猫 Agent 的可管理性：AI 审计流水不只停留在列表和统计，管理员可以点开单条记录，查看完整审计内容、关联对象和安全复盘摘要，方便把“小猫做了什么、谁触发的、风险在哪里”追清楚。
+��������Сè Agent �Ŀɹ����ԣ�AI �����ˮ��ֻͣ�����б���ͳ�ƣ�����Ա���Ե㿪������¼���鿴����������ݡ���������Ͱ�ȫ����ժҪ������ѡ�Сè����ʲô��˭�����ġ����������׷�����
 
-### 主要修改
+### ��Ҫ�޸�
 
-- `work_agent_audit_service.js` 新增 `getAuditDetail`，按审计记录 ID 返回单条有效记录，并对返回内容做长度控制。
-- `work_admin_controller.js` 新增 `getAgentAuditDetail`，复用小程序管理员权限校验。
-- `route.js` 新增 `work/admin_agent_audit_detail` 只读路由。
-- `work_admin_agent_audit.js` 新增列表卡片详情跳转。
-- `work_admin_agent_audit.wxml` 列表卡片支持点击进入详情，并修正统计区域异常闭合标签。
-- 新增 `admin_agent_audit_detail` 页面，展示基础信息、完整审计内容和安全复盘摘要，支持下拉刷新。
-- `miniprogram/app.json` 注册 AI 审计详情页。
-- 重新生成 `work_admin_controller_live_patch.js` 和 `work_route_live_patch.js`，确保云端 mcloud 使用最新控制器、审计服务和路由。
-- `miniprogram/version.js`、`miniprogram/setting/setting.js`、`CHANGELOG.md`、`README.md` 和本文档同步升级到 v1.94。
+- `work_agent_audit_service.js` ���� `getAuditDetail`������Ƽ�¼ ID ���ص�����Ч��¼�����Է������������ȿ��ơ�
+- `work_admin_controller.js` ���� `getAgentAuditDetail`������С�������ԱȨ��У�顣
+- `route.js` ���� `work/admin_agent_audit_detail` ֻ��·�ɡ�
+- `work_admin_agent_audit.js` �����б���Ƭ������ת��
+- `work_admin_agent_audit.wxml` �б���Ƭ֧�ֵ���������飬������ͳ�������쳣�պϱ�ǩ��
+- ���� `admin_agent_audit_detail` ҳ�棬չʾ������Ϣ������������ݺͰ�ȫ����ժҪ��֧������ˢ�¡�
+- `miniprogram/app.json` ע�� AI �������ҳ��
+- �������� `work_admin_controller_live_patch.js` �� `work_route_live_patch.js`��ȷ���ƶ� mcloud ʹ�����¿���������Ʒ����·�ɡ�
+- `miniprogram/version.js`��`miniprogram/setting/setting.js`��`CHANGELOG.md`��`README.md` �ͱ��ĵ�ͬ�������� v1.94��
 
-### 涉及文件
+### �漰�ļ�
 
 - `cloudfunctions/mcloud/project/B00/service/work_agent_audit_service.js`
 - `cloudfunctions/mcloud/project/B00/controller/work_admin_controller.js`
@@ -432,56 +654,56 @@
 - `README.md`
 - `docs/version-change-diary.md`
 
-### 验证结果
+### ��֤���
 
-- `node --check cloudfunctions/mcloud/project/B00/service/work_agent_audit_service.js` 通过。
-- `node --check cloudfunctions/mcloud/project/B00/controller/work_admin_controller.js` 通过。
-- `node --check cloudfunctions/mcloud/project/B00/public/route.js` 通过。
-- `node --check cloudfunctions/mcloud/work_admin_controller_live_patch.js` 通过。
-- `node --check cloudfunctions/mcloud/work_route_live_patch.js` 通过。
-- `node --check miniprogram/projects/B00/pages/work/admin_agent_audit/work_admin_agent_audit.js` 通过。
-- `node --check miniprogram/projects/B00/pages/work/admin_agent_audit_detail/work_admin_agent_audit_detail.js` 通过。
-- `node --check miniprogram/version.js` 与 `node --check miniprogram/setting/setting.js` 通过。
-- `miniprogram/app.json`、`work_admin_agent_audit.json`、`work_admin_agent_audit_detail.json` 和 `project.config.json` JSON 解析通过，详情页已注册。
-- AI 审计列表页和详情页 WXML view 标签数量 sanity check 通过，未发现异常 `/view>` 闭合。
-- `work_admin_controller_live_patch.js` 解压后与 `work_agent_audit_service.js`、`work_agent_audit_model.js`、`work_admin_controller.js` 源码一致。
-- `work_route_live_patch.js` 解压后与 `route.js` 源码一致。
-- live patch 实际加载检查通过；仅出现项目既有 `ws` 依赖提示，不影响本次 patch 注入。
-- 本轮涉及文件 `git diff --check` 通过，仅有既有 LF/CRLF 提示。
-- 敏感信息扫描未发现新增 API Key、Token 或 Secret。
+- `node --check cloudfunctions/mcloud/project/B00/service/work_agent_audit_service.js` ͨ����
+- `node --check cloudfunctions/mcloud/project/B00/controller/work_admin_controller.js` ͨ����
+- `node --check cloudfunctions/mcloud/project/B00/public/route.js` ͨ����
+- `node --check cloudfunctions/mcloud/work_admin_controller_live_patch.js` ͨ����
+- `node --check cloudfunctions/mcloud/work_route_live_patch.js` ͨ����
+- `node --check miniprogram/projects/B00/pages/work/admin_agent_audit/work_admin_agent_audit.js` ͨ����
+- `node --check miniprogram/projects/B00/pages/work/admin_agent_audit_detail/work_admin_agent_audit_detail.js` ͨ����
+- `node --check miniprogram/version.js` �� `node --check miniprogram/setting/setting.js` ͨ����
+- `miniprogram/app.json`��`work_admin_agent_audit.json`��`work_admin_agent_audit_detail.json` �� `project.config.json` JSON ����ͨ��������ҳ��ע�ᡣ
+- AI ����б�ҳ������ҳ WXML view ��ǩ���� sanity check ͨ����δ�����쳣 `/view>` �պϡ�
+- `work_admin_controller_live_patch.js` ��ѹ���� `work_agent_audit_service.js`��`work_agent_audit_model.js`��`work_admin_controller.js` Դ��һ�¡�
+- `work_route_live_patch.js` ��ѹ���� `route.js` Դ��һ�¡�
+- live patch ʵ�ʼ��ؼ��ͨ������������Ŀ���� `ws` ������ʾ����Ӱ�챾�� patch ע�롣
+- �����漰�ļ� `git diff --check` ͨ�������м��� LF/CRLF ��ʾ��
+- ������Ϣɨ��δ�������� API Key��Token �� Secret��
 
-### 部署状态
+### ����״̬
 
-- `work_admin_controller_live_patch.js` 已通过微信开发者工具 CLI 增量部署到 `mcloud`，包体 `6.5 KB`。
-- `work_route_live_patch.js` 已通过微信开发者工具 CLI 增量部署到 `mcloud`，包体 `2.8 KB`。
-- 小程序开发版已通过微信开发者工具 CLI 上传，版本号 `1.94`，包体 `1.5 MB` / `1,566,038 Byte`。
-- 本次未提交审核、未发布上线。
+- `work_admin_controller_live_patch.js` ��ͨ��΢�ſ����߹��� CLI �������� `mcloud`������ `6.5 KB`��
+- `work_route_live_patch.js` ��ͨ��΢�ſ����߹��� CLI �������� `mcloud`������ `2.8 KB`��
+- С���򿪷�����ͨ��΢�ſ����߹��� CLI �ϴ����汾�� `1.94`������ `1.5 MB` / `1,566,038 Byte`��
+- ����δ�ύ��ˡ�δ�������ߡ�
 
-### 未完成风险
+### δ��ɷ���
 
-- 当前详情页展示的是已存在审计模型里的标题、内容、动作、风险和关联对象；历史流水没有单独保存模型原始 JSON，因此“原始工具参数 / 模型返回结构”的独立字段需要后续版本从审计写入源头继续增强。
+- ��ǰ����ҳչʾ�����Ѵ������ģ����ı��⡢���ݡ����������պ͹���������ʷ��ˮû�е�������ģ��ԭʼ JSON����ˡ�ԭʼ���߲��� / ģ�ͷ��ؽṹ���Ķ����ֶ���Ҫ�����汾�����д��Դͷ������ǿ��
 
 ## v1.93 - 2026-06-24 20:02 CST
 
-### 改动级别
+### �Ķ�����
 
-小改修复，v1.92 -> v1.93。
+С���޸���v1.92 -> v1.93��
 
-### 本次目标
+### ����Ŀ��
 
-继续补齐小猫 Agent 的审计闭环：管理员不只要能看到每条 AI 写入流水，还要能先看到当前筛选下的风险分布、最高频动作和最高频员工，方便复盘小猫是否在被正常使用、是否出现高风险集中操作。
+��������Сè Agent ����Ʊջ�������Ա��ֻҪ�ܿ���ÿ�� AI д����ˮ����Ҫ���ȿ�����ǰɸѡ�µķ��շֲ������Ƶ���������ƵԱ�������㸴��Сè�Ƿ��ڱ�����ʹ�á��Ƿ���ָ߷��ռ��в�����
 
-### 主要修改
+### ��Ҫ�޸�
 
-- `work_agent_audit_service.js` 随审计列表返回 `stats` 摘要，统计当前筛选条件下的总数、高风险、财务相关和普通记录。
-- 审计统计基于最近 `500` 条匹配记录生成动作 Top 和员工 Top，避免一次性扫描过多历史数据。
-- `work_admin_agent_audit.js` 新增 `stats` 格式化逻辑，复用动作和风险文案。
-- `work_admin_agent_audit.wxml` 新增统计面板，展示筛选总数、高风险、财务相关、普通、最近操作、最多动作和最多员工。
-- `work_admin_agent_audit.wxss` 补齐统计卡片和摘要行样式，保持管理后台纸质卡片风格。
-- 重新生成 `work_admin_controller_live_patch.js`，确保云端 mcloud 使用最新审计服务。
-- `miniprogram/version.js`、`miniprogram/setting/setting.js`、`CHANGELOG.md`、`README.md` 和本文档同步升级到 v1.93。
+- `work_agent_audit_service.js` ������б����� `stats` ժҪ��ͳ�Ƶ�ǰɸѡ�����µ��������߷��ա�������غ���ͨ��¼��
+- ���ͳ�ƻ������ `500` ��ƥ���¼���ɶ��� Top ��Ա�� Top������һ����ɨ�������ʷ���ݡ�
+- `work_admin_agent_audit.js` ���� `stats` ��ʽ���߼������ö����ͷ����İ���
+- `work_admin_agent_audit.wxml` ����ͳ����壬չʾɸѡ�������߷��ա�������ء���ͨ�������������ද�������Ա����
+- `work_admin_agent_audit.wxss` ����ͳ�ƿ�Ƭ��ժҪ����ʽ�����ֹ�����ֽ̨�ʿ�Ƭ���
+- �������� `work_admin_controller_live_patch.js`��ȷ���ƶ� mcloud ʹ��������Ʒ���
+- `miniprogram/version.js`��`miniprogram/setting/setting.js`��`CHANGELOG.md`��`README.md` �ͱ��ĵ�ͬ�������� v1.93��
 
-### 涉及文件
+### �漰�ļ�
 
 - `cloudfunctions/mcloud/project/B00/service/work_agent_audit_service.js`
 - `cloudfunctions/mcloud/project/B00/controller/work_admin_controller.js`
@@ -495,47 +717,47 @@
 - `README.md`
 - `docs/version-change-diary.md`
 
-### 验证结果
+### ��֤���
 
-- `node --check cloudfunctions/mcloud/project/B00/service/work_agent_audit_service.js` 通过。
-- `node --check cloudfunctions/mcloud/project/B00/controller/work_admin_controller.js` 通过。
-- `node --check cloudfunctions/mcloud/work_admin_controller_live_patch.js` 通过。
-- `node --check miniprogram/projects/B00/pages/work/admin_agent_audit/work_admin_agent_audit.js` 通过。
-- `node --check miniprogram/version.js` 与 `node --check miniprogram/setting/setting.js` 通过。
-- `work_admin_controller_live_patch.js` 解压后与 `work_agent_audit_service.js`、`work_agent_audit_model.js`、`work_admin_controller.js` 源码一致。
-- `work_admin_agent_audit.json`、`miniprogram/app.json` 和 `project.config.json` JSON 解析通过。
-- 本轮涉及文件 `git diff --check` 通过；全仓检查仍受既有无关脏文件 trailing whitespace 影响。
-- 敏感信息扫描未发现新增 API Key、Token 或 Secret。
+- `node --check cloudfunctions/mcloud/project/B00/service/work_agent_audit_service.js` ͨ����
+- `node --check cloudfunctions/mcloud/project/B00/controller/work_admin_controller.js` ͨ����
+- `node --check cloudfunctions/mcloud/work_admin_controller_live_patch.js` ͨ����
+- `node --check miniprogram/projects/B00/pages/work/admin_agent_audit/work_admin_agent_audit.js` ͨ����
+- `node --check miniprogram/version.js` �� `node --check miniprogram/setting/setting.js` ͨ����
+- `work_admin_controller_live_patch.js` ��ѹ���� `work_agent_audit_service.js`��`work_agent_audit_model.js`��`work_admin_controller.js` Դ��һ�¡�
+- `work_admin_agent_audit.json`��`miniprogram/app.json` �� `project.config.json` JSON ����ͨ����
+- �����漰�ļ� `git diff --check` ͨ����ȫ�ּ�����ܼ����޹����ļ� trailing whitespace Ӱ�졣
+- ������Ϣɨ��δ�������� API Key��Token �� Secret��
 
-### 部署状态
+### ����״̬
 
-- `work_admin_controller_live_patch.js` 已通过微信开发者工具 CLI 增量部署到 `mcloud`，包体 `5.6 KB`；首次部署命令超时无结果，重试成功。
-- 小程序开发版已通过微信开发者工具 CLI 上传，版本号 `1.93`，包体 `1.5 MB` / `1,558,739 Byte`。
-- 本次未提交审核、未发布上线。
+- `work_admin_controller_live_patch.js` ��ͨ��΢�ſ����߹��� CLI �������� `mcloud`������ `5.6 KB`���״β������ʱ�޽�������Գɹ���
+- С���򿪷�����ͨ��΢�ſ����߹��� CLI �ϴ����汾�� `1.93`������ `1.5 MB` / `1,558,739 Byte`��
+- ����δ�ύ��ˡ�δ�������ߡ�
 
-### 未完成风险
+### δ��ɷ���
 
-- 统计摘要基于当前筛选下最近 `500` 条匹配审计记录生成动作和员工 Top；当历史记录超过该范围时，Top 是近期运营视角，不等于全量历史排名。
+- ͳ��ժҪ���ڵ�ǰɸѡ����� `500` ��ƥ����Ƽ�¼���ɶ�����Ա�� Top������ʷ��¼�����÷�Χʱ��Top �ǽ�����Ӫ�ӽǣ�������ȫ����ʷ������
 
 ## v1.92 - 2026-06-24 19:43 CST
 
-### 改动级别
+### �Ķ�����
 
-小改修复，v1.91 -> v1.92。
+С���޸���v1.91 -> v1.92��
 
-### 本次目标
+### ����Ŀ��
 
-把 AI 配置页已有的“Agent 能力边界”展示接到小猫后端技能注册表，让管理员看到的技能、动作、写入数量和高风险数量来自真实注册表；继续保持能力目录只读，不开放运行时随意改工具，避免绕过权限和审计。
+�� AI ����ҳ���еġ�Agent �����߽硱չʾ�ӵ�Сè��˼���ע������ù���Ա�����ļ��ܡ�������д�������͸߷�������������ʵע�����������������Ŀ¼ֻ��������������ʱ����Ĺ��ߣ������ƹ�Ȩ�޺���ơ�
 
-### 主要修改
+### ��Ҫ�޸�
 
-- `work_ai_agent_registry.js` 新增脱敏能力目录导出，按技能、动作、写入动作和高风险动作生成只读摘要。
-- `work_ai_service.js` 在管理员 AI 配置接口返回 `agentCatalog`，不包含触发正则、内部提示词、Key 或会话内容。
-- `work_admin_ai.js` 默认表单补齐 `agentCatalog` 空结构，避免旧接口或弱网情况下页面读取能力目录时报错。
-- `work_ai_service_live_patch.js` 重新生成，确保云端 mcloud 使用最新 AI 服务和技能注册表。
-- `miniprogram/version.js`、`miniprogram/setting/setting.js`、`CHANGELOG.md`、`README.md` 和本文档同步升级到 v1.92。
+- `work_ai_agent_registry.js` ������������Ŀ¼�����������ܡ�������д�붯���͸߷��ն�������ֻ��ժҪ��
+- `work_ai_service.js` �ڹ���Ա AI ���ýӿڷ��� `agentCatalog`�����������������ڲ���ʾ�ʡ�Key ��Ự���ݡ�
+- `work_admin_ai.js` Ĭ�ϱ������� `agentCatalog` �սṹ������ɽӿڻ����������ҳ���ȡ����Ŀ¼ʱ������
+- `work_ai_service_live_patch.js` �������ɣ�ȷ���ƶ� mcloud ʹ������ AI ����ͼ���ע�����
+- `miniprogram/version.js`��`miniprogram/setting/setting.js`��`CHANGELOG.md`��`README.md` �ͱ��ĵ�ͬ�������� v1.92��
 
-### 涉及文件
+### �漰�ļ�
 
 - `cloudfunctions/mcloud/project/B00/service/work_ai_agent_registry.js`
 - `cloudfunctions/mcloud/project/B00/service/work_ai_service.js`
@@ -547,49 +769,49 @@
 - `README.md`
 - `docs/version-change-diary.md`
 
-### 验证结果
+### ��֤���
 
-- `node --check cloudfunctions/mcloud/project/B00/service/work_ai_agent_registry.js` 通过。
-- `node --check cloudfunctions/mcloud/project/B00/service/work_ai_service.js` 通过。
-- `node --check cloudfunctions/mcloud/work_ai_service_live_patch.js` 通过。
-- `node --check miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.js` 通过。
-- `node --check miniprogram/version.js` 与 `node --check miniprogram/setting/setting.js` 通过。
-- `miniprogram/app.json`、`work_admin_ai.json` 和 `project.config.json` JSON 解析通过。
-- Agent 能力目录导出检查通过：当前展示 `10` 个技能、`17` 个动作、`12` 个写入动作和 `5` 个高风险动作。
-- `work_ai_service_live_patch.js` 解压后与 `work_ai_service.js`、`work_ai_agent_registry.js`、`work_ai_agent_memory.js`、`work_agent_audit_model.js` 源码一致。
-- 本轮涉及文件 `git diff --check` 通过；全仓检查仍受既有无关脏文件 trailing whitespace 影响。
-- 敏感信息扫描未发现新增 API Key、Token 或 Secret。
+- `node --check cloudfunctions/mcloud/project/B00/service/work_ai_agent_registry.js` ͨ����
+- `node --check cloudfunctions/mcloud/project/B00/service/work_ai_service.js` ͨ����
+- `node --check cloudfunctions/mcloud/work_ai_service_live_patch.js` ͨ����
+- `node --check miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.js` ͨ����
+- `node --check miniprogram/version.js` �� `node --check miniprogram/setting/setting.js` ͨ����
+- `miniprogram/app.json`��`work_admin_ai.json` �� `project.config.json` JSON ����ͨ����
+- Agent ����Ŀ¼�������ͨ������ǰչʾ `10` �����ܡ�`17` ��������`12` ��д�붯���� `5` ���߷��ն�����
+- `work_ai_service_live_patch.js` ��ѹ���� `work_ai_service.js`��`work_ai_agent_registry.js`��`work_ai_agent_memory.js`��`work_agent_audit_model.js` Դ��һ�¡�
+- �����漰�ļ� `git diff --check` ͨ����ȫ�ּ�����ܼ����޹����ļ� trailing whitespace Ӱ�졣
+- ������Ϣɨ��δ�������� API Key��Token �� Secret��
 
-### 部署状态
+### ����״̬
 
-- `work_ai_service_live_patch.js` 已通过微信开发者工具 CLI 增量部署到 `mcloud`，包体 `40.3 KB`；首次部署遇到一次 `ECONNRESET`，重试成功。
-- 小程序开发版已通过微信开发者工具 CLI 上传，版本号 `1.92`，包体 `1.5 MB` / `1,555,760 Byte`。
-- 本次未提交审核、未发布上线。
+- `work_ai_service_live_patch.js` ��ͨ��΢�ſ����߹��� CLI �������� `mcloud`������ `40.3 KB`���״β�������һ�� `ECONNRESET`�����Գɹ���
+- С���򿪷�����ͨ��΢�ſ����߹��� CLI �ϴ����汾�� `1.92`������ `1.5 MB` / `1,555,760 Byte`��
+- ����δ�ύ��ˡ�δ�������ߡ�
 
-### 未完成风险
+### δ��ɷ���
 
-- 能力目录目前是只读可视化，不提供运行时开关；后续若要做管理员开关，需要同步设计权限校验、审计和高风险确认，不建议只在前端隐藏按钮。
+- ����Ŀ¼Ŀǰ��ֻ�����ӻ������ṩ����ʱ���أ�������Ҫ������Ա���أ���Ҫͬ�����Ȩ��У�顢��ƺ͸߷���ȷ�ϣ�������ֻ��ǰ�����ذ�ť��
 
 ## v1.91 - 2026-06-24 19:32 CST
 
-### 改动级别
+### �Ķ�����
 
-小改修复，v1.90 -> v1.91。
+С���޸���v1.90 -> v1.91��
 
-### 本次目标
+### ����Ŀ��
 
-解决小李截图里 AI 配置页手机端不规整的问题：浮动小猫遮挡操作区、字段标签在窄屏下挤压、Key 粘贴和保存按钮不够顺手。继续参考 Hanako/HanaAgent 的分层逻辑，把小猫 Agent 已有技能注册表可视化给管理员查看，让“能做什么、哪些动作是写入/高风险”更透明。继续保留 v1.90 的 Mimo 默认值，默认不等于锁死，管理员仍可自由修改接口、模型和 Key。
+���С���ͼ�� AI ����ҳ�ֻ��˲����������⣺����Сè�ڵ����������ֶα�ǩ��խ���¼�ѹ��Key ճ���ͱ��水ť����˳�֡������ο� Hanako/HanaAgent �ķֲ��߼�����Сè Agent ���м���ע������ӻ�������Ա�鿴���á�����ʲô����Щ������д��/�߷��ա���͸������������ v1.90 �� Mimo Ĭ��ֵ��Ĭ�ϲ���������������Ա�Կ������޸Ľӿڡ�ģ�ͺ� Key��
 
-### 主要修改
+### ��Ҫ�޸�
 
-- `work_admin_ai.wxml` 移除配置页浮动小猫组件，避免遮挡保存、测试、模型选择和 Key 操作区域。
-- `work_admin_ai.wxss` 强化标签、Key 操作按钮和配置块布局，减少窄屏挤压和误触。
-- `work_ai_agent_registry.js` 新增脱敏能力目录导出，按技能、动作、写入动作和高风险动作生成只读摘要。
-- `work_ai_service.js` 在管理员 AI 配置接口返回 `agentCatalog`，不包含触发正则、内部提示词、Key 或会话内容。
-- `work_admin_ai.wxml` / `work_admin_ai.wxss` 新增“Agent 能力边界”区块，展示小猫内置技能、动作和风险标签。
-- `miniprogram/version.js`、`miniprogram/setting/setting.js`、`CHANGELOG.md`、`README.md` 和本文档同步升级到 v1.91。
+- `work_admin_ai.wxml` �Ƴ�����ҳ����Сè����������ڵ����桢���ԡ�ģ��ѡ��� Key ��������
+- `work_admin_ai.wxss` ǿ����ǩ��Key ������ť�����ÿ鲼�֣�����խ����ѹ���󴥡�
+- `work_ai_agent_registry.js` ������������Ŀ¼�����������ܡ�������д�붯���͸߷��ն�������ֻ��ժҪ��
+- `work_ai_service.js` �ڹ���Ա AI ���ýӿڷ��� `agentCatalog`�����������������ڲ���ʾ�ʡ�Key ��Ự���ݡ�
+- `work_admin_ai.wxml` / `work_admin_ai.wxss` ������Agent �����߽硱���飬չʾСè���ü��ܡ������ͷ��ձ�ǩ��
+- `miniprogram/version.js`��`miniprogram/setting/setting.js`��`CHANGELOG.md`��`README.md` �ͱ��ĵ�ͬ�������� v1.91��
 
-### 涉及文件
+### �漰�ļ�
 
 - `cloudfunctions/mcloud/project/B00/service/work_ai_agent_registry.js`
 - `cloudfunctions/mcloud/project/B00/service/work_ai_service.js`
@@ -603,54 +825,54 @@
 - `README.md`
 - `docs/version-change-diary.md`
 
-### 验证结果
+### ��֤���
 
-- `node --check cloudfunctions/mcloud/project/B00/service/work_ai_agent_registry.js` 通过。
-- `node --check cloudfunctions/mcloud/project/B00/service/work_ai_service.js` 通过。
-- `node --check cloudfunctions/mcloud/work_ai_service_live_patch.js` 通过。
-- `node --check miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.js` 通过。
-- `node --check miniprogram/version.js` 与 `node --check miniprogram/setting/setting.js` 通过。
-- `miniprogram/app.json`、`work_admin_ai.json` 和 `project.config.json` JSON 解析通过。
-- Agent 能力目录导出检查通过：当前展示 `10` 个技能、`17` 个动作、`12` 个写入动作和 `5` 个高风险动作。
-- `work_ai_service_live_patch.js` 解压后与 `work_ai_service.js`、`work_ai_agent_registry.js`、`work_ai_agent_memory.js`、`work_agent_audit_model.js` 源码一致。
-- 本轮涉及文件 `git diff --check` 通过；全仓库检查仍受既有无关脏文件 trailing whitespace 影响。
-- 敏感信息扫描未发现新增 API Key、Token 或 Secret。
+- `node --check cloudfunctions/mcloud/project/B00/service/work_ai_agent_registry.js` ͨ����
+- `node --check cloudfunctions/mcloud/project/B00/service/work_ai_service.js` ͨ����
+- `node --check cloudfunctions/mcloud/work_ai_service_live_patch.js` ͨ����
+- `node --check miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.js` ͨ����
+- `node --check miniprogram/version.js` �� `node --check miniprogram/setting/setting.js` ͨ����
+- `miniprogram/app.json`��`work_admin_ai.json` �� `project.config.json` JSON ����ͨ����
+- Agent ����Ŀ¼�������ͨ������ǰչʾ `10` �����ܡ�`17` ��������`12` ��д�붯���� `5` ���߷��ն�����
+- `work_ai_service_live_patch.js` ��ѹ���� `work_ai_service.js`��`work_ai_agent_registry.js`��`work_ai_agent_memory.js`��`work_agent_audit_model.js` Դ��һ�¡�
+- �����漰�ļ� `git diff --check` ͨ����ȫ�ֿ������ܼ����޹����ļ� trailing whitespace Ӱ�졣
+- ������Ϣɨ��δ�������� API Key��Token �� Secret��
 
-### 部署状态
+### ����״̬
 
-- `work_ai_service_live_patch.js` 已通过微信开发者工具 CLI 增量部署到 `mcloud`，包体 `40.3 KB`；首次部署遇到一次 `ECONNRESET`，重试成功。
-- 小程序开发版已通过微信开发者工具 CLI 上传，版本号 `1.91`，包体 `1.5 MB` / `1,555,366 Byte`。
-- 本次未提交审核、未发布上线。
+- `work_ai_service_live_patch.js` ��ͨ��΢�ſ����߹��� CLI �������� `mcloud`������ `40.3 KB`���״β�������һ�� `ECONNRESET`�����Գɹ���
+- С���򿪷�����ͨ��΢�ſ����߹��� CLI �ϴ����汾�� `1.91`������ `1.5 MB` / `1,555,366 Byte`��
+- ����δ�ύ��ˡ�δ�������ߡ�
 
-### 未完成风险
+### δ��ɷ���
 
-- 本次仍不把用户提供的 Key 写入源码、版本日志或提交；已有线上配置若仍保存旧 Key 或旧模型，需要在新版 AI 配置页保存一次配置后生效。
+- �����Բ����û��ṩ�� Key д��Դ�롢�汾��־���ύ�����������������Ա���� Key ���ģ�ͣ���Ҫ���°� AI ����ҳ����һ�����ú���Ч��
 
 ## v1.90 - 2026-06-24 18:57 CST
 
-### 改动级别
+### �Ķ�����
 
-小改修复，v1.89 -> v1.90。
+С���޸���v1.89 -> v1.90��
 
-### 本次目标
+### ����Ŀ��
 
-按小李指定，将小猫助手默认服务商改成小米 MiMo，默认接口使用小米 MiMo OpenAI 兼容地址，默认模型使用 `mimo-v2.5`，同时保留管理页可自由修改 Base URL、模型和 Key 的能力。
+��С��ָ������Сè����Ĭ�Ϸ����̸ĳ�С�� MiMo��Ĭ�Ͻӿ�ʹ��С�� MiMo OpenAI ���ݵ�ַ��Ĭ��ģ��ʹ�� `mimo-v2.5`��ͬʱ��������ҳ�������޸� Base URL��ģ�ͺ� Key ��������
 
-### 和 AI 讨论后的需求结论
+### �� AI ���ۺ���������
 
-- 小李提供的 Key 属于敏感信息，不能写入源码、版本日志、提交信息或公开文档。
-- “默认”只代表新配置和快捷预设的初始值，不应锁死管理员修改。
-- 用户口头说的 `mimov2.5` 实际可用模型 ID 是 `mimo-v2.5`；无连字符写法会触发 `Param Incorrect`。
-- 本地已用该 Key 验证 `mimo-v2.5` 文本接口可返回 200 和中文回复。
+- С���ṩ�� Key ����������Ϣ������д��Դ�롢�汾��־���ύ��Ϣ�򹫿��ĵ���
+- ��Ĭ�ϡ�ֻ���������úͿ��Ԥ��ĳ�ʼֵ����Ӧ��������Ա�޸ġ�
+- �û���ͷ˵�� `mimov2.5` ʵ�ʿ���ģ�� ID �� `mimo-v2.5`�������ַ�д���ᴥ�� `Param Incorrect`��
+- �������ø� Key ��֤ `mimo-v2.5` �ı��ӿڿɷ��� 200 �����Ļظ���
 
-### 主要修改
+### ��Ҫ�޸�
 
-- `work_admin_ai.js` 将默认表单改为 `Mimo + https://api.xiaomimimo.com/v1 + mimo-v2.5`。
-- `work_admin_ai.js` 将 Mimo 预设从空白自定义改为快捷填充 Mimo 地址和模型，但保留管理员手动修改能力。
-- `work_ai_service.js` 将云函数默认 AI 配置同步切换为 Mimo 和 `mimo-v2.5`。
-- 更新 `miniprogram/version.js`、`miniprogram/setting/setting.js`、`CHANGELOG.md`、`README.md` 和本文档到 v1.90。
+- `work_admin_ai.js` ��Ĭ�ϱ�����Ϊ `Mimo + https://api.xiaomimimo.com/v1 + mimo-v2.5`��
+- `work_admin_ai.js` �� Mimo Ԥ��ӿհ��Զ����Ϊ������ Mimo ��ַ��ģ�ͣ�����������Ա�ֶ��޸�������
+- `work_ai_service.js` ���ƺ���Ĭ�� AI ����ͬ���л�Ϊ Mimo �� `mimo-v2.5`��
+- ���� `miniprogram/version.js`��`miniprogram/setting/setting.js`��`CHANGELOG.md`��`README.md` �ͱ��ĵ��� v1.90��
 
-### 涉及文件
+### �漰�ļ�
 
 - `miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.js`
 - `cloudfunctions/mcloud/project/B00/service/work_ai_service.js`
@@ -661,58 +883,58 @@
 - `README.md`
 - `docs/version-change-diary.md`
 
-### 验证结果
+### ��֤���
 
-- `node --check cloudfunctions/mcloud/project/B00/service/work_ai_service.js` 通过。
-- `node --check cloudfunctions/mcloud/work_ai_service_live_patch.js` 通过。
-- `node --check miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.js` 通过。
-- `node --check miniprogram/cmpts/work_pet/work_pet.js` 通过。
-- `node --check miniprogram/version.js` 通过。
-- `node --check miniprogram/setting/setting.js` 通过。
-- `miniprogram/app.json` 与 `project.config.json` JSON 解析通过。
-- `work_ai_service_live_patch.js` 解压后与 `work_ai_service.js`、`work_ai_agent_registry.js`、`work_ai_agent_memory.js`、`work_agent_audit_model.js` 一致。
-- 敏感信息扫描通过，用户提供的 Key 未写入仓库文件。
-- 本地直连小米 MiMo 接口验证 `mimo-v2.5` 返回 200 和中文回复。
-- live patch 加载检查通过；仅出现项目既有 `ws` 依赖提示，不影响本次 patch 注入。
-- `git diff --check` 通过，仅有 Windows 换行提示。
+- `node --check cloudfunctions/mcloud/project/B00/service/work_ai_service.js` ͨ����
+- `node --check cloudfunctions/mcloud/work_ai_service_live_patch.js` ͨ����
+- `node --check miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.js` ͨ����
+- `node --check miniprogram/cmpts/work_pet/work_pet.js` ͨ����
+- `node --check miniprogram/version.js` ͨ����
+- `node --check miniprogram/setting/setting.js` ͨ����
+- `miniprogram/app.json` �� `project.config.json` JSON ����ͨ����
+- `work_ai_service_live_patch.js` ��ѹ���� `work_ai_service.js`��`work_ai_agent_registry.js`��`work_ai_agent_memory.js`��`work_agent_audit_model.js` һ�¡�
+- ������Ϣɨ��ͨ�����û��ṩ�� Key δд��ֿ��ļ���
+- ����ֱ��С�� MiMo �ӿ���֤ `mimo-v2.5` ���� 200 �����Ļظ���
+- live patch ���ؼ��ͨ������������Ŀ���� `ws` ������ʾ����Ӱ�챾�� patch ע�롣
+- `git diff --check` ͨ�������� Windows ������ʾ��
 
-### 部署状态
+### ����״̬
 
-- `work_ai_service_live_patch.js` 已通过微信开发者工具 CLI 增量部署到 `mcloud`，包体 `40.1 KB`。
-- 小程序开发版已通过微信开发者工具 CLI 上传，版本号 `1.90`，包体 `1.5 MB` / `1,550,460 Byte`。
-- 本次未提交审核、未发布上线。
+- `work_ai_service_live_patch.js` ��ͨ��΢�ſ����߹��� CLI �������� `mcloud`������ `40.1 KB`��
+- С���򿪷�����ͨ��΢�ſ����߹��� CLI �ϴ����汾�� `1.90`������ `1.5 MB` / `1,550,460 Byte`��
+- ����δ�ύ��ˡ�δ�������ߡ�
 
-### 未完成风险
+### δ��ɷ���
 
-- 当前本机没有腾讯云 `secretId/secretKey`，不能直接用本地 Node SDK 写入云数据库 `WORK_AI_CHAT_CONFIG`；运行态是否立即覆盖已有旧配置，仍以管理页保存后的云端配置为准。
+- ��ǰ����û����Ѷ�� `secretId/secretKey`������ֱ���ñ��� Node SDK д�������ݿ� `WORK_AI_CHAT_CONFIG`������̬�Ƿ������������о����ã����Թ���ҳ�������ƶ�����Ϊ׼��
 
 ## v1.89 - 2026-06-24 18:58 CST
 
-### 改动级别
+### �Ķ�����
 
-小改修复，v1.88 -> v1.89。
+С���޸���v1.88 -> v1.89��
 
-### 本次目标
+### ����Ŀ��
 
-继续参考 HanakoAgent 的“记忆层”思路，给小猫补一个安全可控的长期记忆入口。先不做自动学习、不从聊天里自动沉淀，避免把一次性客户信息或错误理解写进长期上下文；本轮只允许管理员在 AI 配置页手动维护稳定规则。
+�����ο� HanakoAgent �ġ�����㡱˼·����Сè��һ����ȫ�ɿصĳ��ڼ�����ڡ��Ȳ����Զ�ѧϰ�������������Զ������������һ���Կͻ���Ϣ���������д�����������ģ�����ֻ��������Ա�� AI ����ҳ�ֶ�ά���ȶ�����
 
-### 和 AI 讨论后的需求结论
+### �� AI ���ۺ���������
 
-- 小程序里的长期记忆必须比桌面 Agent 更保守：不能自动写客户隐私、手机号、密钥或一次性聊天内容。
-- 记忆内容应该是店内长期有效的规则，例如报价口径、团队默认习惯、客户跟进原则、常用服务解释。
-- 记忆注入不能替代数据库事实；涉及订单、金额、收款、工资、审核等动作仍必须走后台校验和真实数据。
-- 先把管理员可控的记忆片段做通，再考虑后续的分角色知识库、可见范围和记忆管理页。
+- С������ĳ��ڼ����������� Agent �����أ������Զ�д�ͻ���˽���ֻ��š���Կ��һ�����������ݡ�
+- ��������Ӧ���ǵ��ڳ�����Ч�Ĺ������籨�ۿھ����Ŷ�Ĭ��ϰ�ߡ��ͻ�����ԭ�򡢳��÷�����͡�
+- ����ע�벻��������ݿ���ʵ���漰���������տ���ʡ���˵ȶ����Ա����ߺ�̨У�����ʵ���ݡ�
+- �Ȱѹ���Ա�ɿصļ���Ƭ����ͨ���ٿ��Ǻ����ķֽ�ɫ֪ʶ�⡢�ɼ���Χ�ͼ������ҳ��
 
-### 主要修改
+### ��Ҫ�޸�
 
-- `work_ai_service.js` 配置新增 `memoryEnabled` 和 `memoryText`，保存时做长度裁剪并随公开配置返回前端。
-- `work_ai_service.js` 构建小猫提示词时，按开关注入“管理员维护的长期记忆/店内规则”，并追加“只作参考、不等于数据库事实”的边界说明。
-- `work_admin_ai.js` 默认表单和保存流程支持长期记忆字段。
-- `work_admin_ai.wxml` 在“小猫行为”区域新增长期记忆开关、文本框和安全说明。
-- `work_pet.js` 将小猫 Agent 信息更新为 `0.4.0 管理员长期记忆`。
-- 更新 `miniprogram/version.js`、`miniprogram/setting/setting.js`、`CHANGELOG.md`、`README.md` 和本文档到 v1.89。
+- `work_ai_service.js` �������� `memoryEnabled` �� `memoryText`������ʱ�����Ȳü����湫�����÷���ǰ�ˡ�
+- `work_ai_service.js` ����Сè��ʾ��ʱ��������ע�롰����Աά���ĳ��ڼ���/���ڹ��򡱣���׷�ӡ�ֻ���ο������������ݿ���ʵ���ı߽�˵����
+- `work_admin_ai.js` Ĭ�ϱ����ͱ�������֧�ֳ��ڼ����ֶΡ�
+- `work_admin_ai.wxml` �ڡ�Сè��Ϊ�������������ڼ��俪�ء��ı���Ͱ�ȫ˵����
+- `work_pet.js` ��Сè Agent ��Ϣ����Ϊ `0.4.0 ����Ա���ڼ���`��
+- ���� `miniprogram/version.js`��`miniprogram/setting/setting.js`��`CHANGELOG.md`��`README.md` �ͱ��ĵ��� v1.89��
 
-### 涉及文件
+### �漰�ļ�
 
 - `cloudfunctions/mcloud/project/B00/service/work_ai_service.js`
 - `cloudfunctions/mcloud/work_ai_service_live_patch.js`
@@ -725,47 +947,47 @@
 - `CHANGELOG.md`
 - `docs/version-change-diary.md`
 
-### 验证结果
+### ��֤���
 
-- 已随 v1.90 本地校验一并通过：后端 AI 服务、AI 配置页、小猫组件、版本源、设置文件、JSON 配置和 live patch 一致性均通过。
+- ���� v1.90 ����У��һ��ͨ������� AI ����AI ����ҳ��Сè������汾Դ�������ļ���JSON ���ú� live patch һ���Ծ�ͨ����
 
-### 部署状态
+### ����״̬
 
-- 已随 v1.90 开发版和 `work_ai_service_live_patch.js` 增量部署一并上传；未单独上传 v1.89 开发版。
+- ���� v1.90 ������� `work_ai_service_live_patch.js` ��������һ���ϴ���δ�����ϴ� v1.89 �����档
 
-### 未完成风险
+### δ��ɷ���
 
-- 本轮只是管理员手动维护的一段长期记忆，还不是完整的多条记忆库、分角色可见范围、审批式记忆写入或记忆检索后台。
-- 记忆文本如果管理员手动写入客户隐私或临时信息，仍可能进入提示词；页面文案已提醒不要写密钥、手机号、客户隐私或一次性聊天内容。
+- ����ֻ�ǹ���Ա�ֶ�ά����һ�γ��ڼ��䣬�����������Ķ�������⡢�ֽ�ɫ�ɼ���Χ������ʽ����д�����������̨��
+- �����ı��������Ա�ֶ�д��ͻ���˽����ʱ��Ϣ���Կ��ܽ�����ʾ�ʣ�ҳ���İ������Ѳ�Ҫд��Կ���ֻ��š��ͻ���˽��һ�����������ݡ�
 
 ## v1.88 - 2026-06-24 18:36 CST
 
-### 改动级别
+### �Ķ�����
 
-小改修复，v1.87 -> v1.88。
+С���޸���v1.87 -> v1.88��
 
-### 本次目标
+### ����Ŀ��
 
-补齐小猫 Agent 审计流水从“后台写入”到“管理员可查看”的闭环。v1.86 已经让 AI 写入动作尝试落 Agent 审计记录，本次在小程序管理中心增加审计入口、筛选列表和云端查询路由，方便后续追踪小猫到底执行过什么动作、由谁触发、风险等级是什么。
+����Сè Agent �����ˮ�ӡ���̨д�롱��������Ա�ɲ鿴���ıջ���v1.86 �Ѿ��� AI д�붯�������� Agent ��Ƽ�¼��������С��������������������ڡ�ɸѡ�б����ƶ˲�ѯ·�ɣ��������׷��Сè����ִ�й�ʲô��������˭���������յȼ���ʲô��
 
-### 和 AI 讨论后的需求结论
+### �� AI ���ۺ���������
 
-- HanaAgent 类桌面能力不能直接搬进小程序，但“可审计、可追溯、可控工具边界”必须保留。
-- 审计记录不只写入，还要能被管理员看见；否则出了问题只能查数据库，不适合小团队日常管理。
-- 审计列表只展示必要摘要，不暴露密钥、Token 或完整隐私内容；审计内容在服务层做长度裁剪。
-- 完整 `mcloud` 部署仍可能受本地 `EISDIR` 问题影响，因此继续采用入口 live patch 注入新增路由与服务。
+- HanaAgent ��������������ֱ�Ӱ��С���򣬵�������ơ���׷�ݡ��ɿع��߽߱硱���뱣����
+- ��Ƽ�¼��ֻд�룬��Ҫ�ܱ�����Ա�����������������ֻ�ܲ����ݿ⣬���ʺ�С�Ŷ��ճ�������
+- ����б�ֻչʾ��ҪժҪ������¶��Կ��Token ��������˽���ݣ���������ڷ���������Ȳü���
+- ���� `mcloud` �����Կ����ܱ��� `EISDIR` ����Ӱ�죬��˼���������� live patch ע������·�������
 
-### 主要修改
+### ��Ҫ�޸�
 
-- 新增 `work_agent_audit_service.js`，封装 Agent 审计流水分页查询、筛选条件和前端字段清洗。
-- `work_admin_controller.js` 新增管理中心“AI 审计流水”菜单入口和 `getAgentAuditList` 接口。
-- `route.js` 新增 `work/admin_agent_audit_list` 路由。
-- `app.json` 注册 `projects/B00/pages/work/admin_agent_audit/work_admin_agent_audit` 页面。
-- 新增 `admin_agent_audit` 页面四件套，支持关键词、动作、风险筛选，下拉刷新和触底分页。
-- `index.js` 预加载 `work_route_live_patch.js`，新增 live patch 内联最新路由、审计服务和管理控制器。
-- 更新 `miniprogram/version.js`、`miniprogram/setting/setting.js`、`CHANGELOG.md`、`README.md` 和本文档到 v1.88。
+- ���� `work_agent_audit_service.js`����װ Agent �����ˮ��ҳ��ѯ��ɸѡ������ǰ���ֶ���ϴ��
+- `work_admin_controller.js` �����������ġ�AI �����ˮ���˵���ں� `getAgentAuditList` �ӿڡ�
+- `route.js` ���� `work/admin_agent_audit_list` ·�ɡ�
+- `app.json` ע�� `projects/B00/pages/work/admin_agent_audit/work_admin_agent_audit` ҳ�档
+- ���� `admin_agent_audit` ҳ���ļ��ף�֧�ֹؼ��ʡ�����������ɸѡ������ˢ�ºʹ��׷�ҳ��
+- `index.js` Ԥ���� `work_route_live_patch.js`������ live patch ��������·�ɡ���Ʒ���͹�����������
+- ���� `miniprogram/version.js`��`miniprogram/setting/setting.js`��`CHANGELOG.md`��`README.md` �ͱ��ĵ��� v1.88��
 
-### 涉及文件
+### �漰�ļ�
 
 - `cloudfunctions/mcloud/index.js`
 - `cloudfunctions/mcloud/work_admin_controller_live_patch.js`
@@ -784,60 +1006,60 @@
 - `CHANGELOG.md`
 - `docs/version-change-diary.md`
 
-### 验证结果
+### ��֤���
 
-- `node --check cloudfunctions/mcloud/project/B00/service/work_agent_audit_service.js` 通过。
-- `node --check cloudfunctions/mcloud/project/B00/controller/work_admin_controller.js` 通过。
-- `node --check cloudfunctions/mcloud/project/B00/public/route.js` 通过。
-- `node --check cloudfunctions/mcloud/index.js` 通过。
-- `node --check cloudfunctions/mcloud/work_admin_controller_live_patch.js` 通过。
-- `node --check cloudfunctions/mcloud/work_route_live_patch.js` 通过。
-- `node --check miniprogram/projects/B00/pages/work/admin_agent_audit/work_admin_agent_audit.js` 通过。
-- `node --check miniprogram/version.js` 通过。
-- `node --check miniprogram/setting/setting.js` 通过。
-- `miniprogram/app.json`、`admin_agent_audit.json` 与 `project.config.json` JSON 解析通过。
-- live patch 加载检查通过；仅出现项目既有 `ws` 依赖提示，不影响本次 patch 注入。
-- `git diff --check` 通过，仅有 Windows 换行提示。
+- `node --check cloudfunctions/mcloud/project/B00/service/work_agent_audit_service.js` ͨ����
+- `node --check cloudfunctions/mcloud/project/B00/controller/work_admin_controller.js` ͨ����
+- `node --check cloudfunctions/mcloud/project/B00/public/route.js` ͨ����
+- `node --check cloudfunctions/mcloud/index.js` ͨ����
+- `node --check cloudfunctions/mcloud/work_admin_controller_live_patch.js` ͨ����
+- `node --check cloudfunctions/mcloud/work_route_live_patch.js` ͨ����
+- `node --check miniprogram/projects/B00/pages/work/admin_agent_audit/work_admin_agent_audit.js` ͨ����
+- `node --check miniprogram/version.js` ͨ����
+- `node --check miniprogram/setting/setting.js` ͨ����
+- `miniprogram/app.json`��`admin_agent_audit.json` �� `project.config.json` JSON ����ͨ����
+- live patch ���ؼ��ͨ������������Ŀ���� `ws` ������ʾ����Ӱ�챾�� patch ע�롣
+- `git diff --check` ͨ�������� Windows ������ʾ��
 
-### 部署状态
+### ����״̬
 
-- `mcloud/index.js` 已通过增量部署上传，包体 `370 B`。
-- `mcloud/work_admin_controller_live_patch.js` 已通过增量部署上传，包体 `5.1 KB`。
-- `mcloud/work_route_live_patch.js` 已通过增量部署上传，包体 `2.8 KB`。
-- 小程序开发版已通过微信开发者工具 CLI 上传，版本号 `1.88`，包体 `1.5 MB` / `1,547,955 Byte`。
-- 本次未提交审核、未发布上线；完整 `mcloud` 部署仍沿用增量 live patch 方案避开已知 `EISDIR` 问题。
+- `mcloud/index.js` ��ͨ�����������ϴ������� `370 B`��
+- `mcloud/work_admin_controller_live_patch.js` ��ͨ�����������ϴ������� `5.1 KB`��
+- `mcloud/work_route_live_patch.js` ��ͨ�����������ϴ������� `2.8 KB`��
+- С���򿪷�����ͨ��΢�ſ����߹��� CLI �ϴ����汾�� `1.88`������ `1.5 MB` / `1,547,955 Byte`��
+- ����δ�ύ��ˡ�δ�������ߣ����� `mcloud` �������������� live patch �����ܿ���֪ `EISDIR` ���⡣
 
-### 未完成风险
+### δ��ɷ���
 
-- 如果云数据库尚未创建 `bx_work_agent_audit` 集合，历史列表可能为空或依赖 CloudBase 自动建集合行为；写入链路已做失败兜底，不会阻塞小猫原业务动作。
-- 本次只补管理端查看入口，尚未做审计详情页、导出、批量复盘或风险统计看板。
+- ��������ݿ���δ���� `bx_work_agent_audit` ���ϣ���ʷ�б�����Ϊ�ջ����� CloudBase �Զ���������Ϊ��д����·����ʧ�ܶ��ף���������Сèԭҵ������
+- ����ֻ�������˲鿴��ڣ���δ���������ҳ���������������̻����ͳ�ƿ��塣
 
 ## v1.87 - 2026-06-24 18:32 CST
 
-### 改动级别
+### �Ķ�����
 
-体验修复，v1.86 -> v1.87。
+�����޸���v1.86 -> v1.87��
 
-### 本次目标
+### ����Ŀ��
 
-修复小李在真实手机上配置 AI API 时遇到的三个问题：API Key 不能方便粘贴，配置页显示不规整，以及测试对话返回 `Param Incorrect` 后无法继续判断配置问题。
+�޸�С������ʵ�ֻ������� AI API ʱ�������������⣺API Key ���ܷ���ճ��������ҳ��ʾ���������Լ����ԶԻ����� `Param Incorrect` ���޷������ж��������⡣
 
-### 和 AI 讨论后的需求结论
+### �� AI ���ۺ���������
 
-- 手机端不能只依赖密码输入框长按粘贴；管理员需要一个明确的“粘贴”按钮直接读取剪贴板。
-- API Key 属于敏感信息，页面可以显示本次正在输入的内容，但已保存 Key 仍只展示脱敏值。
-- 第三方兼容接口返回 `Param Incorrect` 时，不应只把原始英文报错丢给用户；应先自动降级重试，再给出 Base URL、模型 ID、视觉模型兼容性的排查方向。
+- �ֻ��˲���ֻ������������򳤰�ճ��������Ա��Ҫһ����ȷ�ġ�ճ������ťֱ�Ӷ�ȡ�����塣
+- API Key ����������Ϣ��ҳ�������ʾ����������������ݣ����ѱ��� Key ��ֻչʾ����ֵ��
+- ���������ݽӿڷ��� `Param Incorrect` ʱ����Ӧֻ��ԭʼӢ�ı��������û���Ӧ���Զ��������ԣ��ٸ��� Base URL��ģ�� ID���Ӿ�ģ�ͼ����Ե��Ų鷽��
 
-### 主要修改
+### ��Ҫ�޸�
 
-- `work_admin_ai.js` 新增剪贴板读取、Key 显示/隐藏、清空输入和粘贴内容清洗逻辑。
-- `work_admin_ai.wxml` 将主 Key 与视觉 Key 输入区改成“输入框 + 粘贴/显示/清空”结构。
-- `work_admin_ai.wxss` 固定 Key 操作按钮布局，提升手机端输入区稳定性，并避免小猫浮层挡住配置页操作。
-- `work_ai_service.js` 在 AI 请求遇到 400/422 或参数兼容错误时，自动用最小 Chat Completions 请求体重试一次。
-- `work_ai_service.js` 将参数错误提示改为可执行排查说明，覆盖 Base URL、模型 ID 和视觉模型配置。
-- 更新 `miniprogram/version.js`、`miniprogram/setting/setting.js`、`CHANGELOG.md`、`README.md` 和本文档到 v1.87。
+- `work_admin_ai.js` �����������ȡ��Key ��ʾ/���ء���������ճ��������ϴ�߼���
+- `work_admin_ai.wxml` ���� Key ���Ӿ� Key �������ĳɡ������ + ճ��/��ʾ/��ա��ṹ��
+- `work_admin_ai.wxss` �̶� Key ������ť���֣������ֻ����������ȶ��ԣ�������Сè���㵲ס����ҳ������
+- `work_ai_service.js` �� AI �������� 400/422 ��������ݴ���ʱ���Զ�����С Chat Completions ����������һ�Ρ�
+- `work_ai_service.js` ������������ʾ��Ϊ��ִ���Ų�˵�������� Base URL��ģ�� ID ���Ӿ�ģ�����á�
+- ���� `miniprogram/version.js`��`miniprogram/setting/setting.js`��`CHANGELOG.md`��`README.md` �ͱ��ĵ��� v1.87��
 
-### 涉及文件
+### �漰�ļ�
 
 - `miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.js`
 - `miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.wxml`
@@ -850,55 +1072,55 @@
 - `README.md`
 - `docs/version-change-diary.md`
 
-### 验证结果
+### ��֤���
 
-- `node --check miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.js` 通过。
-- `node --check cloudfunctions/mcloud/project/B00/service/work_ai_service.js` 通过。
-- `node --check cloudfunctions/mcloud/work_ai_service_live_patch.js` 通过。
-- `node --check miniprogram/version.js` 通过。
-- `node --check miniprogram/setting/setting.js` 通过。
-- `miniprogram/app.json` 与 `project.config.json` JSON 解析通过。
-- `work_ai_service_live_patch.js` 解压后与 `work_ai_service.js`、`work_ai_agent_registry.js`、`work_ai_agent_memory.js`、`work_agent_audit_model.js` 一致。
-- `git diff --check` 通过，仅有 Windows 换行提示。
+- `node --check miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.js` ͨ����
+- `node --check cloudfunctions/mcloud/project/B00/service/work_ai_service.js` ͨ����
+- `node --check cloudfunctions/mcloud/work_ai_service_live_patch.js` ͨ����
+- `node --check miniprogram/version.js` ͨ����
+- `node --check miniprogram/setting/setting.js` ͨ����
+- `miniprogram/app.json` �� `project.config.json` JSON ����ͨ����
+- `work_ai_service_live_patch.js` ��ѹ���� `work_ai_service.js`��`work_ai_agent_registry.js`��`work_ai_agent_memory.js`��`work_agent_audit_model.js` һ�¡�
+- `git diff --check` ͨ�������� Windows ������ʾ��
 
-### 部署状态
+### ����״̬
 
-- `work_ai_service_live_patch.js` 已通过微信开发者工具 CLI 增量部署到 `mcloud`，包体 `39.8 KB`。
-- 小程序开发版已通过微信开发者工具 CLI 上传，版本号 `1.87`，包体 `1.5 MB` / `1,547,783 Byte`。
-- 云函数增量部署前三次遇到微信 Cloud API `getCloudAPISignedHeader failed` / `41002 system error`，最后一次重试成功。
+- `work_ai_service_live_patch.js` ��ͨ��΢�ſ����߹��� CLI �������� `mcloud`������ `39.8 KB`��
+- С���򿪷�����ͨ��΢�ſ����߹��� CLI �ϴ����汾�� `1.87`������ `1.5 MB` / `1,547,783 Byte`��
+- �ƺ�����������ǰ��������΢�� Cloud API `getCloudAPISignedHeader failed` / `41002 system error`�����һ�����Գɹ���
 
-### 未完成风险
+### δ��ɷ���
 
-- 未验证每一家第三方 APIHub 对最小参数重试的兼容程度；如果模型 ID 本身填错或该接口不是 OpenAI Chat Completions 兼容接口，仍需要管理员更正配置。
+- δ��֤ÿһ�ҵ����� APIHub ����С�������Եļ��ݳ̶ȣ����ģ�� ID ���������ýӿڲ��� OpenAI Chat Completions ���ݽӿڣ�����Ҫ����Ա�������á�
 
 ## v1.86 - 2026-06-24 03:20 CST
 
-### 改动级别
+### �Ķ�����
 
-功能升级，v1.76 -> v1.86。
+����������v1.76 -> v1.86��
 
-### 本次目标
+### ����Ŀ��
 
-参考桌面方案《云屿小猫Agent-HanaAgent迁移完整方案.md》，把小猫 Agent 从“一个大提示词 + 一组硬编码动作”推进到更容易维护的底座：技能注册、工具白名单、轻量记忆、审计流水，以及可自由切换 DeepSeek/Mimo/自定义 API 的配置体验。
+�ο����淽��������СèAgent-HanaAgentǨ����������.md������Сè Agent �ӡ�һ������ʾ�� + һ��Ӳ���붯�����ƽ���������ά���ĵ���������ע�ᡢ���߰��������������䡢�����ˮ���Լ��������л� DeepSeek/Mimo/�Զ��� API ���������顣
 
-### 和 AI 讨论后的需求结论
+### �� AI ���ۺ���������
 
-- HanaAgent 的桌面文件、终端、浏览器能力不能直接搬到小程序；应迁移的是 Agent 分层、工具注册、记忆、审计和安全边界。
-- 小程序端优先落地“受控业务 Agent”：动作可以执行，但必须由后台权限和数据校验兜底。
-- 长期记忆和知识库要分阶段做；本次先做轻量会话记忆，不自动写长期库，避免生产数据被错误沉淀。
-- 手机端 AI 配置页要能真正换 DeepSeek、Mimo 或任意兼容接口；自定义预设不能继续保留 Agnes 的旧 URL 和模型。
+- HanaAgent �������ļ����նˡ��������������ֱ�ӰᵽС����ӦǨ�Ƶ��� Agent �ֲ㡢����ע�ᡢ���䡢��ƺͰ�ȫ�߽硣
+- С�����������ء��ܿ�ҵ�� Agent������������ִ�У��������ɺ�̨Ȩ�޺�����У�鶵�ס�
+- ���ڼ����֪ʶ��Ҫ�ֽ׶������������������Ự���䣬���Զ�д���ڿ⣬�����������ݱ����������
+- �ֻ��� AI ����ҳҪ�������� DeepSeek��Mimo ��������ݽӿڣ��Զ���Ԥ�費�ܼ������� Agnes �ľ� URL ��ģ�͡�
 
-### 主要修改
+### ��Ҫ�޸�
 
-- 新增 `work_ai_agent_registry.js`，按技能声明触发词、提示词和允许动作，覆盖档期查询、订单录入、图片录单、改期纠错、财务、工资审核、小记事项、休息请假、客户跟进和知识问答。
-- `work_ai_service.js` 接入技能注册表：本轮对话先选择技能，再生成工具提示词和动作白名单；越界动作不执行，成功幻觉会被改写成未执行提示。
-- 新增 `work_ai_agent_memory.js`，把当前员工、页面上下文、订单上下文和本轮客户跟进线索压缩到系统提示词。
-- 新增 `work_agent_audit_model.js`，AI 写入动作在团队小记之外额外尝试写 Agent 审计流水，失败不阻塞原业务。
-- `work_admin_ai.js` 将 `Mimo` 和 `自定义` 拆成独立预设；选择自定义类预设会清空旧接口和模型，便于直接填新的 Base URL。
-- `work_pet.js` 将小猫 Agent 内置版本更新为 `0.3.0 HanaAgent 架构底座`。
-- 更新 `miniprogram/version.js`、`miniprogram/setting/setting.js`、`CHANGELOG.md`、`README.md` 和本文档到 v1.86。
+- ���� `work_ai_agent_registry.js`�����������������ʡ���ʾ�ʺ��������������ǵ��ڲ�ѯ������¼�롢ͼƬ¼�������ھ��������񡢹�����ˡ�С�������Ϣ��١��ͻ�������֪ʶ�ʴ�
+- `work_ai_service.js` ���뼼��ע��������ֶԻ���ѡ���ܣ������ɹ�����ʾ�ʺͶ�����������Խ�綯����ִ�У��ɹ��þ��ᱻ��д��δִ����ʾ��
+- ���� `work_ai_agent_memory.js`���ѵ�ǰԱ����ҳ�������ġ����������ĺͱ��ֿͻ���������ѹ����ϵͳ��ʾ�ʡ�
+- ���� `work_agent_audit_model.js`��AI д�붯�����Ŷ�С��֮����Ⳣ��д Agent �����ˮ��ʧ�ܲ�����ԭҵ��
+- `work_admin_ai.js` �� `Mimo` �� `�Զ���` ��ɶ���Ԥ�裻ѡ���Զ�����Ԥ�����վɽӿں�ģ�ͣ�����ֱ�����µ� Base URL��
+- `work_pet.js` ��Сè Agent ���ð汾����Ϊ `0.3.0 HanaAgent �ܹ�����`��
+- ���� `miniprogram/version.js`��`miniprogram/setting/setting.js`��`CHANGELOG.md`��`README.md` �ͱ��ĵ��� v1.86��
 
-### 涉及文件
+### �漰�ļ�
 
 - `cloudfunctions/mcloud/project/B00/service/work_ai_service.js`
 - `cloudfunctions/mcloud/project/B00/service/work_ai_agent_registry.js`
@@ -912,62 +1134,62 @@
 - `README.md`
 - `docs/version-change-diary.md`
 
-### 验证结果
+### ��֤���
 
-- `node --check cloudfunctions/mcloud/project/B00/service/work_ai_service.js` 通过。
-- `node --check cloudfunctions/mcloud/project/B00/service/work_ai_agent_registry.js` 通过。
-- `node --check cloudfunctions/mcloud/project/B00/service/work_ai_agent_memory.js` 通过。
-- `node --check cloudfunctions/mcloud/project/B00/model/work_agent_audit_model.js` 通过。
-- `node --check cloudfunctions/mcloud/work_ai_service_live_patch.js` 通过。
-- `node --check cloudfunctions/mcloud/index.js` 通过。
-- `node --check miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.js` 通过。
-- `node --check miniprogram/cmpts/work_pet/work_pet.js` 通过。
-- `node --check miniprogram/version.js` 通过。
-- `node --check miniprogram/setting/setting.js` 通过。
-- `miniprogram/app.json` 与 `project.config.json` JSON 解析通过。
-- 技能白名单样例通过：档期查询只开放 `query_schedule`，收款查询只开放 `query_payments`，改期只开放 `update_order/cancel_order/query_schedule`，工资写入开放工资/审核相关动作。
-- `git diff --check` 通过，仅有 Windows 换行提示。
+- `node --check cloudfunctions/mcloud/project/B00/service/work_ai_service.js` ͨ����
+- `node --check cloudfunctions/mcloud/project/B00/service/work_ai_agent_registry.js` ͨ����
+- `node --check cloudfunctions/mcloud/project/B00/service/work_ai_agent_memory.js` ͨ����
+- `node --check cloudfunctions/mcloud/project/B00/model/work_agent_audit_model.js` ͨ����
+- `node --check cloudfunctions/mcloud/work_ai_service_live_patch.js` ͨ����
+- `node --check cloudfunctions/mcloud/index.js` ͨ����
+- `node --check miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.js` ͨ����
+- `node --check miniprogram/cmpts/work_pet/work_pet.js` ͨ����
+- `node --check miniprogram/version.js` ͨ����
+- `node --check miniprogram/setting/setting.js` ͨ����
+- `miniprogram/app.json` �� `project.config.json` JSON ����ͨ����
+- ���ܰ���������ͨ�������ڲ�ѯֻ���� `query_schedule`���տ��ѯֻ���� `query_payments`������ֻ���� `update_order/cancel_order/query_schedule`������д�뿪�Ź���/�����ض�����
+- `git diff --check` ͨ�������� Windows ������ʾ��
 
-### 部署状态
+### ����״̬
 
-- 小程序开发版已通过微信开发者工具 CLI 上传，版本号 `1.86`，包体 `1.5 MB` / `1,533,406 Byte`。
-- `mcloud` 云函数入口 `index.js` 已通过增量部署上传。
-- `work_admin_controller_live_patch.js` 已通过增量部署上传。
-- `work_ai_service_live_patch.js` 已改为内联依赖版本，并通过增量部署上传；它会在云端运行时注入 `work_ai_agent_registry.js`、`work_ai_agent_memory.js`、`work_agent_audit_model.js` 和新版 `work_ai_service.js`。
-- 完整 `mcloud` 部署仍遇到微信开发者工具已知 `EISDIR` 问题；本次没有继续强行全量部署，避免影响现有云函数包。
+- С���򿪷�����ͨ��΢�ſ����߹��� CLI �ϴ����汾�� `1.86`������ `1.5 MB` / `1,533,406 Byte`��
+- `mcloud` �ƺ������ `index.js` ��ͨ�����������ϴ���
+- `work_admin_controller_live_patch.js` ��ͨ�����������ϴ���
+- `work_ai_service_live_patch.js` �Ѹ�Ϊ���������汾����ͨ�����������ϴ����������ƶ�����ʱע�� `work_ai_agent_registry.js`��`work_ai_agent_memory.js`��`work_agent_audit_model.js` ���°� `work_ai_service.js`��
+- ���� `mcloud` ����������΢�ſ����߹�����֪ `EISDIR` ���⣻����û�м���ǿ��ȫ�����𣬱���Ӱ�������ƺ�������
 
-### 未完成风险
+### δ��ɷ���
 
-- 本次只实现轻量会话记忆，尚未启用 `agent_memories` 长期记忆库和后台管理页。
-- Agent 审计模型已加入代码，但云数据库如果尚未创建集合，写入会失败并被兜底忽略；后续需要补管理端审计列表和集合初始化。
+- ����ֻʵ�������Ự���䣬��δ���� `agent_memories` ���ڼ����ͺ�̨����ҳ��
+- Agent ���ģ���Ѽ�����룬�������ݿ������δ�������ϣ�д���ʧ�ܲ������׺��ԣ�������Ҫ������������б��ͼ��ϳ�ʼ����
 
 ## v1.76 - 2026-06-24 02:31 CST
 
-### 改动级别
+### �Ķ�����
 
-小改，v1.75 -> v1.76。
+С�ģ�v1.75 -> v1.76��
 
-### 本次目标
+### ����Ŀ��
 
-修复手机端 AI 小助手配置页“不够自由”和“不规整”的问题：小李需要能直接换 DeepSeek、Mimo 或任意兼容 API，也需要文字模型和图片识别模型分开配置，不能再被“先获取模型列表”的单一流程卡住。
+�޸��ֻ��� AI С��������ҳ���������ɡ��͡��������������⣺С����Ҫ��ֱ�ӻ� DeepSeek��Mimo ��������� API��Ҳ��Ҫ����ģ�ͺ�ͼƬʶ��ģ�ͷֿ����ã������ٱ����Ȼ�ȡģ���б����ĵ�һ���̿�ס��
 
-### 和 AI 讨论后的需求结论
+### �� AI ���ۺ���������
 
-- 配置页必须允许手动填写 Base URL 和模型 ID；获取模型列表只能是辅助，不应该成为修改模型的前置条件。
-- DeepSeek、Mimo/自定义这类模型不应被固定在 Agnes APIHub 的默认值里；预设只做快捷入口，管理员仍可自由覆盖。
-- 图片识别和普通文字对话可以使用不同模型；有图片时优先用视觉模型，没图片时走文本模型。
-- 手机端页面要单列分组，避免标签、输入框、按钮和说明文字挤在同一行造成“点修改没反应”的错觉。
+- ����ҳ���������ֶ���д Base URL ��ģ�� ID����ȡģ���б�ֻ���Ǹ�������Ӧ�ó�Ϊ�޸�ģ�͵�ǰ��������
+- DeepSeek��Mimo/�Զ�������ģ�Ͳ�Ӧ���̶��� Agnes APIHub ��Ĭ��ֵ�Ԥ��ֻ�������ڣ�����Ա�Կ����ɸ��ǡ�
+- ͼƬʶ�����ͨ���ֶԻ�����ʹ�ò�ͬģ�ͣ���ͼƬʱ�������Ӿ�ģ�ͣ�ûͼƬʱ���ı�ģ�͡�
+- �ֻ���ҳ��Ҫ���з��飬�����ǩ������򡢰�ť��˵�����ּ���ͬһ����ɡ����޸�û��Ӧ���Ĵ�����
 
-### 主要修改
+### ��Ҫ�޸�
 
-- `work_admin_ai.js` 新增服务商预设、文本模型列表、视觉模型列表、视觉接口地址、视觉 API Key 和手动模型 ID 流程。
-- `work_admin_ai.wxml` 将配置页拆成“服务商 / 文本模型 / 图片识别模型 / 小猫行为”四块，保留手动输入作为主路径。
-- `work_admin_ai.wxss` 增加手机端优先的单列布局、预设按钮、固定宽度获取按钮和输入框溢出约束。
-- `work_admin_controller.js` 支持 `clearVisionKey` 和 `target=vision` 的模型列表请求。
-- `work_ai_service.js` 保存视觉配置，并在聊天带图片时优先选择视觉接口、视觉 Key 和视觉模型。
-- 更新 `miniprogram/version.js`、`miniprogram/setting/setting.js`、`CHANGELOG.md`、`README.md` 和本文档到 v1.76。
+- `work_admin_ai.js` ����������Ԥ�衢�ı�ģ���б����Ӿ�ģ���б����Ӿ��ӿڵ�ַ���Ӿ� API Key ���ֶ�ģ�� ID ���̡�
+- `work_admin_ai.wxml` ������ҳ��ɡ������� / �ı�ģ�� / ͼƬʶ��ģ�� / Сè��Ϊ���Ŀ飬�����ֶ�������Ϊ��·����
+- `work_admin_ai.wxss` �����ֻ������ȵĵ��в��֡�Ԥ�谴ť���̶����Ȼ�ȡ��ť����������Լ����
+- `work_admin_controller.js` ֧�� `clearVisionKey` �� `target=vision` ��ģ���б�����
+- `work_ai_service.js` �����Ӿ����ã����������ͼƬʱ����ѡ���Ӿ��ӿڡ��Ӿ� Key ���Ӿ�ģ�͡�
+- ���� `miniprogram/version.js`��`miniprogram/setting/setting.js`��`CHANGELOG.md`��`README.md` �ͱ��ĵ��� v1.76��
 
-### 涉及文件
+### �漰�ļ�
 
 - `miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.js`
 - `miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.wxml`
@@ -981,54 +1203,54 @@
 - `README.md`
 - `docs/version-change-diary.md`
 
-### 验证结果
+### ��֤���
 
-- `node --check miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.js` 通过。
-- `node --check cloudfunctions/mcloud/index.js` 通过。
-- `node --check cloudfunctions/mcloud/project/B00/controller/work_admin_controller.js` 通过。
-- `node --check cloudfunctions/mcloud/project/B00/service/work_ai_service.js` 通过。
-- `node --check cloudfunctions/mcloud/work_ai_service_live_patch.js` 通过。
-- `node --check cloudfunctions/mcloud/work_admin_controller_live_patch.js` 通过。
-- `node --check miniprogram/version.js` 通过。
-- `node --check miniprogram/setting/setting.js` 通过。
-- `miniprogram/app.json` 与 `project.config.json` JSON 解析通过。
-- `work_ai_service_live_patch.js` 和 `work_admin_controller_live_patch.js` 解压后均与对应源码一致。
-- `git diff --check` 通过，仅有 Windows 换行提示。
+- `node --check miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.js` ͨ����
+- `node --check cloudfunctions/mcloud/index.js` ͨ����
+- `node --check cloudfunctions/mcloud/project/B00/controller/work_admin_controller.js` ͨ����
+- `node --check cloudfunctions/mcloud/project/B00/service/work_ai_service.js` ͨ����
+- `node --check cloudfunctions/mcloud/work_ai_service_live_patch.js` ͨ����
+- `node --check cloudfunctions/mcloud/work_admin_controller_live_patch.js` ͨ����
+- `node --check miniprogram/version.js` ͨ����
+- `node --check miniprogram/setting/setting.js` ͨ����
+- `miniprogram/app.json` �� `project.config.json` JSON ����ͨ����
+- `work_ai_service_live_patch.js` �� `work_admin_controller_live_patch.js` ��ѹ������ӦԴ��һ�¡�
+- `git diff --check` ͨ�������� Windows ������ʾ��
 
-### 部署状态
+### ����״̬
 
-- `mcloud` 已增量部署 `work_ai_service_live_patch.js`、`work_admin_controller_live_patch.js` 和 `index.js`。
-- 完整 `mcloud` 部署仍遇到微信开发者工具已知 `EISDIR` 问题，本次通过 live patch 让云端加载最新服务与控制器逻辑。
-- 小程序开发版已通过微信开发者工具 CLI 上传，版本号 `1.76`，包体 `1.5 MB` / `1,532,105 Byte`。
+- `mcloud` ���������� `work_ai_service_live_patch.js`��`work_admin_controller_live_patch.js` �� `index.js`��
+- ���� `mcloud` ����������΢�ſ����߹�����֪ `EISDIR` ���⣬����ͨ�� live patch ���ƶ˼������·�����������߼���
+- С���򿪷�����ͨ��΢�ſ����߹��� CLI �ϴ����汾�� `1.76`������ `1.5 MB` / `1,532,105 Byte`��
 
 ## v1.75 - 2026-06-24 02:10 CST
 
-### 改动级别
+### �Ķ�����
 
-小改，v1.74 -> v1.75。
+С�ģ�v1.74 -> v1.75��
 
-### 本次目标
+### ����Ŀ��
 
-修复小猫助手在截图录单、改档期确认和 AI 超时场景下的误判：页面顶部日期不能被卡片备注覆盖；用户补充“第4张漏了”“1”“无补充”时，应优先进入本地可确定的业务流程，而不是反复调用长耗时 AI。
+�޸�Сè�����ڽ�ͼ¼�����ĵ���ȷ�Ϻ� AI ��ʱ�����µ����У�ҳ�涥�����ڲ��ܱ���Ƭ��ע���ǣ��û����䡰��4��©�ˡ���1�����޲��䡱ʱ��Ӧ���Ƚ��뱾�ؿ�ȷ����ҵ�����̣������Ƿ������ó���ʱ AI��
 
-### 和 AI 讨论后的需求结论
+### �� AI ���ۺ���������
 
-- 每日详情页顶部 `2026.09.11` 是订单档期日期；卡片里的 `9.16摄影` 只能当备注。两者冲突时，应先向用户追问确认，而不是直接覆盖订单日期。
-- 多张相似截图不能因为版式相近就合并判断；一张图可能对应一条订单，也可能漏识别，用户指出“第几张漏了”时要只追补那张。
-- 小猫回复“已改”必须以真实落库或可执行确认流程为前提；不能模型先承诺成功，后续云函数才超时失败。
-- 对“无补充”“只有一个”“1”等短回复，若能从上下文确定意图，应走本地流程快速收口，减少外部模型和 20 秒云函数超时影响。
+- ÿ������ҳ���� `2026.09.11` �Ƕ����������ڣ���Ƭ��� `9.16��Ӱ` ֻ�ܵ���ע�����߳�ͻʱ��Ӧ�����û�׷��ȷ�ϣ�������ֱ�Ӹ��Ƕ������ڡ�
+- �������ƽ�ͼ������Ϊ��ʽ����ͺϲ��жϣ�һ��ͼ���ܶ�Ӧһ��������Ҳ����©ʶ���û�ָ�����ڼ���©�ˡ�ʱҪֻ׷�����š�
+- Сè�ظ����Ѹġ���������ʵ�����ִ��ȷ������Ϊǰ�᣻����ģ���ȳ�ŵ�ɹ��������ƺ����ų�ʱʧ�ܡ�
+- �ԡ��޲��䡱��ֻ��һ������1���ȶ̻ظ������ܴ�������ȷ����ͼ��Ӧ�߱������̿����տڣ������ⲿģ�ͺ� 20 ���ƺ�����ʱӰ�졣
 
-### 主要修改
+### ��Ҫ�޸�
 
-- `work_ai_service.js` 加强截图日期规则：页面顶部日期优先，备注日期冲突先追问；多张相似图按图片独立处理。
-- `work_ai_service.js` 新增漏图追补解析，识别“第4张漏了”等说法，无法拿到历史图片时明确提示重新上传指定图片。
-- `work_pet.js` 前端补齐漏图追补：从历史消息里取指定图片的 `fileID`，只重送该图给云函数。
-- `work_pet.js` 前端改期确认补齐关键词和数字选择，支持“爱公馆9.16那个改为9.11”后回复“1”继续保存。
-- `work_pet.js` 对“无补充”等确认回复做本地响应，避免再次触发 AI 调用超时。
-- `index.js` 预加载 `work_ai_service_live_patch.js`，用于在完整云函数部署受本地目录打包问题影响时，先让云端使用最新小猫逻辑。
-- 更新 `miniprogram/version.js`、`miniprogram/setting/setting.js`、`CHANGELOG.md`、`README.md` 和本文档到 v1.75。
+- `work_ai_service.js` ��ǿ��ͼ���ڹ���ҳ�涥���������ȣ���ע���ڳ�ͻ��׷�ʣ���������ͼ��ͼƬ����������
+- `work_ai_service.js` ����©ͼ׷��������ʶ�𡰵�4��©�ˡ���˵�����޷��õ���ʷͼƬʱ��ȷ��ʾ�����ϴ�ָ��ͼƬ��
+- `work_pet.js` ǰ�˲���©ͼ׷��������ʷ��Ϣ��ȡָ��ͼƬ�� `fileID`��ֻ���͸�ͼ���ƺ�����
+- `work_pet.js` ǰ�˸���ȷ�ϲ���ؼ��ʺ�����ѡ��֧�֡�������9.16�Ǹ���Ϊ9.11����ظ���1���������档
+- `work_pet.js` �ԡ��޲��䡱��ȷ�ϻظ���������Ӧ�������ٴδ��� AI ���ó�ʱ��
+- `index.js` Ԥ���� `work_ai_service_live_patch.js`�������������ƺ��������ܱ���Ŀ¼�������Ӱ��ʱ�������ƶ�ʹ������Сè�߼���
+- ���� `miniprogram/version.js`��`miniprogram/setting/setting.js`��`CHANGELOG.md`��`README.md` �ͱ��ĵ��� v1.75��
 
-### 涉及文件
+### �漰�ļ�
 
 - `cloudfunctions/mcloud/index.js`
 - `cloudfunctions/mcloud/work_ai_service_live_patch.js`
@@ -1040,47 +1262,47 @@
 - `README.md`
 - `docs/version-change-diary.md`
 
-### 验证结果
+### ��֤���
 
-- `node --check cloudfunctions/mcloud/project/B00/service/work_ai_service.js` 通过。
-- `node --check cloudfunctions/mcloud/work_ai_service_live_patch.js` 通过。
-- `node --check miniprogram/cmpts/work_pet/work_pet.js` 通过。
-- `node --check miniprogram/version.js` 通过。
-- `node --check miniprogram/setting/setting.js` 通过。
-- `git diff --check` 通过；仅保留换行符提示。
-- 已下载云端 `mcloud` 函数并核对 `work_ai_service_live_patch.js` 哈希一致。
+- `node --check cloudfunctions/mcloud/project/B00/service/work_ai_service.js` ͨ����
+- `node --check cloudfunctions/mcloud/work_ai_service_live_patch.js` ͨ����
+- `node --check miniprogram/cmpts/work_pet/work_pet.js` ͨ����
+- `node --check miniprogram/version.js` ͨ����
+- `node --check miniprogram/setting/setting.js` ͨ����
+- `git diff --check` ͨ�������������з���ʾ��
+- �������ƶ� `mcloud` �������˶� `work_ai_service_live_patch.js` ��ϣһ�¡�
 
-### 部署状态
+### ����״̬
 
-- `mcloud` 云函数 live patch 已通过微信开发者工具 CLI 增量部署。
-- 小程序开发版已通过微信开发者工具 CLI 上传，版本号 `1.75`，包体 `1.5 MB` / `1,521,594 Byte`。
+- `mcloud` �ƺ��� live patch ��ͨ��΢�ſ����߹��� CLI ��������
+- С���򿪷�����ͨ��΢�ſ����߹��� CLI �ϴ����汾�� `1.75`������ `1.5 MB` / `1,521,594 Byte`��
 
 ## v1.74 - 2026-06-21 18:25 CST
 
-### 改动级别
+### �Ķ�����
 
-小改，v1.73 -> v1.74。
+С�ģ�v1.73 -> v1.74��
 
-### 本次目标
+### ����Ŀ��
 
-修复小猫助手在“把20号档期改到21号 / 只有一个”场景下仍追问或遇到 AI 服务不可用的问题，并把小猫权限改为基于当前登录账号的真实业务权限。
+�޸�Сè�����ڡ���20�ŵ��ڸĵ�21�� / ֻ��һ������������׷�ʻ����� AI ���񲻿��õ����⣬����СèȨ�޸�Ϊ���ڵ�ǰ��¼�˺ŵ���ʵҵ��Ȩ�ޡ�
 
-### 和 AI 讨论后的需求结论
+### �� AI ���ۺ���������
 
-- 小猫不应在提示词层面自我限制“高风险操作都不能做”，而应按当前登录账号权限生成动作，由后端服务做最终权限和数据校验。
-- 收款、提成、工资、审核等敏感动作可以由管理员账号触发，但必须保留明确对象、金额、月份、原因和审查流水。
-- 对截图和聊天记录要强化误导约束：区分套餐/应收与实收/到账，红包或转账必须确认方向和到账状态。
-- “只有一个”属于上一轮改期确认，应能回看历史消息并自动处理；若外部 AI 服务不可用，前端也应能兜底处理唯一订单改期。
+- Сè��Ӧ����ʾ�ʲ����������ơ��߷��ղ�����������������Ӧ����ǰ��¼�˺�Ȩ�����ɶ������ɺ�˷���������Ȩ�޺�����У�顣
+- �տ��ɡ����ʡ���˵����ж��������ɹ���Ա�˺Ŵ����������뱣����ȷ���󡢽��·ݡ�ԭ��������ˮ��
+- �Խ�ͼ�������¼Ҫǿ����Լ���������ײ�/Ӧ����ʵ��/���ˣ������ת�˱���ȷ�Ϸ���͵���״̬��
+- ��ֻ��һ����������һ�ָ���ȷ�ϣ�Ӧ�ܻؿ���ʷ��Ϣ���Զ����������ⲿ AI ���񲻿��ã�ǰ��ҲӦ�ܶ��״���Ψһ�������ڡ�
 
-### 主要修改
+### ��Ҫ�޸�
 
-- `work_ai_service.js` 扩展小猫工具动作，新增收款查询/录入/作废、提成查询、工资查询/发放、订单审核，并按普通员工/管理员分别走权限边界。
-- `work_ai_service.js` 增加截图、红包、转账、定金、套餐金额等误导约束，避免把套餐价误判成实收。
-- `work_pet.js` 新增前端唯一订单改期兜底：先查目标日期当天订单，只有一个则拉取订单详情、改写日期并保存。
-- `work_pet.js` 改期后自动刷新日历，并同步写入团队小记审查流水。
-- 更新 `miniprogram/version.js`、`miniprogram/setting/setting.js`、`CHANGELOG.md`、`README.md` 和本文档到 v1.74。
+- `work_ai_service.js` ��չСè���߶����������տ��ѯ/¼��/���ϡ���ɲ�ѯ�����ʲ�ѯ/���š�������ˣ�������ͨԱ��/����Ա�ֱ���Ȩ�ޱ߽硣
+- `work_ai_service.js` ���ӽ�ͼ�������ת�ˡ������ײͽ�����Լ����������ײͼ����г�ʵ�ա�
+- `work_pet.js` ����ǰ��Ψһ�������ڶ��ף��Ȳ�Ŀ�����ڵ��충����ֻ��һ������ȡ�������顢��д���ڲ����档
+- `work_pet.js` ���ں��Զ�ˢ����������ͬ��д���Ŷ�С�������ˮ��
+- ���� `miniprogram/version.js`��`miniprogram/setting/setting.js`��`CHANGELOG.md`��`README.md` �ͱ��ĵ��� v1.74��
 
-### 涉及文件
+### �漰�ļ�
 
 - `cloudfunctions/mcloud/project/B00/service/work_ai_service.js`
 - `miniprogram/cmpts/work_pet/work_pet.js`
@@ -1090,78 +1312,78 @@
 - `README.md`
 - `docs/version-change-diary.md`
 
-### 验证结果
+### ��֤���
 
-- `node --check cloudfunctions/mcloud/project/B00/service/work_ai_service.js` 通过。
-- `node --check miniprogram/cmpts/work_pet/work_pet.js` 通过。
-- `node --check miniprogram/version.js` 通过。
-- `node --check miniprogram/setting/setting.js` 通过。
-- `git diff --check` 通过。
+- `node --check cloudfunctions/mcloud/project/B00/service/work_ai_service.js` ͨ����
+- `node --check miniprogram/cmpts/work_pet/work_pet.js` ͨ����
+- `node --check miniprogram/version.js` ͨ����
+- `node --check miniprogram/setting/setting.js` ͨ����
+- `git diff --check` ͨ����
 
-### 部署状态
+### ����״̬
 
-- 仅本地代码已修改。
-- 需要在微信开发者工具重新编译前端。
-- 需要重新部署 `cloudfunctions/mcloud` 云函数后，云端 AI 权限与深度分析能力才完整生效。
+- �����ش������޸ġ�
+- ��Ҫ��΢�ſ����߹������±���ǰ�ˡ�
+- ��Ҫ���²��� `cloudfunctions/mcloud` �ƺ������ƶ� AI Ȩ������ȷ���������������Ч��
 
-## v1.72 - 2026-06-20 小猫助手录单解析与多会话安全修复
+## v1.72 - 2026-06-20 Сè����¼���������Ự��ȫ�޸�
 
-### 修改原因
+### �޸�ԭ��
 
-修复 AI 录单金额清洗、跨年日期纠偏、访客客户名识别和多会话异步写入/滚动串线问题。
+�޸� AI ¼�������ϴ���������ھ�ƫ���ÿͿͻ���ʶ��Ͷ�Ự�첽д��/�����������⡣
 
-### 修改内容
+### �޸�����
 
-- `_amount()` 支持从包含符号、单位或杂字符的金额文本中提取数字，避免金额被静默保存为 0。
-- 跨年日期修正改为互斥分支，避免同一日期被二次加减年份。
-- 访客模式客户名识别扩展 CJK 范围，并继续拦截金额/来源词误当客户名。
-- 小猫多会话异步回复增加线程守卫，避免切换会话后写错聊天记录或强制滚动当前会话。
+- `_amount()` ֧�ִӰ������š���λ�����ַ��Ľ���ı�����ȡ���֣��������Ĭ����Ϊ 0��
+- ��������������Ϊ�����֧������ͬһ���ڱ����μӼ���ݡ�
+- �ÿ�ģʽ�ͻ���ʶ����չ CJK ��Χ�����������ؽ��/��Դ���󵱿ͻ�����
+- Сè��Ự�첽�ظ������߳������������л��Ự��д�������¼��ǿ�ƹ�����ǰ�Ự��
 
-### 验证
+### ��֤
 
 - `node --check cloudfunctions/mcloud/project/B00/service/work_ai_service.js`
 - `node --check miniprogram/helper/guest_helper.js`
 - `node --check miniprogram/cmpts/work_pet/work_pet.js`
-- 金额清洗与访客客户名回归用例通过
+- �����ϴ��ÿͿͻ����ع�����ͨ��
 
-> 记录云屿摄影小程序每次本地代码修改、版本号、讨论结论、涉及文件、验证结果和部署状态。
-> 安全规则：密钥、密码、token、客户隐私、订单隐私不写入本文档原文；必要时只记录脱敏描述。
+> ��¼������ӰС����ÿ�α��ش����޸ġ��汾�š����۽��ۡ��漰�ļ�����֤����Ͳ���״̬��
+> ��ȫ������Կ�����롢token���ͻ���˽��������˽��д�뱾�ĵ�ԭ�ģ���Ҫʱֻ��¼����������
 
-## 版本规则
+## �汾����
 
-- 当前版本基线：v1.42。
-- 小改：版本号 `+0.01`，例如 v1.42 -> v1.43。
-- 大改：版本号 `+0.10`，例如 v1.42 -> v1.52。
-- 完全体系升级：版本号 `+1.00`，例如 v1.42 -> v2.42。
-- 每次修改后同步更新：
+- ��ǰ�汾���ߣ�v1.42��
+- С�ģ��汾�� `+0.01`������ v1.42 -> v1.43��
+- ��ģ��汾�� `+0.10`������ v1.42 -> v1.52��
+- ��ȫ��ϵ�������汾�� `+1.00`������ v1.42 -> v2.42��
+- ÿ���޸ĺ�ͬ�����£�
   - `miniprogram/setting/setting.js`
   - `miniprogram/version.js`
 - `CHANGELOG.md`
-- 本文档
+- ���ĵ�
 
 ## v1.71 - 2026-06-19 06:52 CST
 
-### 改动级别
+### �Ķ�����
 
-小改，v1.70 -> v1.71。
+С�ģ�v1.70 -> v1.71��
 
-### 本次目标
+### ����Ŀ��
 
-修复"本周一"在周五等非周一基准日时错误跳转到下周一的问题。
+�޸�"����һ"������ȷ���һ��׼��ʱ������ת������һ�����⡣
 
-### 和 AI 讨论后的需求结论
+### �� AI ���ۺ���������
 
-- `_extractWeekdayTextDate` 中"本周/这周"前缀的条件分支 `if (offset < 0) offset += 7` 会导致当前周内已过去的日期被推到下周一。
-- 例如：用户在周五说"本周一安排拍摄"，期望返回本周一（2026-06-15），但代码返回下周一（2026-06-22）。
-- 根因：对于"本周"前缀，用户明确表示"当前这一周"，不应将负 offset 修正为正值。
-- 修复策略：移除"本周/这周"前缀分支中的 `if (offset < 0) offset += 7`，让 offset 保持原值，指向当前 ISO 周内对应日期。
+- `_extractWeekdayTextDate` ��"����/����"ǰ׺��������֧ `if (offset < 0) offset += 7` �ᵼ�µ�ǰ�����ѹ�ȥ�����ڱ��Ƶ�����һ��
+- ���磺�û�������˵"����һ��������"���������ر���һ��2026-06-15���������뷵������һ��2026-06-22����
+- ���򣺶���"����"ǰ׺���û���ȷ��ʾ"��ǰ��һ��"����Ӧ���� offset ����Ϊ��ֵ��
+- �޸����ԣ��Ƴ�"����/����"ǰ׺��֧�е� `if (offset < 0) offset += 7`���� offset ����ԭֵ��ָ��ǰ ISO ���ڶ�Ӧ���ڡ�
 
-### 主要修改
+### ��Ҫ�޸�
 
-- `work_ai_service.js` 的 `_extractWeekdayTextDate` 中"本周/这周/本星期/这星期/本礼拜/这礼拜"分支移除 `if (offset < 0) offset += 7`。
-- 同步更新 `miniprogram/setting/setting.js`、`miniprogram/version.js` 和 `CHANGELOG.md` 的版本记录。
+- `work_ai_service.js` �� `_extractWeekdayTextDate` ��"����/����/������/������/�����/�����"��֧�Ƴ� `if (offset < 0) offset += 7`��
+- ͬ������ `miniprogram/setting/setting.js`��`miniprogram/version.js` �� `CHANGELOG.md` �İ汾��¼��
 
-### 涉及文件
+### �漰�ļ�
 
 - `cloudfunctions/mcloud/project/B00/service/work_ai_service.js`
 - `miniprogram/setting/setting.js`
@@ -1169,41 +1391,41 @@
 - `CHANGELOG.md`
 - `docs/version-change-diary.md`
 
-### 验证结果
+### ��֤���
 
-- `node --check` 已检查 `work_ai_service.js`、`setting.js` 和 `version.js`，通过。
-- 星期解析验证 20/20 通过：下周六、本周五、周日、下星期六、下礼拜天、上周一、上周六、上周日、下周一、本周一（修复项）、周三、上上周一、上上周六、下下周三、这周五、周一基准本周一/本周五/本周日、周日基准本周一/本周日。
-- 连续第 74 轮无 v1.69/v1.70 回归发现（本次为 v1.71 新增修复）。
+- `node --check` �Ѽ�� `work_ai_service.js`��`setting.js` �� `version.js`��ͨ����
+- ���ڽ�����֤ 20/20 ͨ�����������������塢���ա�����������������졢����һ���������������ա�����һ������һ���޸����������������һ���������������������������塢��һ��׼����һ/������/�����ա����ջ�׼����һ/�����ա�
+- ������ 74 ���� v1.69/v1.70 �ع鷢�֣�����Ϊ v1.71 �����޸�����
 
-### 部署状态
+### ����״̬
 
-- 仅本地代码已修改。
-- 未上传小程序。
-- 未上传 `mcloud` 云函数。
+- �����ش������޸ġ�
+- δ�ϴ�С����
+- δ�ϴ� `mcloud` �ƺ�����
 
 ## v1.70 - 2026-06-19 04:36:11 CST
 
-### 改动级别
+### �Ķ�����
 
-小改，v1.69 -> v1.70。
+С�ģ�v1.69 -> v1.70��
 
-### 本次目标
+### ����Ŀ��
 
-修复小猫助手无法识别"上周一""上周六""上星期三"等过去一周星期日期的问题。
+�޸�Сè�����޷�ʶ��"����һ""������""��������"�ȹ�ȥһ���������ڵ����⡣
 
-### 和 AI 讨论后的需求结论
+### �� AI ���ۺ���������
 
-- `_extractWeekdayTextDate` 正则和条件分支未覆盖"上周"前缀，导致"上周一"从周五基准算被当作"周一"处理，返回下周一而非上周一。
-- 这是预已存在的功能缺失，不是 v1.69 引入的回归。
-- 修复策略：在正则中添加上上周/上周/上星期/上礼拜前缀，在条件分支中添加对应 offset 偏移。
+- `_extractWeekdayTextDate` �����������֧δ����"����"ǰ׺������"����һ"�������׼�㱻����"��һ"��������������һ��������һ��
+- ����Ԥ�Ѵ��ڵĹ���ȱʧ������ v1.69 ����Ļع顣
+- �޸����ԣ�������������������/����/������/�����ǰ׺����������֧�����Ӷ�Ӧ offset ƫ�ơ�
 
-### 主要修改
+### ��Ҫ�޸�
 
-- `work_ai_service.js` 的 `_extractWeekdayTextDate` 正则新增 `上上周|上上星期|上上礼拜|上周|上星期|上礼拜` 前缀匹配。
-- 条件分支新增 `offset -= 14`（上上周）和 `offset -= 7`（上周）处理。
-- 同步更新 `miniprogram/setting/setting.js`、`miniprogram/version.js` 和 `CHANGELOG.md` 的版本记录。
+- `work_ai_service.js` �� `_extractWeekdayTextDate` �������� `������|��������|�������|����|������|�����` ǰ׺ƥ�䡣
+- ������֧���� `offset -= 14`�������ܣ��� `offset -= 7`�����ܣ�������
+- ͬ������ `miniprogram/setting/setting.js`��`miniprogram/version.js` �� `CHANGELOG.md` �İ汾��¼��
 
-### 涉及文件
+### �漰�ļ�
 
 - `cloudfunctions/mcloud/project/B00/service/work_ai_service.js`
 - `miniprogram/setting/setting.js`
@@ -1211,48 +1433,48 @@
 - `CHANGELOG.md`
 - `docs/version-change-diary.md`
 
-### 验证结果
+### ��֤���
 
-- 已完成本地代码修改。
-- `node --check` 已检查 `work_ai_service.js`、`setting.js` 和 `version.js`，通过。
-- 星期解析验证 10/10 通过：下周六、本周五、周日、下星期六、下礼拜天、这周五、周一、上周一、上周六、上周日。
-- 上周一从周五基准正确换算为 2026-06-08（上周一）。
-- 上周六从周五基准正确换算为 2026-06-13（上周六）。
-- 尚未在微信开发者工具真机/模拟器复测。
+- ����ɱ��ش����޸ġ�
+- `node --check` �Ѽ�� `work_ai_service.js`��`setting.js` �� `version.js`��ͨ����
+- ���ڽ�����֤ 10/10 ͨ�����������������塢���ա�����������������졢�����塢��һ������һ���������������ա�
+- ����һ�������׼��ȷ����Ϊ 2026-06-08������һ����
+- �������������׼��ȷ����Ϊ 2026-06-13������������
+- ��δ��΢�ſ����߹������/ģ�������⡣
 
-### 部署状态
+### ����״̬
 
-- 仅本地代码已修改。
-- 未上传小程序。
-- 未上传 `mcloud` 云函数。
+- �����ش������޸ġ�
+- δ�ϴ�С����
+- δ�ϴ� `mcloud` �ƺ�����
 
 ## v1.69 - 2026-06-18 23:15:34 CST
 
-### 改动级别
+### �Ķ�����
 
-小改，v1.68 -> v1.69。
+С�ģ�v1.68 -> v1.69��
 
-### 本次目标
+### ����Ŀ��
 
-修复两个明确问题：直接添加档期添加不了；小猫助手添加档期遇到星期类日期或动作别名时容易显示格式错误。
+�޸�������ȷ���⣺ֱ�����ӵ������Ӳ��ˣ�Сè�������ӵ����������������ڻ�������ʱ������ʾ��ʽ����
 
-### 和 AI 讨论后的需求结论
+### �� AI ���ۺ���������
 
-- `work/add` 不是 tabBar 页面，不能使用 `wx.switchTab` 打开；从日历页和日详情页进入时应使用 `wx.navigateTo`。
-- 新增档期页既要能从 URL 参数拿到 `day`，也要保留 `WORK_ADD_DAY` 作为兜底。
-- 小猫助手除了今天/明天/后天，也要能把“下周六、本周五、周日”等常见县城门店口语日期转成标准日期。
-- 兼容 `create_note` 和既有 `add_note`，避免模型输出同义动作时被系统判成不能执行或格式错误。
+- `work/add` ���� tabBar ҳ�棬����ʹ�� `wx.switchTab` �򿪣�������ҳ��������ҳ����ʱӦʹ�� `wx.navigateTo`��
+- ��������ҳ��Ҫ�ܴ� URL �����õ� `day`��ҲҪ���� `WORK_ADD_DAY` ��Ϊ���ס�
+- Сè���ֳ��˽���/����/���죬ҲҪ�ܰѡ��������������塢���ա��ȳ����س��ŵ��������ת�ɱ�׼���ڡ�
+- ���� `create_note` �ͼ��� `add_note`������ģ�����ͬ�嶯��ʱ��ϵͳ�гɲ���ִ�л��ʽ����
 
-### 主要修改
+### ��Ҫ�޸�
 
-- `work_calendar.js` 的直接新增档期入口从 `wx.switchTab` 改为 `wx.navigateTo`，并携带 `?day=YYYY-MM-DD`。
-- `work_day_detail.js` 的直接新增档期入口从 `wx.switchTab` 改为 `wx.navigateTo`，并携带 `?day=YYYY-MM-DD`。
-- `work_order_edit.js` 新建态默认设置 `canEdit/canFull` 为 `true`，修复保存按钮和编辑入口被隐藏的问题。
-- `work_ai_service.js` 新增星期类日期解析，支持周/星期/礼拜表达，并将 `create_note` 归一到 `add_note`。
-- `work_pet.js` 刷新逻辑兼容 `create_note`，确保小猫助手写入后仍能触发页面刷新。
-- 同步更新 `miniprogram/setting/setting.js`、`miniprogram/version.js` 和 `CHANGELOG.md` 的版本记录。
+- `work_calendar.js` ��ֱ������������ڴ� `wx.switchTab` ��Ϊ `wx.navigateTo`����Я�� `?day=YYYY-MM-DD`��
+- `work_day_detail.js` ��ֱ������������ڴ� `wx.switchTab` ��Ϊ `wx.navigateTo`����Я�� `?day=YYYY-MM-DD`��
+- `work_order_edit.js` �½�̬Ĭ������ `canEdit/canFull` Ϊ `true`���޸����水ť�ͱ༭��ڱ����ص����⡣
+- `work_ai_service.js` �������������ڽ�����֧����/����/��ݱ������ `create_note` ��һ�� `add_note`��
+- `work_pet.js` ˢ���߼����� `create_note`��ȷ��Сè����д������ܴ���ҳ��ˢ�¡�
+- ͬ������ `miniprogram/setting/setting.js`��`miniprogram/version.js` �� `CHANGELOG.md` �İ汾��¼��
 
-### 涉及文件
+### �漰�ļ�
 
 - `miniprogram/projects/B00/pages/work/calendar/work_calendar.js`
 - `miniprogram/projects/B00/pages/work/day_detail/work_day_detail.js`
@@ -1263,48 +1485,48 @@
 - `CHANGELOG.md`
 - `docs/version-change-diary.md`
 
-### 验证结果
+### ��֤���
 
-- 已完成本地代码修改。
-- `node --check` 已检查 `work_calendar.js`、`work_day_detail.js`、`work_order_edit.js`、`work_pet.js`、`work_ai_service.js`、`setting.js` 和 `version.js`，通过。
-- 已检查关键页面均在 `app.json` 注册，且 `.js/.json/.wxml/.wxss` 文件齐全。
-- 已检查 `work/order_save`、`work/item_save`、`work/rest_save`、`work/ai_chat`、`work/admin_ai_config_get`、`work/admin_ai_config_save` 路由存在。
-- 星期类日期轻量用例通过：`下周六`、`本周五`、`周日`、`下星期六`、`下礼拜天` 均可换算为标准日期。
-- 尚未在微信开发者工具真机/模拟器复测。
+- ����ɱ��ش����޸ġ�
+- `node --check` �Ѽ�� `work_calendar.js`��`work_day_detail.js`��`work_order_edit.js`��`work_pet.js`��`work_ai_service.js`��`setting.js` �� `version.js`��ͨ����
+- �Ѽ��ؼ�ҳ����� `app.json` ע�ᣬ�� `.js/.json/.wxml/.wxss` �ļ���ȫ��
+- �Ѽ�� `work/order_save`��`work/item_save`��`work/rest_save`��`work/ai_chat`��`work/admin_ai_config_get`��`work/admin_ai_config_save` ·�ɴ��ڡ�
+- ������������������ͨ����`������`��`������`��`����`��`��������`��`�������` ���ɻ���Ϊ��׼���ڡ�
+- ��δ��΢�ſ����߹������/ģ�������⡣
 
-### 部署状态
+### ����״̬
 
-- 仅本地代码已修改。
-- 未上传小程序。
-- 未上传 `mcloud` 云函数。
+- �����ش������޸ġ�
+- δ�ϴ�С����
+- δ�ϴ� `mcloud` �ƺ�����
 
 ## v1.68 - 2026-06-12 15:20:57 CST
 
-### 改动级别
+### �Ķ�����
 
-小改，v1.67 -> v1.68。
+С�ģ�v1.67 -> v1.68��
 
-### 本次目标
+### ����Ŀ��
 
-修复小猫助手记录“今天下午一点，拍摄螺先生视频”时，把今天误识别成 `2026-06-01`，并且只生成AI操作记录、真实档期不显示的问题。
+�޸�Сè���ּ�¼����������һ�㣬������������Ƶ��ʱ���ѽ�����ʶ��� `2026-06-01`������ֻ����AI������¼����ʵ���ڲ���ʾ�����⡣
 
-### 和 AI 讨论后的需求结论
+### �� AI ���ۺ���������
 
-- 2026-06-12 当天，用户说“今天”时必须按服务器当前日期解析为 `2026-06-12`，不能完全相信模型返回的日期字段。
-- AI写入动作如果涉及“今天/明天/后天”等相对日期，后端必须用用户原话和服务器日期做兜底纠偏。
-- AI新增事项不能只写成待审核状态后回复“已新增档期”；如果要回复成功，真实事项必须能在日历和日详情看到。
-- AI操作记录应在真实业务记录落库校验通过后再写入，避免“只有AI记录，没有实际档期”的假成功。
+- 2026-06-12 ���죬�û�˵�����족ʱ���밴��������ǰ���ڽ���Ϊ `2026-06-12`��������ȫ����ģ�ͷ��ص������ֶΡ�
+- AIд�붯������漰������/����/���족��������ڣ���˱������û�ԭ���ͷ��������������׾�ƫ��
+- AI���������ֻд�ɴ����״̬��ظ������������ڡ������Ҫ�ظ��ɹ�����ʵ����������������������鿴����
+- AI������¼Ӧ����ʵҵ���¼���У��ͨ������д�룬���⡰ֻ��AI��¼��û��ʵ�ʵ��ڡ��ļٳɹ���
 
-### 主要修改
+### ��Ҫ�޸�
 
-- `work_ai_service.js` 新增用户原话日期纠偏：支持从原话识别单个明确日期，或把“今天/明天/后天/大后天/昨天/前天”按服务器当前日期换算。
-- `work_ai_service.js` 的日期清洗新增真实日历校验，避免不存在日期或版本号、小数被误识别成日期。
-- `work_ai_service.js` 写入类动作改用新的日期清洗入口；单条订单、事项、休息、小记和查询档期都会优先使用用户原话中的日期线索。
-- `work_ai_service.js` 的AI新增事项改为保存后回查 `WorkItemModel`，确认记录存在、日期标题匹配且状态生效后，才写AI操作记录并返回成功。
-- `work_service.js` 的 `saveItem` 新增受控 `forceActive` 参数，仅服务端AI调用可让事项直接生效，普通前端保存仍沿用原审核规则。
-- 同步更新 `miniprogram/setting/setting.js`、`miniprogram/version.js` 和 `CHANGELOG.md` 的版本记录。
+- `work_ai_service.js` �����û�ԭ�����ھ�ƫ��֧�ִ�ԭ��ʶ�𵥸���ȷ���ڣ���ѡ�����/����/����/�����/����/ǰ�족����������ǰ���ڻ��㡣
+- `work_ai_service.js` ��������ϴ������ʵ����У�飬���ⲻ�������ڻ�汾�š�С������ʶ������ڡ�
+- `work_ai_service.js` д���ද�������µ�������ϴ��ڣ����������������Ϣ��С�ǺͲ�ѯ���ڶ�������ʹ���û�ԭ���е�����������
+- `work_ai_service.js` ��AI���������Ϊ�����ز� `WorkItemModel`��ȷ�ϼ�¼���ڡ����ڱ���ƥ����״̬��Ч�󣬲�дAI������¼�����سɹ���
+- `work_service.js` �� `saveItem` �����ܿ� `forceActive` �������������AI���ÿ�������ֱ����Ч����ͨǰ�˱���������ԭ��˹���
+- ͬ������ `miniprogram/setting/setting.js`��`miniprogram/version.js` �� `CHANGELOG.md` �İ汾��¼��
 
-### 涉及文件
+### �漰�ļ�
 
 - `cloudfunctions/mcloud/project/B00/service/work_ai_service.js`
 - `cloudfunctions/mcloud/project/B00/service/work_service.js`
@@ -1313,45 +1535,45 @@
 - `CHANGELOG.md`
 - `docs/version-change-diary.md`
 
-### 验证结果
+### ��֤���
 
-- 已完成本地代码修改。
-- `node --check` 已检查 `work_ai_service.js`、`work_service.js`、`miniprogram/version.js` 和 `miniprogram/setting/setting.js`，通过。
-- 轻量日期纠偏用例已确认：`今天下午一点` 会从模型错误日期 `2026-06-01` 纠正为 `2026-06-12`，`明天` 会纠正为 `2026-06-13`，`6.15` 会纠正为 `2026-06-15`。
-- 轻量非法日期用例已确认：版本号文本 `1.68` 不会被当作日期，`2026-01-68` 会被拦截。
-- 本次涉及的已跟踪文件 `git diff --check` 通过；全仓 `git diff --check` 仍命中既有无关空格 `miniprogram/projects/B00/biz/project_biz.js:17`，本次未改动该文件。
-- 尚未在微信开发者工具真机/模拟器复测。
+- ����ɱ��ش����޸ġ�
+- `node --check` �Ѽ�� `work_ai_service.js`��`work_service.js`��`miniprogram/version.js` �� `miniprogram/setting/setting.js`��ͨ����
+- �������ھ�ƫ������ȷ�ϣ�`��������һ��` ���ģ�ʹ������� `2026-06-01` ����Ϊ `2026-06-12`��`����` �����Ϊ `2026-06-13`��`6.15` �����Ϊ `2026-06-15`��
+- �����Ƿ�����������ȷ�ϣ��汾���ı� `1.68` ���ᱻ�������ڣ�`2026-01-68` �ᱻ���ء�
+- �����漰���Ѹ����ļ� `git diff --check` ͨ����ȫ�� `git diff --check` �����м����޹ؿո� `miniprogram/projects/B00/biz/project_biz.js:17`������δ�Ķ����ļ���
+- ��δ��΢�ſ����߹������/ģ�������⡣
 
-### 部署状态
+### ����״̬
 
-- 仅本地代码已修改。
-- 未上传小程序。
-- 未上传 `mcloud` 云函数。
+- �����ش������޸ġ�
+- δ�ϴ�С����
+- δ�ϴ� `mcloud` �ƺ�����
 
 ## v1.66 - 2026-06-11 20:02:17 CST
 
-### 改动级别
+### �Ķ�����
 
-小改，v1.65 -> v1.66。
+С�ģ�v1.65 -> v1.66��
 
-### 本次目标
+### ����Ŀ��
 
-修复微信开发者工具上传 `mcloud` 云函数时报错：`请确认 config.json 中包含合法的 triggers 字段`。
+�޸�΢�ſ����߹����ϴ� `mcloud` �ƺ���ʱ������`��ȷ�� config.json �а����Ϸ��� triggers �ֶ�`��
 
-### 和 AI 讨论后的需求结论
+### �� AI ���ۺ���������
 
-- 开发者工具错误发生在“上传云函数 mcloud 的触发器”阶段，不是小程序前端编译错误。
-- `cloudfunctions/mcloud/config.json` 原本只有 `timeout` 和 `permissions`，缺少 `triggers` 字段。
-- `mcloud` 是普通业务云函数，不是定时任务云函数，因此不应新增 timer 触发器。
-- 对这类非定时云函数，补合法空数组 `triggers: []` 即可让开发者工具通过触发器配置校验。
+- �����߹��ߴ������ڡ��ϴ��ƺ��� mcloud �Ĵ��������׶Σ�����С����ǰ�˱������
+- `cloudfunctions/mcloud/config.json` ԭ��ֻ�� `timeout` �� `permissions`��ȱ�� `triggers` �ֶΡ�
+- `mcloud` ����ͨҵ���ƺ��������Ƕ�ʱ�����ƺ�������˲�Ӧ���� timer ��������
+- ������Ƕ�ʱ�ƺ��������Ϸ������� `triggers: []` �����ÿ����߹���ͨ������������У�顣
 
-### 主要修改
+### ��Ҫ�޸�
 
-- `cloudfunctions/mcloud/config.json` 新增 `"triggers": []`。
-- 规范化 `permissions.openapi` 数组空格。
-- 同步更新 `miniprogram/setting/setting.js`、`miniprogram/version.js` 和 `CHANGELOG.md` 的版本记录。
+- `cloudfunctions/mcloud/config.json` ���� `"triggers": []`��
+- �淶�� `permissions.openapi` ����ո�
+- ͬ������ `miniprogram/setting/setting.js`��`miniprogram/version.js` �� `CHANGELOG.md` �İ汾��¼��
 
-### 涉及文件
+### �漰�ļ�
 
 - `cloudfunctions/mcloud/config.json`
 - `miniprogram/setting/setting.js`
@@ -1359,44 +1581,44 @@
 - `CHANGELOG.md`
 - `docs/version-change-diary.md`
 
-### 验证结果
+### ��֤���
 
-- JSON 解析已检查 `cloudfunctions/mcloud/config.json`，通过。
-- `node --check` 已检查 `miniprogram/setting/setting.js` 和 `miniprogram/version.js`，通过。
-- 尚未在微信开发者工具重新点击上传 `mcloud` 云函数。
+- JSON �����Ѽ�� `cloudfunctions/mcloud/config.json`��ͨ����
+- `node --check` �Ѽ�� `miniprogram/setting/setting.js` �� `miniprogram/version.js`��ͨ����
+- ��δ��΢�ſ����߹������µ���ϴ� `mcloud` �ƺ�����
 
-### 部署状态
+### ����״̬
 
-- 仅本地代码已修改。
-- 未上传小程序。
-- 未上传 `mcloud` 云函数。
+- �����ش������޸ġ�
+- δ�ϴ�С����
+- δ�ϴ� `mcloud` �ƺ�����
 
 ## v1.65 - 2026-06-11 19:57:52 CST
 
-### 改动级别
+### �Ķ�����
 
-小改，v1.64 -> v1.65。
+С�ģ�v1.64 -> v1.65��
 
-### 本次目标
+### ����Ŀ��
 
-继续修复上一轮未完成的重复订单 bug：不能只在 AI 录单层做“保存前查重”，还要把核心重复判断下沉到订单保存服务入口，避免普通保存、并发保存或后续新增入口绕过 AI 层继续重复落库。
+�����޸���һ��δ��ɵ��ظ����� bug������ֻ�� AI ¼������������ǰ���ء�����Ҫ�Ѻ����ظ��ж��³����������������ڣ�������ͨ���桢��������������������ƹ� AI ������ظ���⡣
 
-### 和 AI 讨论后的需求结论
+### �� AI ���ۺ���������
 
-- 重复订单问题的最后一层风险在 `work_service.js` 的 `saveOrder`，该入口原本校验权限、金额和财务状态后直接插入。
-- AI 层仍需要给用户友好的“已跳过”提示，但真正防止重复落库应由订单保存服务兜底。
-- 判重不能只看同一天或同时间，避免误伤同一天同客户但不同拍摄类型的订单。
-- 判重应至少要求同日期、同客户名或有效电话、同拍摄类型；有明确时间时同时间才拦截，缺时间时再结合电话或地点等信息保守拦截。
-- 短数字片段不能当作有效手机号匹配，避免 OCR 错识别造成误判。
+- �ظ�������������һ������� `work_service.js` �� `saveOrder`�������ԭ��У��Ȩ�ޡ����Ͳ���״̬��ֱ�Ӳ��롣
+- AI ������Ҫ���û��Ѻõġ�����������ʾ����������ֹ�ظ����Ӧ�ɶ���������񶵵ס�
+- ���ز���ֻ��ͬһ���ͬʱ�䣬��������ͬһ��ͬ�ͻ�����ͬ�������͵Ķ�����
+- ����Ӧ����Ҫ��ͬ���ڡ�ͬ�ͻ�������Ч�绰��ͬ�������ͣ�����ȷʱ��ʱͬʱ������أ�ȱʱ��ʱ�ٽ�ϵ绰��ص����Ϣ�������ء�
+- ������Ƭ�β��ܵ�����Ч�ֻ���ƥ�䣬���� OCR ��ʶ��������С�
 
-### 主要修改
+### ��Ҫ�޸�
 
-- `work_service.js` 新增统一订单重复判断方法，包含客户名、有效电话、时间、拍摄类型和地点归一化比较。
-- `saveOrder` 在新增或编辑前执行 `_assertNoDuplicateOrder`，编辑时排除当前订单自身。
-- `work_ai_service.js` 的 AI 单条、批量和批量内去重改为复用 `WorkService` 的统一判断，减少两套规则漂移。
-- 同步更新 `miniprogram/setting/setting.js`、`miniprogram/version.js` 和 `CHANGELOG.md` 的版本记录。
+- `work_service.js` ����ͳһ�����ظ��жϷ����������ͻ�������Ч�绰��ʱ�䡢�������ͺ͵ص��һ���Ƚϡ�
+- `saveOrder` ��������༭ǰִ�� `_assertNoDuplicateOrder`���༭ʱ�ų���ǰ����������
+- `work_ai_service.js` �� AI ������������������ȥ�ظ�Ϊ���� `WorkService` ��ͳһ�жϣ��������׹���Ư�ơ�
+- ͬ������ `miniprogram/setting/setting.js`��`miniprogram/version.js` �� `CHANGELOG.md` �İ汾��¼��
 
-### 涉及文件
+### �漰�ļ�
 
 - `cloudfunctions/mcloud/project/B00/service/work_service.js`
 - `cloudfunctions/mcloud/project/B00/service/work_ai_service.js`
@@ -1405,42 +1627,42 @@
 - `CHANGELOG.md`
 - `docs/version-change-diary.md`
 
-### 验证结果
+### ��֤���
 
-- `node --check` 已检查 `work_service.js` 和 `work_ai_service.js`，通过。
-- 轻量规则样本验证已确认：同日同客户同类型同时间会判重；同日同客户不同类型不会判重；同日同客户同类型不同时间不会判重。
-- 还未运行微信开发者工具或云函数线上验证。
+- `node --check` �Ѽ�� `work_service.js` �� `work_ai_service.js`��ͨ����
+- ��������������֤��ȷ�ϣ�ͬ��ͬ�ͻ�ͬ����ͬʱ������أ�ͬ��ͬ�ͻ���ͬ���Ͳ������أ�ͬ��ͬ�ͻ�ͬ���Ͳ�ͬʱ�䲻�����ء�
+- ��δ����΢�ſ����߹��߻��ƺ���������֤��
 
-### 部署状态
+### ����״̬
 
-- 仅本地代码已修改。
-- 未上传小程序。
-- 未上传 `mcloud` 云函数。
+- �����ش������޸ġ�
+- δ�ϴ�С����
+- δ�ϴ� `mcloud` �ƺ�����
 
 ## v1.64 - 2026-06-11 17:47:00 CST
 
-### 改动级别
+### �Ķ�����
 
-小改，v1.63 -> v1.64。
+С�ģ�v1.63 -> v1.64��
 
-### 本次目标
+### ����Ŀ��
 
-修复 AI 截图/文字录单里最容易让人误判的两类问题：日期写法识别过严导致录单失败或日期错位，以及重复订单判断过松和保存后缺少回查导致“说已登记但实际上没落库”的假成功。
+�޸� AI ��ͼ/����¼�����������������е��������⣺����д��ʶ����ϵ���¼��ʧ�ܻ����ڴ�λ���Լ��ظ������жϹ��ɺͱ����ȱ�ٻز鵼�¡�˵�ѵǼǵ�ʵ����û��⡱�ļٳɹ���
 
-### 和 AI 讨论后的需求结论
+### �� AI ���ۺ���������
 
-- AI 录单日期不能只接受严格 `YYYY-MM-DD`，常见的 `2026/6/13`、`2026年6月13日`、`6.13` 也要能规范成标准日期。
-- 重复判断不能只靠“同一天 + 同客户”就跳过新单，至少要看客户、时间、类型等多个关键字段一起匹配。
-- 保存完成后要再查一次真实记录，确认真的写进系统后再给“已登记”类回复。
+- AI ¼�����ڲ���ֻ�����ϸ� `YYYY-MM-DD`�������� `2026/6/13`��`2026��6��13��`��`6.13` ҲҪ�ܹ淶�ɱ�׼���ڡ�
+- �ظ��жϲ���ֻ����ͬһ�� + ͬ�ͻ����������µ�������Ҫ���ͻ���ʱ�䡢���͵ȶ���ؼ��ֶ�һ��ƥ�䡣
+- ������ɺ�Ҫ�ٲ�һ����ʵ��¼��ȷ�����д��ϵͳ���ٸ����ѵǼǡ���ظ���
 
-### 主要修改
+### ��Ҫ�޸�
 
-- `work_ai_service.js` 的 `_cleanDate` 增强了日期格式兼容，保存前统一标准化成 `YYYY-MM-DD`。
-- `work_ai_service.js` 的重复判断从“同客户 + 单一字段”收紧为“同客户 + 多个字段同时匹配”。
-- `work_ai_service.js` 在 `saveOrder` 后增加落库回查，若写入失败或字段不一致直接报错，不再返回空成功提示。
-- 同步更新 `miniprogram/version.js`、`miniprogram/setting/setting.js` 和 `CHANGELOG.md` 的版本记录。
+- `work_ai_service.js` �� `_cleanDate` ��ǿ�����ڸ�ʽ���ݣ�����ǰͳһ��׼���� `YYYY-MM-DD`��
+- `work_ai_service.js` ���ظ��жϴӡ�ͬ�ͻ� + ��һ�ֶΡ��ս�Ϊ��ͬ�ͻ� + ����ֶ�ͬʱƥ�䡱��
+- `work_ai_service.js` �� `saveOrder` ���������ز飬��д��ʧ�ܻ��ֶβ�һ��ֱ�ӱ��������ٷ��ؿճɹ���ʾ��
+- ͬ������ `miniprogram/version.js`��`miniprogram/setting/setting.js` �� `CHANGELOG.md` �İ汾��¼��
 
-### 涉及文件
+### �漰�ļ�
 
 - `cloudfunctions/mcloud/project/B00/service/work_ai_service.js`
 - `miniprogram/setting/setting.js`
@@ -1448,47 +1670,47 @@
 - `CHANGELOG.md`
 - `docs/version-change-diary.md`
 
-### 验证结果
+### ��֤���
 
-- 代码已完成本地修改并同步版本记录。
-- 还未运行微信开发者工具或云函数线上验证。
+- ��������ɱ����޸Ĳ�ͬ���汾��¼��
+- ��δ����΢�ſ����߹��߻��ƺ���������֤��
 
-### 部署状态
+### ����״̬
 
-- 仅本地代码已修改。
-- 未上传小程序。
-- 未上传 `mcloud` 云函数。
+- �����ش������޸ġ�
+- δ�ϴ�С����
+- δ�ϴ� `mcloud` �ƺ�����
 
 ## v1.63 - 2026-06-11 16:17:18 CST
 
-### 改动级别
+### �Ķ�����
 
-小改，v1.62 -> v1.63。
+С�ģ�v1.62 -> v1.63��
 
-### 本次目标
+### ����Ŀ��
 
-根据开发者工具截图继续修正小猫助手和业绩页体验：缩小聊天必须有输入框，放大聊天顶部不能占太多空间，日志文案需要规范排版，常用区删除按钮取消，等待文案更贴近小猫语气；业绩页默认展示本人信息，并把订单和业绩都放在同一工作台里。
+���ݿ����߹��߽�ͼ��������Сè���ֺ�ҵ��ҳ���飺��С�������������򣬷Ŵ����춥������ռ̫��ռ䣬��־�İ���Ҫ�淶�Ű棬������ɾ����ťȡ�����ȴ��İ�������Сè������ҵ��ҳĬ��չʾ������Ϣ�����Ѷ�����ҵ��������ͬһ����̨�
 
-### 和 AI 讨论后的需求结论
+### �� AI ���ۺ���������
 
-- 小猫助手缩小态不能因为聊天列表高度挤掉输入框。
-- 放大态顶部只保留必要信息，说明小字不再展示，避免标题和按钮挤压。
-- 清空/删除聊天不应放在 `+` 旁边作为高频按钮，避免误触。
-- Agent日志需要分区排版，而不是一整段系统弹窗文字。
-- 业绩页默认展示本人业绩和本人排行，其他人/团队排行默认收起。
-- 业绩页上半部分放业绩，下半部分放订单，每块都展示一部分摘要，更多信息再点进去。
+- Сè������С̬������Ϊ�����б��߶ȼ��������
+- �Ŵ�̬����ֻ������Ҫ��Ϣ��˵��С�ֲ���չʾ���������Ͱ�ť��ѹ��
+- ���/ɾ�����첻Ӧ���� `+` �Ա���Ϊ��Ƶ��ť�������󴥡�
+- Agent��־��Ҫ�����Ű棬������һ����ϵͳ�������֡�
+- ҵ��ҳĬ��չʾ����ҵ���ͱ������У�������/�Ŷ�����Ĭ������
+- ҵ��ҳ�ϰ벿�ַ�ҵ�����°벿�ַŶ�����ÿ�鶼չʾһ����ժҪ��������Ϣ�ٵ��ȥ��
 
-### 主要修改
+### ��Ҫ�޸�
 
-- 小猫聊天面板改为固定弹层高度和 flex 布局，保障输入区、快捷问题和附件预览始终可见。
-- 小猫全屏头部压缩高度，隐藏说明小字，标题不再换行竖排。
-- 小猫头部和侧边栏底部移除清空聊天按钮，仅保留新建、缩放、关闭和设置。
-- 等待回复文案改为“小猫正在思考...”。
-- Agent信息从 `wx.showModal` 改为自定义弹层，按版本信息、模型信息和更新日志排版。
-- 业绩页新增本人排行卡，其他员工/团队排行默认收起。
-- 业绩页新增订单概览区，拉取 `work/order_list` 展示本月订单、未定档、未结算、未收合计和最近订单。
+- Сè��������Ϊ�̶�����߶Ⱥ� flex ���֣��������������������͸���Ԥ��ʼ�տɼ���
+- Сèȫ��ͷ��ѹ���߶ȣ�����˵��С�֣����ⲻ�ٻ������š�
+- Сèͷ���Ͳ�����ײ��Ƴ�������찴ť���������½������š��رպ����á�
+- �ȴ��ظ��İ���Ϊ��Сè����˼��...����
+- Agent��Ϣ�� `wx.showModal` ��Ϊ�Զ��嵯�㣬���汾��Ϣ��ģ����Ϣ�͸�����־�Ű档
+- ҵ��ҳ�����������п�������Ա��/�Ŷ�����Ĭ������
+- ҵ��ҳ������������������ȡ `work/order_list` չʾ���¶�����δ������δ���㡢δ�պϼƺ����������
 
-### 涉及文件
+### �漰�ļ�
 
 - `miniprogram/cmpts/work_pet/work_pet.js`
 - `miniprogram/cmpts/work_pet/work_pet.wxml`
@@ -1502,55 +1724,55 @@
 - `CHANGELOG.md`
 - `docs/version-change-diary.md`
 
-### 验证结果
+### ��֤���
 
-- `node --check` 已检查 `work_pet.js`、`work_performance.js`、`version.js` 和 `setting.js`，通过。
-- JSON 解析已检查业绩页配置、`app.json` 和 `project.config.json`，通过。
-- `git diff --check` 已检查本次涉及文件，未发现空白或补丁格式问题。
+- `node --check` �Ѽ�� `work_pet.js`��`work_performance.js`��`version.js` �� `setting.js`��ͨ����
+- JSON �����Ѽ��ҵ��ҳ���á�`app.json` �� `project.config.json`��ͨ����
+- `git diff --check` �Ѽ�鱾���漰�ļ���δ���ֿհ׻򲹶���ʽ���⡣
 
-### 部署状态
+### ����״̬
 
-- 仅本地代码已修改。
-- 未执行微信开发者工具上传。
-- 未上传 `mcloud` 云函数。
+- �����ش������޸ġ�
+- δִ��΢�ſ����߹����ϴ���
+- δ�ϴ� `mcloud` �ƺ�����
 
 ## v1.62 - 2026-06-11 15:25:36 CST
 
-### 改动级别
+### �Ķ�����
 
-小改，v1.61 -> v1.62。
+С�ģ�v1.61 -> v1.62��
 
-### 本次目标
+### ����Ŀ��
 
-集中处理订单入口、店内知识、版本识别、AI录单、消息详情、附件预览、小猫助手、员工规则、访客隔离和 Hanako Agent 参考方案等问题。先落地可闭环的本地功能与安全修复，再把流式回复、联网搜索、Skill 化和完整知识权限体系记录为后续路线。
+���д���������ڡ�����֪ʶ���汾ʶ��AI¼������Ϣ���顢����Ԥ����Сè���֡�Ա�����򡢷ÿ͸���� Hanako Agent �ο����������⡣����ؿɱջ��ı��ع����밲ȫ�޸����ٰ���ʽ�ظ�������������Skill ��������֪ʶȨ����ϵ��¼Ϊ����·�ߡ�
 
-### 和 AI 讨论后的需求结论
+### �� AI ���ۺ���������
 
-- 访客不能看到任何真实档期、订单、小记、业绩、团队或工资数据；访客通过小猫新增的内容只能作为本机临时访客数据，不能同步到登录后的真实账号。
-- AI截图录单必须区分订单金额、定金、尾款、已收和未收，不能把“尾款未收”误认为“尾款已收”。
-- 多订单截图需要逐条去重和逐条新增，已登记订单应跳过，未登记订单应继续登记。
-- 消息中心应像微信消息一样能点开卡片看详情，并能跳转关联订单或反馈。
-- 订单附件需要可点击预览，新增附件应转为云文件，不应只停留在本地缓存。
-- 原底部“订单”入口改为“知识”，订单工作台迁入业绩页；知识内容后续按权限上传、读取和检索。
-- 小猫助手需要更像独立 Agent：有新建对话入口、版本信息、模型信息、受控工具动作和未来 Skill 化能力。
-- 员工身份和提成规则应支持管理员用一段话录入，由小猫先规整为结构化规则。
+- �ÿͲ��ܿ����κ���ʵ���ڡ�������С�ǡ�ҵ�����Ŷӻ������ݣ��ÿ�ͨ��Сè����������ֻ����Ϊ������ʱ�ÿ����ݣ�����ͬ������¼�����ʵ�˺š�
+- AI��ͼ¼���������ֶ���������β����պ�δ�գ����ܰѡ�β��δ�ա�����Ϊ��β�����ա���
+- �ඩ����ͼ��Ҫ����ȥ�غ������������ѵǼǶ���Ӧ������δ�ǼǶ���Ӧ�����Ǽǡ�
+- ��Ϣ����Ӧ��΢����Ϣһ���ܵ㿪��Ƭ�����飬������ת��������������
+- ����������Ҫ�ɵ��Ԥ������������ӦתΪ���ļ�����Ӧֻͣ���ڱ��ػ��档
+- ԭ�ײ�����������ڸ�Ϊ��֪ʶ������������̨Ǩ��ҵ��ҳ��֪ʶ���ݺ�����Ȩ���ϴ�����ȡ�ͼ�����
+- Сè������Ҫ������� Agent�����½��Ի���ڡ��汾��Ϣ��ģ����Ϣ���ܿع��߶�����δ�� Skill ��������
+- Ա�����ݺ���ɹ���Ӧ֧�ֹ���Ա��һ�λ�¼�룬��Сè�ȹ���Ϊ�ṹ������
 
-### 主要修改
+### ��Ҫ�޸�
 
-- 访客模式改为只返回空真实数据和本机临时访客订单；访客小猫新增档期只保存到本机临时缓存，并带过期清理。
-- AI录单提示词和执行层补齐已收字段、支付明细构造、重复订单判断和批量录单清单回复。
-- 日历、当天详情和员工可见订单数据补齐 `PAID_AMOUNT`、`UNPAID_AMOUNT` 展示逻辑。
-- 消息中心新增消息详情弹层、关联内容入口、卡片摘要和单条点击已读。
-- 订单审核通知增加订单摘要，便于用户知道是哪一单进入待结算。
-- 订单附件图片支持点击 `wx.previewImage` 放大查看，新增上传继续走云文件转换。
-- 底部 tabBar 第三项从“订单”改为“知识”，新增 `work_knowledge` 页面；业绩页新增订单工作台入口。
-- 版本更新页按运行时版本与环境标记当前版本、研发版本、待发布、版本预告和历史版本。
-- 小猫助手新增 Agent 版本日志、顶部新建对话、设置弹窗和 `join_order` 安全动作。
-- 订单非完整编辑权限用户点击订单时，可申请把自己加入参与人；Agent 也可通过 `join_order` 一句话加入。加入后会对已有有效收款补跑幂等提成生成，并给本人发送核实提醒；已结算订单不允许自助加入。
-- 员工管理新增自然语言输入框，可解析岗位、手机号、百分比/固定提成和不计提成规则。
-- 新增 `docs/hanako-agent-adaptation.md`，记录从 Hanako 参考到云屿小猫的可迁移能力与后续实施边界。
+- �ÿ�ģʽ��Ϊֻ���ؿ���ʵ���ݺͱ�����ʱ�ÿͶ������ÿ�Сè��������ֻ���浽������ʱ���棬��������������
+- AI¼����ʾ�ʺ�ִ�в㲹�������ֶΡ�֧����ϸ���졢�ظ������жϺ�����¼���嵥�ظ���
+- ���������������Ա���ɼ��������ݲ��� `PAID_AMOUNT`��`UNPAID_AMOUNT` չʾ�߼���
+- ��Ϣ����������Ϣ���鵯�㡢����������ڡ���ƬժҪ�͵�������Ѷ���
+- �������֪ͨ���Ӷ���ժҪ�������û�֪������һ����������㡣
+- ��������ͼƬ֧�ֵ�� `wx.previewImage` �Ŵ�鿴�������ϴ����������ļ�ת����
+- �ײ� tabBar ������ӡ���������Ϊ��֪ʶ�������� `work_knowledge` ҳ�棻ҵ��ҳ������������̨��ڡ�
+- �汾����ҳ������ʱ�汾�뻷����ǵ�ǰ�汾���з��汾�����������汾Ԥ�����ʷ�汾��
+- Сè�������� Agent �汾��־�������½��Ի������õ����� `join_order` ��ȫ������
+- �����������༭Ȩ���û��������ʱ����������Լ���������ˣ�Agent Ҳ��ͨ�� `join_order` һ�仰���롣�������������Ч�տ���ݵ�������ɣ��������˷��ͺ�ʵ���ѣ��ѽ��㶩���������������롣
+- Ա������������Ȼ��������򣬿ɽ�����λ���ֻ��š��ٷֱ�/�̶���ɺͲ�����ɹ���
+- ���� `docs/hanako-agent-adaptation.md`����¼�� Hanako �ο�������Сè�Ŀ�Ǩ�����������ʵʩ�߽硣
 
-### 涉及文件
+### �漰�ļ�
 
 - `miniprogram/helper/guest_helper.js`
 - `miniprogram/cmpts/work_pet/work_pet.js`
@@ -1589,50 +1811,50 @@
 - `CHANGELOG.md`
 - `docs/version-change-diary.md`
 
-### 验证结果
+### ��֤���
 
-- `node --check` 已检查访客隔离、小猫助手、日历、当天详情、消息、订单编辑、店内知识、业绩、版本、员工管理、AI服务、订单服务、通知服务、控制器、路由、版本配置 JS，全部通过。
-- JSON 解析已检查 `app.json`、店内知识页、版本页、消息页、日历、当天详情、订单编辑、业绩、员工管理和 `project.config.json`，通过；确认底部 `知识` tab 已注册。
-- `git diff --check` 已检查本次涉及的已跟踪文件，未发现空白或补丁格式问题。
-- 新增未跟踪文件已单独扫描尾随空格，未发现问题。
+- `node --check` �Ѽ��ÿ͸��롢Сè���֡��������������顢��Ϣ�������༭������֪ʶ��ҵ�����汾��Ա��������AI���񡢶�������֪ͨ���񡢿�������·�ɡ��汾���� JS��ȫ��ͨ����
+- JSON �����Ѽ�� `app.json`������֪ʶҳ���汾ҳ����Ϣҳ���������������顢�����༭��ҵ����Ա�������� `project.config.json`��ͨ����ȷ�ϵײ� `֪ʶ` tab ��ע�ᡣ
+- `git diff --check` �Ѽ�鱾���漰���Ѹ����ļ���δ���ֿհ׻򲹶���ʽ���⡣
+- ����δ�����ļ��ѵ���ɨ��β��ո�δ�������⡣
 
-### 部署状态
+### ����״̬
 
-- 仅本地代码已修改。
-- 未执行微信开发者工具上传。
-- 未上传 `mcloud` 云函数。
+- �����ش������޸ġ�
+- δִ��΢�ſ����߹����ϴ���
+- δ�ϴ� `mcloud` �ƺ�����
 
 ## v1.61 - 2026-06-11 09:50:02 CST
 
-### 改动级别
+### �Ķ�����
 
-小改，v1.60 -> v1.61。
+С�ģ�v1.60 -> v1.61��
 
-### 本次目标
+### ����Ŀ��
 
-优化小记、版本和消息体验：AI 操作记录单独分板块显示，普通小记自动规整成条理清晰的“小猫整理”格式；我的页新增版本更新入口；消息中心实现未读数量、未读提醒和一键已读。
+�Ż�С�ǡ��汾����Ϣ���飺AI ������¼�����ְ����ʾ����ͨС���Զ����������������ġ�Сè��������ʽ���ҵ�ҳ�����汾������ڣ���Ϣ����ʵ��δ��������δ�����Ѻ�һ���Ѷ���
 
-### 和 AI 讨论后的需求结论
+### �� AI ���ۺ���������
 
-- AI 操作流水不应混在“全部/团队/个人”普通小记里，应有单独“AI记录”板块。
-- 普通小记展示时应自动整理为清晰要点，但不改写原始小记正文，避免破坏历史内容。
-- 我的页需要能查看当前版本号和各版本更新内容。
-- 消息中心需要类似微信的未读数量提示，并支持一键全部已读。
+- AI ������ˮ��Ӧ���ڡ�ȫ��/�Ŷ�/���ˡ���ͨС���Ӧ�е�����AI��¼����顣
+- ��ͨС��չʾʱӦ�Զ�����Ϊ����Ҫ�㣬������дԭʼС�����ģ������ƻ���ʷ���ݡ�
+- �ҵ�ҳ��Ҫ�ܲ鿴��ǰ�汾�ź͸��汾�������ݡ�
+- ��Ϣ������Ҫ����΢�ŵ�δ��������ʾ����֧��һ��ȫ���Ѷ���
 
-### 主要修改
+### ��Ҫ�޸�
 
-- 小记页新增“AI记录”分栏。
-- 小记列表前端自动识别 `AI操作记录` 标题，普通分栏过滤 AI 记录，AI 分栏只看操作流水。
-- 普通小记卡片新增“小猫整理”要点展示，自动拆分原正文为清晰条目。
-- 后端 `work/note_list` 同步支持 AI 操作记录过滤，上传云函数后数据层也会分离。
-- 我的页“消息中心”入口新增未读数量角标。
-- 我的页新增“版本更新”入口和当前版本胶囊。
-- 新增 `work_version` 页面，读取 `version.js` 展示当前版本和历史更新内容。
-- 消息中心新增未读数量、未读红点、单条点击已读和一键已读按钮。
-- 后端新增 `work/message_summary` 和 `work/message_read_all` 路由。
-- 同步版本号到 v1.61，并在 `version.js` 写入版本历史列表。
+- С��ҳ������AI��¼��������
+- С���б�ǰ���Զ�ʶ�� `AI������¼` ���⣬��ͨ�������� AI ��¼��AI ����ֻ��������ˮ��
+- ��ͨС�ǿ�Ƭ������Сè������Ҫ��չʾ���Զ����ԭ����Ϊ������Ŀ��
+- ��� `work/note_list` ͬ��֧�� AI ������¼���ˣ��ϴ��ƺ��������ݲ�Ҳ����롣
+- �ҵ�ҳ����Ϣ���ġ��������δ�������Ǳꡣ
+- �ҵ�ҳ�������汾���¡���ں͵�ǰ�汾���ҡ�
+- ���� `work_version` ҳ�棬��ȡ `version.js` չʾ��ǰ�汾����ʷ�������ݡ�
+- ��Ϣ��������δ��������δ����㡢��������Ѷ���һ���Ѷ���ť��
+- ������� `work/message_summary` �� `work/message_read_all` ·�ɡ�
+- ͬ���汾�ŵ� v1.61������ `version.js` д��汾��ʷ�б���
 
-### 涉及文件
+### �漰�ļ�
 
 - `miniprogram/projects/B00/pages/work/note/work_note.js`
 - `miniprogram/projects/B00/pages/work/note/work_note.wxml`
@@ -1657,47 +1879,47 @@
 - `CHANGELOG.md`
 - `docs/version-change-diary.md`
 
-### 验证结果
+### ��֤���
 
-- `node --check` 已检查小记、消息、我的、版本页 JS，以及 `version.js`、`setting.js`、`work_service.js`、`work_controller.js`、`route.js`，通过。
-- JSON 解析已检查 `app.json`、`work_version.json`、`messages.json`、`note.json`、`project.config.json`，通过；确认版本页已注册到 `app.json`。
-- `git diff --check` 已检查本次涉及文件，未发现空白或补丁格式问题。
-- 微信开发者工具已触发热重载；云函数未上传前，新增后端路由需部署 `mcloud` 后在云端生效。
+- `node --check` �Ѽ��С�ǡ���Ϣ���ҵġ��汾ҳ JS���Լ� `version.js`��`setting.js`��`work_service.js`��`work_controller.js`��`route.js`��ͨ����
+- JSON �����Ѽ�� `app.json`��`work_version.json`��`messages.json`��`note.json`��`project.config.json`��ͨ����ȷ�ϰ汾ҳ��ע�ᵽ `app.json`��
+- `git diff --check` �Ѽ�鱾���漰�ļ���δ���ֿհ׻򲹶���ʽ���⡣
+- ΢�ſ����߹����Ѵ��������أ��ƺ���δ�ϴ�ǰ���������·���貿�� `mcloud` �����ƶ���Ч��
 
-### 部署状态
+### ����״̬
 
-- 仅本地代码已修改。
-- 未执行微信开发者工具上传。
-- 未上传 `mcloud` 云函数。
+- �����ش������޸ġ�
+- δִ��΢�ſ����߹����ϴ���
+- δ�ϴ� `mcloud` �ƺ�����
 
 ## v1.60 - 2026-06-11 09:38:22 CST
 
-### 改动级别
+### �Ķ�����
 
-小改，v1.59 -> v1.60。
+С�ģ�v1.59 -> v1.60��
 
-### 本次目标
+### ����Ŀ��
 
-修复小猫全屏侧栏展开后的收起交互，并调整业绩页排行展示方式：默认收起排行，用户点击展开后再查看；其他员工条目不再出现“仅排名/仅展示排名”文案。
+�޸�Сèȫ������չ��������𽻻���������ҵ��ҳ����չʾ��ʽ��Ĭ���������У��û����չ�����ٲ鿴������Ա����Ŀ���ٳ��֡�������/��չʾ�������İ���
 
-### 和 AI 讨论后的需求结论
+### �� AI ���ۺ���������
 
-- 小猫全屏侧栏展开时，右侧空白应作为收起热区，点击后只收起侧栏，不关闭整个对话。
-- 业绩排行默认应折叠，避免一进页面就露出完整排行。
-- 员工/团队切换只需要在展开状态展示。
-- 对于无金额权限的其他员工，保留姓名和名次即可，不需要额外写“仅排名”。
+- Сèȫ������չ��ʱ���Ҳ�հ�Ӧ��Ϊ���������������ֻ������������ر������Ի���
+- ҵ������Ĭ��Ӧ�۵�������һ��ҳ���¶���������С�
+- Ա��/�Ŷ��л�ֻ��Ҫ��չ��״̬չʾ��
+- �����޽��Ȩ�޵�����Ա�����������������μ��ɣ�����Ҫ����д������������
 
-### 主要修改
+### ��Ҫ�޸�
 
-- 小猫聊天体内新增 `chat-sidebar-scrim`，全屏侧栏展开时覆盖右侧空白区域。
-- 新增 `bindHideSidebar`，点击右侧空白时收起侧栏。
-- 业绩页新增 `rankExpanded` 状态，默认 `false`。
-- 业绩排行头部新增“展开/收起”按钮，展开后才渲染排行列表和员工/团队切换。
-- 切换月份后排行恢复折叠状态。
-- 删除非本人排行条目的“仅展示排名”和“仅排名”展示。
-- 同步版本号到 v1.60。
+- Сè������������ `chat-sidebar-scrim`��ȫ������չ��ʱ�����Ҳ�հ�����
+- ���� `bindHideSidebar`������Ҳ�հ�ʱ���������
+- ҵ��ҳ���� `rankExpanded` ״̬��Ĭ�� `false`��
+- ҵ������ͷ��������չ��/���𡱰�ť��չ�������Ⱦ�����б���Ա��/�Ŷ��л���
+- �л��·ݺ����лָ��۵�״̬��
+- ɾ���Ǳ���������Ŀ�ġ���չʾ�������͡���������չʾ��
+- ͬ���汾�ŵ� v1.60��
 
-### 涉及文件
+### �漰�ļ�
 
 - `miniprogram/cmpts/work_pet/work_pet.js`
 - `miniprogram/cmpts/work_pet/work_pet.wxml`
@@ -1711,49 +1933,49 @@
 - `CHANGELOG.md`
 - `docs/version-change-diary.md`
 
-### 验证结果
+### ��֤���
 
-- `node --check` 已检查 `work_pet.js` 和 `work_performance.js`，通过。
-- `node --check` 已检查 `setting.js` 和 `version.js`，通过。
-- `app.json`、`project.config.json` JSON 解析通过。
-- 本次涉及文件 `git diff --check` 通过。
-- `miniprogram/projects/B00/pages/work/performance` 内已无“仅排名/仅展示排名”展示文案。
+- `node --check` �Ѽ�� `work_pet.js` �� `work_performance.js`��ͨ����
+- `node --check` �Ѽ�� `setting.js` �� `version.js`��ͨ����
+- `app.json`��`project.config.json` JSON ����ͨ����
+- �����漰�ļ� `git diff --check` ͨ����
+- `miniprogram/projects/B00/pages/work/performance` �����ޡ�������/��չʾ������չʾ�İ���
 
-### 部署状态
+### ����״̬
 
-- 仅本地代码已修改。
-- 未执行微信开发者工具上传。
-- 未上传 `mcloud` 云函数。
+- �����ش������޸ġ�
+- δִ��΢�ſ����߹����ϴ���
+- δ�ϴ� `mcloud` �ƺ�����
 
 ## v1.59 - 2026-06-11 09:27:41 CST
 
-### 改动级别
+### �Ķ�����
 
-小改，v1.58 -> v1.59。
+С�ģ�v1.58 -> v1.59��
 
-### 本次目标
+### ����Ŀ��
 
-修复小猫 AI 放大聊天的交互问题，并提升截图录单的批量识别能力：放大态默认不显示侧边栏，聊天内容可以上下滚动，上传多张截图或一张图内有多个订单时不再只记录一条。
+�޸�Сè AI �Ŵ�����Ľ������⣬��������ͼ¼��������ʶ���������Ŵ�̬Ĭ�ϲ���ʾ��������������ݿ������¹������ϴ����Ž�ͼ��һ��ͼ���ж������ʱ����ֻ��¼һ����
 
-### 和 AI 讨论后的需求结论
+### �� AI ���ۺ���������
 
-- 放大聊天时侧边栏应默认隐藏，用户需要时再手动展开。
-- 放大聊天内容区必须支持上下翻页，不能被遮罩层或 flex 高度限制卡住。
-- 截图识别不能假设一张图只有一个订单；多张图、多张订单卡片都应逐条提取。
-- 后端不能只依赖提示词，应新增批量动作协议和执行层兜底。
+- �Ŵ�����ʱ�����ӦĬ�����أ��û���Ҫʱ���ֶ�չ����
+- �Ŵ���������������֧�����·�ҳ�����ܱ����ֲ�� flex �߶����ƿ�ס��
+- ��ͼʶ���ܼ���һ��ͼֻ��һ������������ͼ�����Ŷ�����Ƭ��Ӧ������ȡ��
+- ��˲���ֻ������ʾ�ʣ�Ӧ������������Э���ִ�в㶵�ס�
 
-### 主要修改
+### ��Ҫ�޸�
 
-- 进入放大聊天时强制默认收起侧边栏，关闭或重新打开聊天恢复普通态。
-- 聊天 `scroll-view` 开启 flex 支持，父级补齐 `height:0`、`flex:1`、`overflow:hidden`，避免全屏态不可滚动。
-- 遮罩层不再截获所有 `touchmove`，避免影响内部聊天列表滚动。
-- 截图录单快捷提示改为逐张识别并记录所有可确认订单。
-- 后端 AI 动作协议新增 `create_orders`，支持一次新增多条订单档期。
-- 后端兼容 `create_order.data.orders`，即使模型返回多订单数组但动作名仍是单条，也会按批量处理。
-- 批量新增订单会返回已新增清单；识别到但缺少日期或客户名称的条目会单独说明。
-- 同步版本号到 v1.59。
+- ����Ŵ�����ʱǿ��Ĭ�������������رջ����´�����ָ���̬ͨ��
+- ���� `scroll-view` ���� flex ֧�֣��������� `height:0`��`flex:1`��`overflow:hidden`������ȫ��̬���ɹ�����
+- ���ֲ㲻�ٽػ����� `touchmove`������Ӱ���ڲ������б�������
+- ��ͼ¼�������ʾ��Ϊ����ʶ�𲢼�¼���п�ȷ�϶�����
+- ��� AI ����Э������ `create_orders`��֧��һ�����������������ڡ�
+- ��˼��� `create_order.data.orders`����ʹģ�ͷ��ضඩ�����鵫���������ǵ�����Ҳ�ᰴ����������
+- �������������᷵���������嵥��ʶ�𵽵�ȱ�����ڻ�ͻ����Ƶ���Ŀ�ᵥ��˵����
+- ͬ���汾�ŵ� v1.59��
 
-### 涉及文件
+### �漰�ļ�
 
 - `miniprogram/cmpts/work_pet/work_pet.js`
 - `miniprogram/cmpts/work_pet/work_pet.wxml`
@@ -1765,46 +1987,46 @@
 - `CHANGELOG.md`
 - `docs/version-change-diary.md`
 
-### 验证结果
+### ��֤���
 
-- `node --check` 已检查 `work_ai_service.js` 和 `work_pet.js`，通过。
-- `node --check` 已检查 `setting.js` 和 `version.js`，通过。
-- `app.json`、`project.config.json` JSON 解析通过。
-- 本次涉及的已跟踪文件 `git diff --check` 通过；新增未跟踪文件已单独做 JS 语法检查。
+- `node --check` �Ѽ�� `work_ai_service.js` �� `work_pet.js`��ͨ����
+- `node --check` �Ѽ�� `setting.js` �� `version.js`��ͨ����
+- `app.json`��`project.config.json` JSON ����ͨ����
+- �����漰���Ѹ����ļ� `git diff --check` ͨ��������δ�����ļ��ѵ����� JS �﷨��顣
 
-### 部署状态
+### ����״̬
 
-- 仅本地代码已修改。
-- 未执行微信开发者工具上传。
-- 未上传 `mcloud` 云函数。
+- �����ش������޸ġ�
+- δִ��΢�ſ����߹����ϴ���
+- δ�ϴ� `mcloud` �ƺ�����
 
 ## v1.58 - 2026-06-11 20:10:00 CST
 
-### 改动级别
+### �Ķ�����
 
-小改，v1.57 -> v1.58。
+С�ģ�v1.57 -> v1.58��
 
-### 本次目标
+### ����Ŀ��
 
-参考豆包移动端侧边栏样式，优化小猫 AI 全屏聊天的会话侧边栏，并把放大/缩小等文字操作改为简约图标按钮。
+�ο������ƶ��˲������ʽ���Ż�Сè AI ȫ������ĻỰ����������ѷŴ�/��С�����ֲ�����Ϊ��Լͼ�갴ť��
 
-### 和 AI 讨论后的需求结论
+### �� AI ���ۺ���������
 
-- 侧边栏应更像左侧抽屉，而不是窄列表。
-- 侧边栏需要有搜索占位、功能入口、会话列表和底部工具栏。
-- 会话项应更像聊天应用列表：圆形标识、标题、上下文信息、轻量删除入口。
-- 全屏聊天顶部的“放大/缩小/关闭”等不应使用文字按钮，应改成简约图标。
+- �����Ӧ���������룬������խ�б���
+- �������Ҫ������ռλ��������ڡ��Ự�б��͵ײ���������
+- �Ự��Ӧ��������Ӧ���б���Բ�α�ʶ�����⡢��������Ϣ������ɾ����ڡ�
+- ȫ�����춥���ġ��Ŵ�/��С/�رա��Ȳ�Ӧʹ�����ְ�ť��Ӧ�ĳɼ�Լͼ�ꡣ
 
-### 主要修改
+### ��Ҫ�޸�
 
-- 全屏聊天头部新增菜单图标。
-- 放大/缩小、清空、关闭改为圆形图标按钮。
-- 侧边栏宽度和视觉层级调整为抽屉式。
-- 侧边栏新增搜索占位、云屿小猫卡片、快捷入口、会话列表和底部工具栏。
-- 会话项新增彩色圆点和选中态。
-- 同步版本号到 v1.58。
+- ȫ������ͷ�������˵�ͼ�ꡣ
+- �Ŵ�/��С����ա��رո�ΪԲ��ͼ�갴ť��
+- ��������Ⱥ��Ӿ��㼶����Ϊ����ʽ��
+- �������������ռλ������Сè��Ƭ�������ڡ��Ự�б��͵ײ���������
+- �Ự��������ɫԲ���ѡ��̬��
+- ͬ���汾�ŵ� v1.58��
 
-### 涉及文件
+### �漰�ļ�
 
 - `miniprogram/cmpts/work_pet/work_pet.wxml`
 - `miniprogram/cmpts/work_pet/work_pet.wxss`
@@ -1814,44 +2036,44 @@
 - `CHANGELOG.md`
 - `docs/version-change-diary.md`
 
-### 验证结果
+### ��֤���
 
-- `node --check` 已检查小猫组件和版本文件，均通过。
-- `app.json` JSON 解析通过。
-- 本次涉及文件 `git diff --check` 通过。
+- `node --check` �Ѽ��Сè����Ͱ汾�ļ�����ͨ����
+- `app.json` JSON ����ͨ����
+- �����漰�ļ� `git diff --check` ͨ����
 
-### 部署状态
+### ����״̬
 
-- 仅本地代码已修改。
-- 未执行微信开发者工具上传。
+- �����ش������޸ġ�
+- δִ��΢�ſ����߹����ϴ���
 
 ## v1.57 - 2026-06-10 21:24:00 CST
 
-### 改动级别
+### �Ķ�����
 
-小改，v1.56 -> v1.57。
+С�ģ�v1.56 -> v1.57��
 
-### 本次目标
+### ����Ŀ��
 
-让版本更新通告排版更清晰，改动内容按 `1. 2. 3.` 分行展示，避免系统弹窗一整段文字难读。
+�ð汾����ͨ���Ű���������Ķ����ݰ� `1. 2. 3.` ����չʾ������ϵͳ����һ���������Ѷ���
 
-### 和 AI 讨论后的需求结论
+### �� AI ���ۺ���������
 
-- 系统 `wx.showModal` 的内容排版能力有限，不适合展示多条更新说明。
-- 更新通告应改为自定义弹窗。
-- 内容应分为标题、版本名称、编号清单、更新时间和按钮区。
-- “关闭”只关闭本次；“不再提醒”仍记录当前版本。
-- 由于小程序没有全局 `app.wxml`，由页面内的小猫组件托管更新通告弹窗。
+- ϵͳ `wx.showModal` �������Ű��������ޣ����ʺ�չʾ��������˵����
+- ����ͨ��Ӧ��Ϊ�Զ��嵯����
+- ����Ӧ��Ϊ���⡢�汾���ơ�����嵥������ʱ��Ͱ�ť����
+- ���رա�ֻ�رձ��Σ����������ѡ��Լ�¼��ǰ�汾��
+- ����С����û��ȫ�� `app.wxml`����ҳ���ڵ�Сè����йܸ���ͨ�浯����
 
-### 主要修改
+### ��Ҫ�޸�
 
-- `app.js` 不再直接使用 `wx.showModal` 展示更新通告。
-- `app.js` 启动后查找当前页面 `#workPet` 组件并传入版本通告数据。
-- 小猫组件新增版本通告弹窗状态、关闭和不再提醒事件。
-- 小猫组件新增清单式更新通告 WXML/WXSS。
-- 同步版本号到 v1.57。
+- `app.js` ����ֱ��ʹ�� `wx.showModal` չʾ����ͨ�档
+- `app.js` ��������ҵ�ǰҳ�� `#workPet` ���������汾ͨ�����ݡ�
+- Сè��������汾ͨ�浯��״̬���رպͲ��������¼���
+- Сè��������嵥ʽ����ͨ�� WXML/WXSS��
+- ͬ���汾�ŵ� v1.57��
 
-### 涉及文件
+### �漰�ļ�
 
 - `miniprogram/app.js`
 - `miniprogram/cmpts/work_pet/work_pet.js`
@@ -1863,45 +2085,45 @@
 - `CHANGELOG.md`
 - `docs/version-change-diary.md`
 
-### 验证结果
+### ��֤���
 
-- `node --check` 已检查 `app.js`、小猫组件和版本文件，均通过。
-- `app.json` JSON 解析通过。
-- 本次涉及文件 `git diff --check` 通过。
+- `node --check` �Ѽ�� `app.js`��Сè����Ͱ汾�ļ�����ͨ����
+- `app.json` JSON ����ͨ����
+- �����漰�ļ� `git diff --check` ͨ����
 
-### 部署状态
+### ����״̬
 
-- 仅本地代码已修改。
-- 未执行微信开发者工具上传。
+- �����ش������޸ġ�
+- δִ��΢�ſ����߹����ϴ���
 
 ## v1.56 - 2026-06-10 21:16:00 CST
 
-### 改动级别
+### �Ķ�����
 
-小改，v1.55 -> v1.56。
+С�ģ�v1.55 -> v1.56��
 
-### 本次目标
+### ����Ŀ��
 
-解决小猫 AI 聊天中用户发送图片后只能看到“已附加1张图片”，无法回看图片内容的问题。
+���Сè AI �������û�����ͼƬ��ֻ�ܿ������Ѹ���1��ͼƬ�����޷��ؿ�ͼƬ���ݵ����⡣
 
-### 和 AI 讨论后的需求结论
+### �� AI ���ۺ���������
 
-- 图片仍然上传到云存储，继续用于 AI 多模态识别和订单附件。
-- 聊天窗口展示不依赖再次请求云端图片，优先使用小程序本地缓存路径。
-- 用户发送后的消息气泡应显示图片缩略图。
-- 点击缩略图应可打开图片预览。
-- 待发送附件栏也应显示缩略图，方便发送前确认。
+- ͼƬ��Ȼ�ϴ����ƴ洢���������� AI ��ģ̬ʶ��Ͷ���������
+- ���촰��չʾ�������ٴ������ƶ�ͼƬ������ʹ��С���򱾵ػ���·����
+- �û����ͺ����Ϣ����Ӧ��ʾͼƬ����ͼ��
+- �������ͼӦ�ɴ�ͼƬԤ����
+- �����͸�����ҲӦ��ʾ����ͼ�����㷢��ǰȷ�ϡ�
 
-### 主要修改
+### ��Ҫ�޸�
 
-- 小猫组件新增图片本地缓存目录处理。
-- 图片上传时同时复制到本地文件缓存。
-- 聊天消息新增 `images` 字段，保存本地预览路径、文件名和 fileID。
-- 聊天气泡支持图片缩略图展示和点击预览。
-- 待发送附件栏支持图片小缩略图。
-- 同步版本号到 v1.56。
+- Сè�������ͼƬ���ػ���Ŀ¼������
+- ͼƬ�ϴ�ʱͬʱ���Ƶ������ļ����档
+- ������Ϣ���� `images` �ֶΣ����汾��Ԥ��·�����ļ����� fileID��
+- ��������֧��ͼƬ����ͼչʾ�͵��Ԥ����
+- �����͸�����֧��ͼƬС����ͼ��
+- ͬ���汾�ŵ� v1.56��
 
-### 涉及文件
+### �漰�ļ�
 
 - `miniprogram/cmpts/work_pet/work_pet.js`
 - `miniprogram/cmpts/work_pet/work_pet.wxml`
@@ -1912,46 +2134,46 @@
 - `CHANGELOG.md`
 - `docs/version-change-diary.md`
 
-### 验证结果
+### ��֤���
 
-- `node --check` 已检查小猫组件和版本文件，均通过。
-- `app.json` JSON 解析通过。
-- 本次涉及文件 `git diff --check` 通过。
+- `node --check` �Ѽ��Сè����Ͱ汾�ļ�����ͨ����
+- `app.json` JSON ����ͨ����
+- �����漰�ļ� `git diff --check` ͨ����
 
-### 部署状态
+### ����״̬
 
-- 仅本地代码已修改。
-- 未执行微信开发者工具上传。
-- 未上传云函数。
+- �����ش������޸ġ�
+- δִ��΢�ſ����߹����ϴ���
+- δ�ϴ��ƺ�����
 
 ## v1.55 - 2026-06-10 21:06:00 CST
 
-### 改动级别
+### �Ķ�����
 
-小改，v1.54 -> v1.55。
+С�ģ�v1.54 -> v1.55��
 
-### 本次目标
+### ����Ŀ��
 
-参考 GitHub 上 Hanako 类人格化 agent 的设计思路，结合本地知识库和当前小程序实际功能，让云屿小猫更像贴合摄影工作室业务的 agent，而不是普通聊天框。
+�ο� GitHub �� Hanako ���˸� agent �����˼·����ϱ���֪ʶ��͵�ǰС����ʵ�ʹ��ܣ�������Сè����������Ӱ������ҵ��� agent����������ͨ�����
 
-### 和 AI 讨论后的需求结论
+### �� AI ���ۺ���������
 
-- 小猫应具备可配置性格，而不是只有固定语气。
-- 小猫应知道本小程序的真实功能边界：档期、订单、事项、休息、小记、消息、反馈、业绩、工资、管理中心、收款、提成、审核、AI 配置。
-- 小猫应结合云屿知识库提炼出的项目定位：这是摄影工作室档期、订单、员工业绩提成与工资结算小程序，云屿摄影是案例配置和真实业务样本。
-- 小猫可以继续直接写入低风险业务数据，但所有写入都要保留团队小记审查流水。
-- 高风险动作仍不允许由 AI 直接执行，包括删除、作废、收款、退款、发工资、改提成、审核通过、批量修改。
+- СèӦ�߱��������Ը񣬶�����ֻ�й̶�������
+- СèӦ֪����С�������ʵ���ܱ߽磺���ڡ������������Ϣ��С�ǡ���Ϣ��������ҵ�������ʡ��������ġ��տ��ɡ���ˡ�AI ���á�
+- СèӦ�������֪ʶ������������Ŀ��λ��������Ӱ�����ҵ��ڡ�������Ա��ҵ������빤�ʽ���С����������Ӱ�ǰ������ú���ʵҵ��������
+- Сè���Լ���ֱ��д��ͷ���ҵ�����ݣ�������д�붼Ҫ�����Ŷ�С�������ˮ��
+- �߷��ն����Բ������� AI ֱ��ִ�У�����ɾ�������ϡ��տ�˿�����ʡ�����ɡ����ͨ���������޸ġ�
 
-### 主要修改
+### ��Ҫ�޸�
 
-- AI 配置页新增“小猫性格”选择。
-- 后端新增 4 种性格模板：值班小猫、温柔小猫、审查小猫、成交小猫。
-- 后端 agent 系统提示词注入性格、本地知识库摘要和小程序实际功能清单。
-- AI 工具动作新增 `create_rest`，支持新增休息/请假申请。
-- AI 新增休息/请假申请后自动写入团队小记审查流水。
-- 小猫默认开场白与快捷问题改为更贴合实际工作台。
+- AI ����ҳ������Сè�Ը�ѡ��
+- ������� 4 ���Ը�ģ�壺ֵ��Сè������Сè�����Сè���ɽ�Сè��
+- ��� agent ϵͳ��ʾ��ע���Ը񡢱���֪ʶ��ժҪ��С����ʵ�ʹ����嵥��
+- AI ���߶������� `create_rest`��֧��������Ϣ/������롣
+- AI ������Ϣ/���������Զ�д���Ŷ�С�������ˮ��
+- СèĬ�Ͽ��������������Ϊ������ʵ�ʹ���̨��
 
-### 涉及文件
+### �漰�ļ�
 
 - `cloudfunctions/mcloud/project/B00/service/work_ai_service.js`
 - `miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.js`
@@ -1964,47 +2186,47 @@
 - `CHANGELOG.md`
 - `docs/version-change-diary.md`
 
-### 验证结果
+### ��֤���
 
-- `node --check` 已检查 AI 服务、AI 配置页、小猫组件和版本文件，均通过。
-- `app.json` JSON 解析通过。
-- 本次涉及文件 `git diff --check` 通过。
+- `node --check` �Ѽ�� AI ����AI ����ҳ��Сè����Ͱ汾�ļ�����ͨ����
+- `app.json` JSON ����ͨ����
+- �����漰�ļ� `git diff --check` ͨ����
 
-### 部署状态
+### ����״̬
 
-- 仅本地代码已修改。
-- 未执行微信开发者工具上传。
-- 未上传云函数。
+- �����ش������޸ġ�
+- δִ��΢�ſ����߹����ϴ���
+- δ�ϴ��ƺ�����
 
 ## v1.54 - 2026-06-10 20:50:00 CST
 
-### 改动级别
+### �Ķ�����
 
-小改，v1.53 -> v1.54。
+С�ģ�v1.53 -> v1.54��
 
-### 本次目标
+### ����Ŀ��
 
-让 AI 小猫聊天窗口可以放大为整屏聊天工作台，支持像 Codex 一样管理多个对话，并显示当前对话的上下文占用。
+�� AI Сè���촰�ڿ��ԷŴ�Ϊ�������칤��̨��֧���� Codex һ����������Ի�������ʾ��ǰ�Ի���������ռ�á�
 
-### 和 AI 讨论后的需求结论
+### �� AI ���ۺ���������
 
-- 普通聊天窗口保留，增加“放大”入口。
-- 放大后应铺满当前小程序界面，便于长对话和识图录单。
-- 左侧增加会话侧边栏，可新建、切换、删除对话。
-- 删除对话只删除本机聊天记录，不影响订单、档期和小记。
-- 上下文圈显示当前会话估算 token 占用；模型上下文窗口优先按服务端返回，缺省按模型名估算。
-- 本次仍只做本地代码实现，不上传、不部署。
+- ��ͨ���촰�ڱ��������ӡ��Ŵ���ڡ�
+- �Ŵ��Ӧ������ǰС������棬���ڳ��Ի���ʶͼ¼����
+- ������ӻỰ����������½����л���ɾ���Ի���
+- ɾ���Ի�ֻɾ�����������¼����Ӱ�충�������ں�С�ǡ�
+- ������Ȧ��ʾ��ǰ�Ự���� token ռ�ã�ģ�������Ĵ������Ȱ�����˷��أ�ȱʡ��ģ�������㡣
+- ������ֻ�����ش���ʵ�֣����ϴ���������
 
-### 主要修改
+### ��Ҫ�޸�
 
-- 小猫组件新增全屏模式、会话侧边栏和本地多会话缓存。
-- 旧单会话缓存自动迁移为第一个会话。
-- 聊天头部新增上下文占用圈。
-- `work_ai_service` 返回模型名、usage 和预估上下文窗口。
-- AI 配置页显示当前模型预估上下文窗口。
-- 同步版本号到 v1.54。
+- Сè�������ȫ��ģʽ���Ự������ͱ��ض�Ự���档
+- �ɵ��Ự�����Զ�Ǩ��Ϊ��һ���Ự��
+- ����ͷ������������ռ��Ȧ��
+- `work_ai_service` ����ģ������usage ��Ԥ�������Ĵ��ڡ�
+- AI ����ҳ��ʾ��ǰģ��Ԥ�������Ĵ��ڡ�
+- ͬ���汾�ŵ� v1.54��
 
-### 涉及文件
+### �漰�ļ�
 
 - `miniprogram/cmpts/work_pet/work_pet.js`
 - `miniprogram/cmpts/work_pet/work_pet.wxml`
@@ -2018,43 +2240,43 @@
 - `CHANGELOG.md`
 - `docs/version-change-diary.md`
 
-### 验证结果
+### ��֤���
 
-- `node --check` 已检查小猫组件、AI 服务、AI 配置页、版本文件，均通过。
-- `app.json` JSON 解析通过。
-- 本次涉及文件 `git diff --check` 通过。
+- `node --check` �Ѽ��Сè�����AI ����AI ����ҳ���汾�ļ�����ͨ����
+- `app.json` JSON ����ͨ����
+- �����漰�ļ� `git diff --check` ͨ����
 
-### 部署状态
+### ����״̬
 
-- 仅本地代码已修改。
-- 未执行微信开发者工具上传。
-- 未上传云函数。
+- �����ش������޸ġ�
+- δִ��΢�ſ����߹����ϴ���
+- δ�ϴ��ƺ�����
 
 ## v1.53 - 2026-06-10 20:36:00 CST
 
-### 改动级别
+### �Ķ�����
 
-小改，v1.52 -> v1.53。
+С�ģ�v1.52 -> v1.53��
 
-### 本次目标
+### ����Ŀ��
 
-每次小程序版本更新后，用户打开小程序时应看到更新通告弹窗，并可选择关闭或不再提醒。
+ÿ��С����汾���º��û���С����ʱӦ��������ͨ�浯��������ѡ��رջ������ѡ�
 
-### 和 AI 讨论后的需求结论
+### �� AI ���ۺ���������
 
-- 更新通告应在小程序启动时统一触发。
-- 使用当前版本号作为提醒判断依据。
-- “关闭”只关闭本次；“不再提醒”记录当前版本，后续同版本不再弹。
-- 下次版本号变化后自动重新弹出。
+- ����ͨ��Ӧ��С��������ʱͳһ������
+- ʹ�õ�ǰ�汾����Ϊ�����ж����ݡ�
+- ���رա�ֻ�رձ��Σ����������ѡ���¼��ǰ�汾������ͬ�汾���ٵ���
+- �´ΰ汾�ű仯���Զ����µ�����
 
-### 主要修改
+### ��Ҫ�޸�
 
-- `app.js` 引入 `version.js`。
-- 新增 `showVersionNotice`，读取当前版本、名称、摘要和日期。
-- 使用本地缓存 `YUNYU_VERSION_NOTICE_CLOSED` 记录已关闭提醒的版本号。
-- 同步版本号到 v1.53。
+- `app.js` ���� `version.js`��
+- ���� `showVersionNotice`����ȡ��ǰ�汾�����ơ�ժҪ�����ڡ�
+- ʹ�ñ��ػ��� `YUNYU_VERSION_NOTICE_CLOSED` ��¼�ѹر����ѵİ汾�š�
+- ͬ���汾�ŵ� v1.53��
 
-### 涉及文件
+### �漰�ļ�
 
 - `miniprogram/app.js`
 - `miniprogram/setting/setting.js`
@@ -2063,49 +2285,49 @@
 - `CHANGELOG.md`
 - `docs/version-change-diary.md`
 
-### 验证结果
+### ��֤���
 
-- `node --check` 已检查 `app.js`、`setting.js`、`version.js`，通过。
-- `app.json` JSON 解析通过。
-- 本次涉及文件 `git diff --check` 通过。
+- `node --check` �Ѽ�� `app.js`��`setting.js`��`version.js`��ͨ����
+- `app.json` JSON ����ͨ����
+- �����漰�ļ� `git diff --check` ͨ����
 
-### 部署状态
+### ����״̬
 
-- 仅本地代码已修改。
-- 未执行微信开发者工具上传。
+- �����ش������޸ġ�
+- δִ��΢�ſ����߹����ϴ���
 
 ## v1.52 - 2026-06-10 20:22:00 CST
 
-### 改动级别
+### �Ķ�����
 
-小改，v1.51 -> v1.52。
+С�ģ�v1.51 -> v1.52��
 
-### 本次目标
+### ����Ŀ��
 
-实现 AI 小猫聊天框的图片入口和多模态识别链路：用户可直接上传截图，让 AI 识别截图里的档期/订单信息并记录，同时将截图保存为订单附件。
+ʵ�� AI Сè������ͼƬ��ںͶ�ģ̬ʶ����·���û���ֱ���ϴ���ͼ���� AI ʶ���ͼ��ĵ���/������Ϣ����¼��ͬʱ����ͼ����Ϊ����������
 
-### 和 AI 讨论后的需求结论
+### �� AI ���ۺ���������
 
-- 用户反馈 AI 仍回答“无法识别图片”，并且聊天窗口没有添加文件或图片入口。
-- 输入框左侧应增加 `+`，支持添加图片或文件。
-- 当前第一版聚焦图片和聊天图片文件；普通非图片文件暂不进入识别链路。
-- 使用 Agnes APIHub 的多模态模型时，后端应按 OpenAI Chat Completions 的 `image_url` 格式传图。
-- 若 AI 根据截图新增订单，原截图应写入 `ORDER_ATTACHMENTS`。
-- 本次仍只做本地实现，不上传。
+- �û����� AI �Իش��޷�ʶ��ͼƬ�����������촰��û�������ļ���ͼƬ��ڡ�
+- ��������Ӧ���� `+`��֧������ͼƬ���ļ���
+- ��ǰ��һ��۽�ͼƬ������ͼƬ�ļ�����ͨ��ͼƬ�ļ��ݲ�����ʶ����·��
+- ʹ�� Agnes APIHub �Ķ�ģ̬ģ��ʱ�����Ӧ�� OpenAI Chat Completions �� `image_url` ��ʽ��ͼ��
+- �� AI ���ݽ�ͼ����������ԭ��ͼӦд�� `ORDER_ATTACHMENTS`��
+- ������ֻ������ʵ�֣����ϴ���
 
-### 主要修改
+### ��Ҫ�޸�
 
-- 小猫组件新增 `chatAttachments` 和 `uploadingAttachment` 状态。
-- 聊天输入框新增 `+` 按钮。
-- 新增选择图片、选择聊天图片文件、上传云存储、移除附件等前端逻辑。
-- `work/ai_chat` 控制器接收 `attachments` 参数。
-- `WorkAiService.chat` 支持图片附件。
-- 后端使用 `cloudUtil.getTempFileURLOne` 将 fileID 换成临时 URL。
-- 多模态请求中将最后一条用户消息改为 `[{type:'text'}, {type:'image_url'}]`。
-- AI 新增订单时，将附件 fileID 写入订单 `ORDER_ATTACHMENTS`。
-- 同步版本号到 v1.52。
+- Сè������� `chatAttachments` �� `uploadingAttachment` ״̬��
+- ������������� `+` ��ť��
+- ����ѡ��ͼƬ��ѡ������ͼƬ�ļ����ϴ��ƴ洢���Ƴ�������ǰ���߼���
+- `work/ai_chat` ���������� `attachments` ������
+- `WorkAiService.chat` ֧��ͼƬ������
+- ���ʹ�� `cloudUtil.getTempFileURLOne` �� fileID ������ʱ URL��
+- ��ģ̬�����н����һ���û���Ϣ��Ϊ `[{type:'text'}, {type:'image_url'}]`��
+- AI ��������ʱ�������� fileID д�붩�� `ORDER_ATTACHMENTS`��
+- ͬ���汾�ŵ� v1.52��
 
-### 涉及文件
+### �漰�ļ�
 
 - `cloudfunctions/mcloud/project/B00/controller/work_controller.js`
 - `cloudfunctions/mcloud/project/B00/service/work_ai_service.js`
@@ -2118,47 +2340,47 @@
 - `CHANGELOG.md`
 - `docs/version-change-diary.md`
 
-### 验证结果
+### ��֤���
 
-- `node --check` 已检查相关 JS 文件，通过。
-- `app.json` JSON 解析通过。
-- 页面完整性检查通过。
-- 本次涉及文件 `git diff --check` 通过。
+- `node --check` �Ѽ����� JS �ļ���ͨ����
+- `app.json` JSON ����ͨ����
+- ҳ�������Լ��ͨ����
+- �����漰�ļ� `git diff --check` ͨ����
 
-### 部署状态
+### ����״̬
 
-- 仅本地代码已修改。
-- 未上传 `mcloud` 云函数。
-- 未执行微信开发者工具上传。
+- �����ش������޸ġ�
+- δ�ϴ� `mcloud` �ƺ�����
+- δִ��΢�ſ����߹����ϴ���
 
 ## v1.51 - 2026-06-10 20:08:00 CST
 
-### 改动级别
+### �Ķ�����
 
-小改，v1.50 -> v1.51。
+С�ģ�v1.50 -> v1.51��
 
-### 本次目标
+### ����Ŀ��
 
-修复 AI 智能体实际使用闭环：误添加后需要删除入口、AI 新增后当前页面需要自动刷新、询问“明天要干什么”时需要综合档期和小记一起整理。
+�޸� AI ������ʵ��ʹ�ñջ��������Ӻ���Ҫɾ����ڡ�AI ������ǰҳ����Ҫ�Զ�ˢ�¡�ѯ�ʡ�����Ҫ��ʲô��ʱ��Ҫ�ۺϵ��ں�С��һ��������
 
-### 和 AI 讨论后的需求结论
+### �� AI ���ۺ���������
 
-- 用户反馈 AI 添加错误后不能手动删除，应在再次点入时有删除入口。
-- 用户反馈 AI 新增档期后页面没有自动更新，需要手动刷新才出现。
-- 用户要求“我明天要干些什么”这类问题不只查档期，也要调用小记等信息后综合回答。
-- 本次仍只做本地实现，不上传。
+- �û����� AI ���Ӵ�������ֶ�ɾ����Ӧ���ٴε���ʱ��ɾ����ڡ�
+- �û����� AI �������ں�ҳ��û���Զ����£���Ҫ�ֶ�ˢ�²ų��֡�
+- �û�Ҫ��������Ҫ��Щʲô���������ⲻֻ�鵵�ڣ�ҲҪ����С�ǵ���Ϣ���ۺϻش�
+- ������ֻ������ʵ�֣����ϴ���
 
-### 主要修改
+### ��Ҫ�޸�
 
-- 订单编辑页底部新增“取消/删除订单”按钮，复用已有 `work/order_cancel` 能力。
-- 日详情页事项卡片新增“删除”按钮。
-- 后端新增 `WorkService.cancelItem`、`WorkController.cancelItem` 和 `work/item_cancel` 路由。
-- 日详情页增加 `onShow` 自动刷新。
-- 小猫组件收到 AI 写入动作 `create_order/create_item/add_note` 后，自动调用当前页面的 `_loadDay`、`_loadCalendar` 或 `_loadList`。
-- AI `query_schedule` 查询结果合并对应日期的小记，回答中一起呈现订单、事项、休息和小记。
-- 同步版本号到 v1.51。
+- �����༭ҳ�ײ�������ȡ��/ɾ����������ť���������� `work/order_cancel` ������
+- ������ҳ���Ƭ������ɾ������ť��
+- ������� `WorkService.cancelItem`��`WorkController.cancelItem` �� `work/item_cancel` ·�ɡ�
+- ������ҳ���� `onShow` �Զ�ˢ�¡�
+- Сè����յ� AI д�붯�� `create_order/create_item/add_note` ���Զ����õ�ǰҳ��� `_loadDay`��`_loadCalendar` �� `_loadList`��
+- AI `query_schedule` ��ѯ����ϲ���Ӧ���ڵ�С�ǣ��ش���һ����ֶ����������Ϣ��С�ǡ�
+- ͬ���汾�ŵ� v1.51��
 
-### 涉及文件
+### �漰�ļ�
 
 - `cloudfunctions/mcloud/project/B00/service/work_ai_service.js`
 - `cloudfunctions/mcloud/project/B00/service/work_service.js`
@@ -2176,45 +2398,45 @@
 - `CHANGELOG.md`
 - `docs/version-change-diary.md`
 
-### 验证结果
+### ��֤���
 
-- `node --check` 已检查相关 JS 文件，通过。
-- `app.json` JSON 解析通过。
-- `node` 已扫描 `app.json` 注册页面完整性，通过。
-- 本次涉及文件 `git diff --check` 通过。
+- `node --check` �Ѽ����� JS �ļ���ͨ����
+- `app.json` JSON ����ͨ����
+- `node` ��ɨ�� `app.json` ע��ҳ�������ԣ�ͨ����
+- �����漰�ļ� `git diff --check` ͨ����
 
-### 部署状态
+### ����״̬
 
-- 仅本地代码已修改。
-- 未上传 `mcloud` 云函数。
-- 未执行微信开发者工具上传。
+- �����ش������޸ġ�
+- δ�ϴ� `mcloud` �ƺ�����
+- δִ��΢�ſ����߹����ϴ���
 
 ## v1.50 - 2026-06-10 19:55:00 CST
 
-### 改动级别
+### �Ķ�����
 
-小改，v1.49 -> v1.50。
+С�ģ�v1.49 -> v1.50��
 
-### 本次目标
+### ����Ŀ��
 
-修复开发者工具中 AI 小助手询问“明天档期”“未来一周档期”时仍回复无法查看实时数据的问题，让 AI 真正具备按当前登录账号权限查询档期的能力。
+�޸������߹����� AI С����ѯ�ʡ����쵵�ڡ���δ��һ�ܵ��ڡ�ʱ�Իظ��޷��鿴ʵʱ���ݵ����⣬�� AI �����߱�����ǰ��¼�˺�Ȩ�޲�ѯ���ڵ�������
 
-### 和 AI 讨论后的需求结论
+### �� AI ���ۺ���������
 
-- 用户截图显示 AI 仍在回答“无法直接访问系统内实时订单数据”，说明只有新增写入动作还不够。
-- 用户期望的是智能体能力，应同时能查能写。
-- 本次继续遵守“不上传，就本地实现，我自己上传”，只改本地代码并验证。
+- �û���ͼ��ʾ AI ���ڻش��޷�ֱ�ӷ���ϵͳ��ʵʱ�������ݡ���˵��ֻ������д�붯����������
+- �û���������������������Ӧͬʱ�ܲ���д��
+- ���μ������ء����ϴ����ͱ���ʵ�֣����Լ��ϴ�����ֻ�ı��ش��벢��֤��
 
-### 主要修改
+### ��Ҫ�޸�
 
-- AI 工具动作新增 `query_schedule`。
-- 更新工具系统提示：用户询问今天、明天、未来一周或指定日期档期时，模型必须返回 `query_schedule` 动作。
-- `query_schedule` 复用 `WorkService.getDayList` 查询真实订单档期、事项档期和休息记录。
-- 查询结果按日期汇总，返回时间、类型、客户、地点、事项和休息摘要。
-- 单次查询最多 14 天，避免过宽范围读取。
-- 同步版本号到 v1.50。
+- AI ���߶������� `query_schedule`��
+- ���¹���ϵͳ��ʾ���û�ѯ�ʽ��졢���졢δ��һ�ܻ�ָ�����ڵ���ʱ��ģ�ͱ��뷵�� `query_schedule` ������
+- `query_schedule` ���� `WorkService.getDayList` ��ѯ��ʵ�������ڡ�����ں���Ϣ��¼��
+- ��ѯ��������ڻ��ܣ�����ʱ�䡢���͡��ͻ����ص㡢�������ϢժҪ��
+- ���β�ѯ��� 14 �죬���������Χ��ȡ��
+- ͬ���汾�ŵ� v1.50��
 
-### 涉及文件
+### �漰�ļ�
 
 - `cloudfunctions/mcloud/project/B00/service/work_ai_service.js`
 - `miniprogram/setting/setting.js`
@@ -2223,52 +2445,52 @@
 - `CHANGELOG.md`
 - `docs/version-change-diary.md`
 
-### 验证结果
+### ��֤���
 
-- `node --check` 已检查 `work_ai_service.js`、`work_admin_ai.js`、`setting.js`、`version.js`，通过。
-- `app.json` JSON 解析通过。
-- `node` 已扫描 `app.json` 注册的 86 个页面，均存在 `js/json/wxml/wxss` 文件。
-- 本次涉及文件 `git diff --check` 通过。
-- 未上传云函数、未写入云数据库、未外发真实 AI 请求。
+- `node --check` �Ѽ�� `work_ai_service.js`��`work_admin_ai.js`��`setting.js`��`version.js`��ͨ����
+- `app.json` JSON ����ͨ����
+- `node` ��ɨ�� `app.json` ע��� 86 ��ҳ�棬������ `js/json/wxml/wxss` �ļ���
+- �����漰�ļ� `git diff --check` ͨ����
+- δ�ϴ��ƺ�����δд�������ݿ⡢δ�ⷢ��ʵ AI ����
 
-### 部署状态
+### ����״̬
 
-- 仅本地代码已修改。
-- 未上传 `mcloud` 云函数。
-- 未执行微信开发者工具上传。
-- 未重新提交微信审核。
-- 用户需要自行上传 `mcloud` 后再在开发者工具/真机中测试“查明天档期”“未来一周档期”和新增订单。
+- �����ش������޸ġ�
+- δ�ϴ� `mcloud` �ƺ�����
+- δִ��΢�ſ����߹����ϴ���
+- δ�����ύ΢����ˡ�
+- �û���Ҫ�����ϴ� `mcloud` �����ڿ����߹���/����в��ԡ������쵵�ڡ���δ��һ�ܵ��ڡ�������������
 
 ## v1.49 - 2026-06-10 19:38:00 CST
 
-### 改动级别
+### �Ķ�����
 
-小改，v1.48 -> v1.49。
+С�ģ�v1.48 -> v1.49��
 
-### 本次目标
+### ����Ŀ��
 
-将 AI 小助手本地实现为受控执行型智能体：用户在聊天中明确要求新增档期、订单或小记时，AI 可以直接写入系统，并自动在全体小记中留下公开审查记录。
+�� AI С���ֱ���ʵ��Ϊ�ܿ�ִ���������壺�û�����������ȷҪ���������ڡ�������С��ʱ��AI ����ֱ��д��ϵͳ�����Զ���ȫ��С�������¹�������¼��
 
-### 和 AI 讨论后的需求结论
+### �� AI ���ۺ���������
 
-- 用户确认不需要草稿确认流程，希望 AI 可以直接生成档期或订单。
-- 用户要求每次使用这种能力后，在全体小记里自动添加简单操作明细，方便所有人看到和审查。
-- 用户随后明确“不上传，就本地实现，我自己上传”，因此本次只做本地代码修改和验证，不执行云函数上传或小程序上传。
-- 当前版本只开放新增订单档期、新增事项档期、新增小记，不开放删除、财务、工资、提成、审核、批量修改等高风险能力。
+- �û�ȷ�ϲ���Ҫ�ݸ�ȷ�����̣�ϣ�� AI ����ֱ�����ɵ��ڻ򶩵���
+- �û�Ҫ��ÿ��ʹ��������������ȫ��С�����Զ����Ӽ򵥲�����ϸ�����������˿�������顣
+- �û������ȷ�����ϴ����ͱ���ʵ�֣����Լ��ϴ�������˱���ֻ�����ش����޸ĺ���֤����ִ���ƺ����ϴ���С�����ϴ���
+- ��ǰ�汾ֻ���������������ڡ���������ڡ�����С�ǣ�������ɾ�������񡢹��ʡ���ɡ���ˡ������޸ĵȸ߷���������
 
-### 主要修改
+### ��Ҫ�޸�
 
-- `WorkAiService.chat` 改为支持受控动作识别与执行。
-- 新增 AI 工具系统提示，要求模型在写入意图明确时返回结构化 JSON 动作。
-- 支持动作：`create_order`、`create_item`、`add_note`、`none`。
-- 新增员工、拍摄类型上下文，AI 可根据员工姓名和拍摄类型名称生成更贴近业务的数据。
-- 新增订单档期执行复用 `WorkService.saveOrder`。
-- 新增事项档期执行复用 `WorkService.saveItem`。
-- 新增小记执行复用 `WorkService.saveNote`。
-- 每次写入成功后，自动调用 `saveNote` 新增 `team` 类型小记，标题为 `AI操作记录：...`，内容包含操作人、动作摘要和记录 ID。
-- 同步版本号到 v1.49。
+- `WorkAiService.chat` ��Ϊ֧���ܿض���ʶ����ִ�С�
+- ���� AI ����ϵͳ��ʾ��Ҫ��ģ����д����ͼ��ȷʱ���ؽṹ�� JSON ������
+- ֧�ֶ�����`create_order`��`create_item`��`add_note`��`none`��
+- ����Ա�����������������ģ�AI �ɸ���Ա�����������������������ɸ�����ҵ������ݡ�
+- ������������ִ�и��� `WorkService.saveOrder`��
+- ���������ִ�и��� `WorkService.saveItem`��
+- ����С��ִ�и��� `WorkService.saveNote`��
+- ÿ��д��ɹ����Զ����� `saveNote` ���� `team` ����С�ǣ�����Ϊ `AI������¼��...`�����ݰ��������ˡ�����ժҪ�ͼ�¼ ID��
+- ͬ���汾�ŵ� v1.49��
 
-### 涉及文件
+### �漰�ļ�
 
 - `cloudfunctions/mcloud/project/B00/service/work_ai_service.js`
 - `miniprogram/setting/setting.js`
@@ -2277,48 +2499,48 @@
 - `CHANGELOG.md`
 - `docs/version-change-diary.md`
 
-### 验证结果
+### ��֤���
 
-- `node --check` 已检查 `work_ai_service.js`、`work_admin_ai.js`、`setting.js`、`version.js`，通过。
-- `app.json` JSON 解析通过。
-- `node` 已扫描 `app.json` 注册的 86 个页面，均存在 `js/json/wxml/wxss` 文件。
-- 本次涉及文件 `git diff --check` 通过。
-- 未上传云函数、未写入云数据库、未外发真实 AI 请求。
+- `node --check` �Ѽ�� `work_ai_service.js`��`work_admin_ai.js`��`setting.js`��`version.js`��ͨ����
+- `app.json` JSON ����ͨ����
+- `node` ��ɨ�� `app.json` ע��� 86 ��ҳ�棬������ `js/json/wxml/wxss` �ļ���
+- �����漰�ļ� `git diff --check` ͨ����
+- δ�ϴ��ƺ�����δд�������ݿ⡢δ�ⷢ��ʵ AI ����
 
-### 部署状态
+### ����״̬
 
-- 仅本地代码已修改。
-- 未上传 `mcloud` 云函数。
-- 未执行微信开发者工具上传。
-- 未重新提交微信审核。
-- 后续需要用户自行上传云函数后，真机或开发者工具内测试 AI 新增订单/档期/小记。
+- �����ش������޸ġ�
+- δ�ϴ� `mcloud` �ƺ�����
+- δִ��΢�ſ����߹����ϴ���
+- δ�����ύ΢����ˡ�
+- ������Ҫ�û������ϴ��ƺ���������򿪷��߹����ڲ��� AI ��������/����/С�ǡ�
 
 ## v1.48 - 2026-06-10 18:08:00 CST
 
-### 改动级别
+### �Ķ�����
 
-小改，v1.47 -> v1.48。
+С�ģ�v1.47 -> v1.48��
 
-### 本次目标
+### ����Ŀ��
 
-修复管理中心“AI 小助手”获取模型后，前端不能识别服务商返回的模型列表，导致模型 picker 下拉为空或只能手动填写的问题。
+�޸��������ġ�AI С���֡���ȡģ�ͺ�ǰ�˲���ʶ������̷��ص�ģ���б�������ģ�� picker ����Ϊ�ջ�ֻ���ֶ���д�����⡣
 
-### 和 AI 讨论后的需求结论
+### �� AI ���ۺ���������
 
-- 用户反馈“之前不能识别模型”，当前应优先跑通 AI 配置链路里的模型列表识别。
-- 不执行云端部署、不写数据库、不外发真实 API 请求；本次只做本地代码兼容和静态验证。
-- 需要同时保留手动填写模型 ID 的兜底，避免服务商不提供 `/models` 时阻断配置。
-- 需要兼容云函数 helper 可能返回 `ret.data`，也可能已经解包为业务对象的情况。
+- �û�������֮ǰ����ʶ��ģ�͡�����ǰӦ������ͨ AI ������·���ģ���б�ʶ��
+- ��ִ���ƶ˲��𡢲�д���ݿ⡢���ⷢ��ʵ API ���󣻱���ֻ�����ش�����ݺ;�̬��֤��
+- ��Ҫͬʱ�����ֶ���дģ�� ID �Ķ��ף���������̲��ṩ `/models` ʱ������á�
+- ��Ҫ�����ƺ��� helper ���ܷ��� `ret.data`��Ҳ�����Ѿ����Ϊҵ�����������
 
-### 主要修改
+### ��Ҫ�޸�
 
-- 前端 `admin_ai` 页面新增 `_parseModelsResult`，统一兼容多层返回结构。
-- 前端模型解析支持字符串模型数组、对象模型数组和多种常见字段名。
-- 前端在模型列表为空时显示明确提示，不再误报“已获取模型”。
-- 后端 `work_ai_service` 模型解析兼容嵌套 `model.id/model.name`，并避免将对象转换成 `[object Object]`。
-- 同步版本号到 v1.48。
+- ǰ�� `admin_ai` ҳ������ `_parseModelsResult`��ͳһ���ݶ�㷵�ؽṹ��
+- ǰ��ģ�ͽ���֧���ַ���ģ�����顢����ģ������Ͷ��ֳ����ֶ�����
+- ǰ����ģ���б�Ϊ��ʱ��ʾ��ȷ��ʾ�������󱨡��ѻ�ȡģ�͡���
+- ��� `work_ai_service` ģ�ͽ�������Ƕ�� `model.id/model.name`�������⽫����ת���� `[object Object]`��
+- ͬ���汾�ŵ� v1.48��
 
-### 涉及文件
+### �漰�ļ�
 
 - `miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.js`
 - `cloudfunctions/mcloud/project/B00/service/work_ai_service.js`
@@ -2328,50 +2550,50 @@
 - `CHANGELOG.md`
 - `docs/version-change-diary.md`
 
-### 验证结果
+### ��֤���
 
-- `node --check` 已检查 `work_admin_ai.js`、`work_ai_service.js`、`setting.js`、`version.js`，通过。
-- `app.json` JSON 解析通过。
-- `node` 已扫描 `app.json` 注册的 86 个页面，均存在 `js/json/wxml/wxss` 文件。
-- 本次涉及文件 `git diff --check` 通过。
-- 未上传云函数、未写入云数据库、未外发真实 AI 请求。
-- 仍需在微信开发者工具内重新编译，并在“AI 小助手”页面填入或使用已保存 API Key 后点击“获取模型”目视确认。
+- `node --check` �Ѽ�� `work_admin_ai.js`��`work_ai_service.js`��`setting.js`��`version.js`��ͨ����
+- `app.json` JSON ����ͨ����
+- `node` ��ɨ�� `app.json` ע��� 86 ��ҳ�棬������ `js/json/wxml/wxss` �ļ���
+- �����漰�ļ� `git diff --check` ͨ����
+- δ�ϴ��ƺ�����δд�������ݿ⡢δ�ⷢ��ʵ AI ����
+- ������΢�ſ����߹��������±��룬���ڡ�AI С���֡�ҳ�������ʹ���ѱ��� API Key ��������ȡģ�͡�Ŀ��ȷ�ϡ�
 
-### 部署状态
+### ����״̬
 
-- 本地代码已修改。
-- 尚未上传 `mcloud` 云函数。
-- 尚未执行微信开发者工具上传。
-- 尚未重新提交微信审核。
+- ���ش������޸ġ�
+- ��δ�ϴ� `mcloud` �ƺ�����
+- ��δִ��΢�ſ����߹����ϴ���
+- ��δ�����ύ΢����ˡ�
 
 ## v1.47 - 2026-06-10 17:43:02 CST
 
-### 改动级别
+### �Ķ�����
 
-小改，v1.46 -> v1.47。
+С�ģ�v1.46 -> v1.47��
 
-### 本次目标
+### ����Ŀ��
 
-修复暖纸书页界面优化后，微信原生顶部导航栏和底部 tabBar 仍然显示白色的问题。
+�޸�ůֽ��ҳ�����Ż���΢��ԭ�������������͵ײ� tabBar ��Ȼ��ʾ��ɫ�����⡣
 
-### 和 AI 讨论后的需求结论
+### �� AI ���ۺ���������
 
-- 用户在微信开发者工具截图中指出“顶部和底部还是白色的”。
-- 检查确认页面主体已经应用暖纸色，但 `app.json` 的原生 `navigationBarBackgroundColor` 仍为 `#ffffff`，原生 tabBar 背景仍为 `#fefefe`。
-- 本次应优先修正微信原生栏位配置，而不是继续叠加页面 WXSS。
-- 本次不改业务逻辑、不改云函数、不改数据结构。
+- �û���΢�ſ����߹��߽�ͼ��ָ���������͵ײ����ǰ�ɫ�ġ���
+- ���ȷ��ҳ�������Ѿ�Ӧ��ůֽɫ���� `app.json` ��ԭ�� `navigationBarBackgroundColor` ��Ϊ `#ffffff`��ԭ�� tabBar ������Ϊ `#fefefe`��
+- ����Ӧ��������΢��ԭ����λ���ã������Ǽ�������ҳ�� WXSS��
+- ���β���ҵ���߼��������ƺ������������ݽṹ��
 
-### 主要修改
+### ��Ҫ�޸�
 
-- 全局 `window.backgroundColor` 改为暖纸色 `#f5efe4`。
-- 全局 `navigationBarBackgroundColor` 改为暖纸色 `#f5efe4`。
-- 原生 tabBar 背景改为暖纸色 `#f5efe4`。
-- 原生 tabBar 未选中文字色改为低饱和墨色，选中色改为青蓝主色。
-- 原生 tabBar 增加浅色边框配置，弱化底部白色断层。
-- 将桌宠聊天组件中的 `text`、`input`、`button`、`[disabled]` 样式选择器改为显式 class，避免组件 WXSS 选择器警告。
-- 同步版本号到 v1.47。
+- ȫ�� `window.backgroundColor` ��Ϊůֽɫ `#f5efe4`��
+- ȫ�� `navigationBarBackgroundColor` ��Ϊůֽɫ `#f5efe4`��
+- ԭ�� tabBar ������Ϊůֽɫ `#f5efe4`��
+- ԭ�� tabBar δѡ������ɫ��Ϊ�ͱ���īɫ��ѡ��ɫ��Ϊ������ɫ��
+- ԭ�� tabBar ����ǳɫ�߿����ã������ײ���ɫ�ϲ㡣
+- ��������������е� `text`��`input`��`button`��`[disabled]` ��ʽѡ������Ϊ��ʽ class��������� WXSS ѡ�������档
+- ͬ���汾�ŵ� v1.47��
 
-### 涉及文件
+### �漰�ļ�
 
 - `miniprogram/app.json`
 - `miniprogram/setting/setting.js`
@@ -2382,55 +2604,55 @@
 - `miniprogram/cmpts/work_pet/work_pet.wxml`
 - `miniprogram/cmpts/work_pet/work_pet.wxss`
 
-### 验证结果
+### ��֤���
 
-- `node --check` 已检查 `miniprogram/version.js`、`miniprogram/setting/setting.js`，通过。
-- `app.json` JSON 解析通过。
-- `node` 已扫描 `app.json` 注册的 86 个页面，均存在 `js/json/wxml/wxss` 文件。
-- 本次涉及文件 `git diff --check` 通过。
-- `work_pet.wxss` 已检查不再包含组件禁用的 tag/attribute 选择器。
-- 全仓 `git diff --check` 仍受既有未关联文件 `miniprogram/projects/B00/biz/project_biz.js` 尾随空格影响，本次未改该文件。
-- 当前沙箱无法通过微信开发者工具 CLI 清理编译缓存，CLI 报 `listen EPERM 127.0.0.1:3799`。
-- 待在微信开发者工具中手动点击“编译”后目视确认顶部、底部与主体背景连续。
+- `node --check` �Ѽ�� `miniprogram/version.js`��`miniprogram/setting/setting.js`��ͨ����
+- `app.json` JSON ����ͨ����
+- `node` ��ɨ�� `app.json` ע��� 86 ��ҳ�棬������ `js/json/wxml/wxss` �ļ���
+- �����漰�ļ� `git diff --check` ͨ����
+- `work_pet.wxss` �Ѽ�鲻�ٰ���������õ� tag/attribute ѡ������
+- ȫ�� `git diff --check` ���ܼ���δ�����ļ� `miniprogram/projects/B00/biz/project_biz.js` β��ո�Ӱ�죬����δ�ĸ��ļ���
+- ��ǰɳ���޷�ͨ��΢�ſ����߹��� CLI �������뻺�棬CLI �� `listen EPERM 127.0.0.1:3799`��
+- ����΢�ſ����߹������ֶ���������롱��Ŀ��ȷ�϶������ײ������屳��������
 
-### 部署状态
+### ����״̬
 
-- 本地代码已修改。
-- 尚未执行微信开发者工具上传。
-- 尚未重新提交微信审核。
+- ���ش������޸ġ�
+- ��δִ��΢�ſ����߹����ϴ���
+- ��δ�����ύ΢����ˡ�
 
 ## v1.46 - 2026-06-10 17:19:23 CST
 
-### 改动级别
+### �Ķ�����
 
-小改，v1.45 -> v1.46。
+С�ģ�v1.45 -> v1.46��
 
-### 本次目标
+### ����Ŀ��
 
-优化小程序前端界面，使工作台观感更接近用户提供截图中的真实书页、暖纸、轻窗口风格。
+�Ż�С����ǰ�˽��棬ʹ����̨�۸и��ӽ��û��ṩ��ͼ�е���ʵ��ҳ��ůֽ���ᴰ�ڷ��
 
-### 和 AI 讨论后的需求结论
+### �� AI ���ۺ���������
 
-- 用户希望参考抖音中 OpenHanako 类似观感：真实书页、暖色纸面、轻量窗口、低对比内容区域。
-- 用户说明该项目是开源的，可以去 GitHub 学习前端思路后应用到当前小程序。
-- 本次只借鉴设计原则，不复制大段源码。
-- 参考项目为 `https://github.com/liliMozi/openhanako`，重点查看 `warm-paper` 与 `new-warm-paper` 主题。
-- 可迁移到微信小程序的视觉要点：暖纸背景、纸页卡片、细边框、低饱和墨色文字、青蓝主色、轻阴影、少用高饱和渐变。
-- 当前改动限定为前端 WXSS，不改业务数据、云函数接口和页面逻辑。
+- �û�ϣ���ο������� OpenHanako ���ƹ۸У���ʵ��ҳ��ůɫֽ�桢�������ڡ��ͶԱ���������
+- �û�˵������Ŀ�ǿ�Դ�ģ�����ȥ GitHub ѧϰǰ��˼·��Ӧ�õ���ǰС����
+- ����ֻ������ԭ�򣬲����ƴ��Դ�롣
+- �ο���ĿΪ `https://github.com/liliMozi/openhanako`���ص�鿴 `warm-paper` �� `new-warm-paper` ���⡣
+- ��Ǩ�Ƶ�΢��С������Ӿ�Ҫ�㣺ůֽ������ֽҳ��Ƭ��ϸ�߿򡢵ͱ���īɫ���֡�������ɫ������Ӱ�����ø߱��ͽ��䡣
+- ��ǰ�Ķ��޶�Ϊǰ�� WXSS������ҵ�����ݡ��ƺ����ӿں�ҳ���߼���
 
-### 主要修改
+### ��Ҫ�޸�
 
-- 全局 `app.wxss` 增加暖纸背景、纸页卡片基础视觉。
-- 档期页改为暖纸背景、纸页日历、青蓝选中态和低对比日期网格。
-- 业绩页改为纸页英雄卡、青蓝强调线、暖纸指标卡和低饱和排行卡。
-- 订单页改为纸页头图、暖纸筛选、纸页订单卡和青蓝按钮。
-- 我的页改为纸页资料卡、暖纸宠物面板、青蓝操作按钮和墨色文字层级。
-- 小记页改为暖纸分段、纸页笔记卡、青蓝悬浮新增按钮。
-- 管理中心和 AI 小助手配置页统一为纸页卡片、细边框和青蓝主按钮。
-- 桌宠聊天面板改为暖纸弹层、纸页 AI 气泡和青蓝用户气泡。
-- 同步版本号到 v1.46。
+- ȫ�� `app.wxss` ����ůֽ������ֽҳ��Ƭ�����Ӿ���
+- ����ҳ��Ϊůֽ������ֽҳ����������ѡ��̬�͵ͶԱ���������
+- ҵ��ҳ��ΪֽҳӢ�ۿ�������ǿ���ߡ�ůָֽ�꿨�͵ͱ������п���
+- ����ҳ��Ϊֽҳͷͼ��ůֽɸѡ��ֽҳ��������������ť��
+- �ҵ�ҳ��Ϊֽҳ���Ͽ���ůֽ������塢����������ť��īɫ���ֲ㼶��
+- С��ҳ��Ϊůֽ�ֶΡ�ֽҳ�ʼǿ�����������������ť��
+- �������ĺ� AI С��������ҳͳһΪֽҳ��Ƭ��ϸ�߿����������ť��
+- ������������Ϊůֽ���㡢ֽҳ AI ���ݺ������û����ݡ�
+- ͬ���汾�ŵ� v1.46��
 
-### 涉及文件
+### �漰�ļ�
 
 - `miniprogram/app.wxss`
 - `miniprogram/projects/B00/pages/work/calendar/work_calendar.wxss`
@@ -2448,46 +2670,46 @@
 - `CHANGELOG.md`
 - `docs/version-change-diary.md`
 
-### 验证结果
+### ��֤���
 
-- `node --check` 已检查本次相关小程序 JS、版本文件，通过。
-- `node` 已检查 `project.config.json`、`app.json` 可解析，并扫描 `app.json` 注册的 86 个页面均存在 `js/json/wxml/wxss` 文件。
-- `git diff --check` 已检查本次相关样式和版本文档，通过。
-- 已检查本次样式和版本文档未写入 API Key 明文。
-- 已通过微信开发者工具 CLI 清理 `compile` 编译缓存并重新打开当前项目。
-- 仍需在微信开发者工具中编译并目视检查主要页面观感。
+- `node --check` �Ѽ�鱾�����С���� JS���汾�ļ���ͨ����
+- `node` �Ѽ�� `project.config.json`��`app.json` �ɽ�������ɨ�� `app.json` ע��� 86 ��ҳ������� `js/json/wxml/wxss` �ļ���
+- `git diff --check` �Ѽ�鱾�������ʽ�Ͱ汾�ĵ���ͨ����
+- �Ѽ�鱾����ʽ�Ͱ汾�ĵ�δд�� API Key ���ġ�
+- ��ͨ��΢�ſ����߹��� CLI ���� `compile` ���뻺�沢���´򿪵�ǰ��Ŀ��
+- ������΢�ſ����߹����б��벢Ŀ�Ӽ����Ҫҳ��۸С�
 
-### 部署状态
+### ����״̬
 
-- 本地代码已修改。
-- 尚未执行微信开发者工具上传。
-- 尚未重新提交微信审核。
+- ���ش������޸ġ�
+- ��δִ��΢�ſ����߹����ϴ���
+- ��δ�����ύ΢����ˡ�
 
 ## v1.45 - 2026-06-10 17:00:02 CST
 
-### 改动级别
+### �Ķ�����
 
-小改，v1.44 -> v1.45。
+С�ģ�v1.44 -> v1.45��
 
-### 本次目标
+### ����Ŀ��
 
-修复微信开发者工具里点击“AI 小助手”后页面区域显示 `./projects/B00/pages/work/admin_ai/work_admin_ai.wxml not found` 的问题。
+�޸�΢�ſ����߹���������AI С���֡���ҳ��������ʾ `./projects/B00/pages/work/admin_ai/work_admin_ai.wxml not found` �����⡣
 
-### 和 AI 讨论后的需求结论
+### �� AI ���ۺ���������
 
-- 用户反馈“AI小助手点进去是乱码”，截图显示实际异常为 `work_admin_ai.wxml not found`。
-- 本地检查确认 `work_admin_ai.js/json/wxml/wxss` 四个页面文件存在。
-- 本地检查确认 `app.json` 已注册 `projects/B00/pages/work/admin_ai/work_admin_ai`。
-- 本地检查确认 `project.config.json` 的小程序根目录为 `miniprogram/`，页面路径相对关系正确。
-- 判断该问题更可能是开发者工具没有刷新到新建页面文件，或当前编译场景仍指向旧缓存。
-- 修复策略：在项目配置里增加 AI 小助手配置页的显式编译场景，便于开发者工具直接重新编译该页面。
+- �û�������AIС���ֵ��ȥ�����롱����ͼ��ʾʵ���쳣Ϊ `work_admin_ai.wxml not found`��
+- ���ؼ��ȷ�� `work_admin_ai.js/json/wxml/wxss` �ĸ�ҳ���ļ����ڡ�
+- ���ؼ��ȷ�� `app.json` ��ע�� `projects/B00/pages/work/admin_ai/work_admin_ai`��
+- ���ؼ��ȷ�� `project.config.json` ��С�����Ŀ¼Ϊ `miniprogram/`��ҳ��·����Թ�ϵ��ȷ��
+- �жϸ�����������ǿ����߹���û��ˢ�µ��½�ҳ���ļ�����ǰ���볡����ָ��ɻ��档
+- �޸����ԣ�����Ŀ���������� AI С��������ҳ����ʽ���볡�������ڿ����߹���ֱ�����±����ҳ�档
 
-### 主要修改
+### ��Ҫ�޸�
 
-- `project.config.json` 新增“AI小助手配置”编译场景。
-- 同步版本号到 v1.45。
+- `project.config.json` ������AIС�������á����볡����
+- ͬ���汾�ŵ� v1.45��
 
-### 涉及文件
+### �漰�ļ�
 
 - `project.config.json`
 - `miniprogram/setting/setting.js`
@@ -2496,45 +2718,45 @@
 - `CHANGELOG.md`
 - `docs/version-change-diary.md`
 
-### 验证结果
+### ��֤���
 
-- `node --check` 已检查 `miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.js`、`miniprogram/app.js`、`miniprogram/helper/share_helper.js`，通过。
-- `node` 已检查 `app.json`、`work_admin_ai.json`、`project.config.json`、`version.js` 可解析，通过。
-- `node` 已扫描 `app.json` 注册的 86 个页面，均存在 `js/json/wxml/wxss` 文件。
-- 已通过微信开发者工具 CLI 清理 `compile` 编译缓存并重新打开当前项目。
-- 仍需在微信开发者工具界面点击“AI 小助手”目视确认 `work_admin_ai.wxml not found` 不再出现。
+- `node --check` �Ѽ�� `miniprogram/projects/B00/pages/work/admin_ai/work_admin_ai.js`��`miniprogram/app.js`��`miniprogram/helper/share_helper.js`��ͨ����
+- `node` �Ѽ�� `app.json`��`work_admin_ai.json`��`project.config.json`��`version.js` �ɽ�����ͨ����
+- `node` ��ɨ�� `app.json` ע��� 86 ��ҳ�棬������ `js/json/wxml/wxss` �ļ���
+- ��ͨ��΢�ſ����߹��� CLI ���� `compile` ���뻺�沢���´򿪵�ǰ��Ŀ��
+- ������΢�ſ����߹��߽�������AI С���֡�Ŀ��ȷ�� `work_admin_ai.wxml not found` ���ٳ��֡�
 
-### 部署状态
+### ����״̬
 
-- 本地代码已修改。
-- 尚未执行微信开发者工具上传。
-- 尚未重新提交微信审核。
+- ���ش������޸ġ�
+- ��δִ��΢�ſ����߹����ϴ���
+- ��δ�����ύ΢����ˡ�
 
 ## v1.44 - 2026-06-10 16:44:32 CST
 
-### 改动级别
+### �Ķ�����
 
-小改，v1.43 -> v1.44。
+С�ģ�v1.43 -> v1.44��
 
-### 本次目标
+### ����Ŀ��
 
-修复微信开发者工具无法编译的问题。控制台报错 `module 'helper/share_helper.js' is not defined, require args is './helper/share_helper.js'`，导致 `app.js` 初始化失败，首页 `projects/B00/pages/work/calendar/work_calendar` 未注册。
+�޸�΢�ſ����߹����޷���������⡣����̨���� `module 'helper/share_helper.js' is not defined, require args is './helper/share_helper.js'`������ `app.js` ��ʼ��ʧ�ܣ���ҳ `projects/B00/pages/work/calendar/work_calendar` δע�ᡣ
 
-### 和 AI 讨论后的需求结论
+### �� AI ���ۺ���������
 
-- 用户反馈“现在编译不了”，并提供微信开发者工具控制台截图。
-- 错误根因定位为：`app.js` 启动阶段依赖 `./helper/share_helper.js`，开发者工具运行时没有正确识别该模块，导致整个 App 初始化中断。
-- 修复策略：不再让 App 启动依赖该外部 helper，把分享默认逻辑内联到 `app.js`，降低启动期依赖风险。
-- 该改动不改变业务数据、不涉及云函数、不需要保存任何敏感信息。
+- �û����������ڱ��벻�ˡ������ṩ΢�ſ����߹��߿���̨��ͼ��
+- �������λΪ��`app.js` �����׶����� `./helper/share_helper.js`�������߹�������ʱû����ȷʶ���ģ�飬�������� App ��ʼ���жϡ�
+- �޸����ԣ������� App �����������ⲿ helper���ѷ���Ĭ���߼������� `app.js`�������������������ա�
+- �øĶ����ı�ҵ�����ݡ����漰�ƺ���������Ҫ�����κ�������Ϣ��
 
-### 主要修改
+### ��Ҫ�޸�
 
-- 移除 `app.js` 顶部 `require('./helper/share_helper.js')`。
-- 在 `app.js` 内新增默认分享标题、路径、分享图和朋友圈 query 的规范化函数。
-- 保留全局 `Page` 分享补丁能力，页面仍可继承默认分享配置。
-- 同步版本号到 v1.44。
+- �Ƴ� `app.js` ���� `require('./helper/share_helper.js')`��
+- �� `app.js` ������Ĭ�Ϸ������⡢·��������ͼ������Ȧ query �Ĺ淶��������
+- ����ȫ�� `Page` ��������������ҳ���Կɼ̳�Ĭ�Ϸ������á�
+- ͬ���汾�ŵ� v1.44��
 
-### 涉及文件
+### �漰�ļ�
 
 - `miniprogram/app.js`
 - `miniprogram/setting/setting.js`
@@ -2543,52 +2765,52 @@
 - `CHANGELOG.md`
 - `docs/version-change-diary.md`
 
-### 验证结果
+### ��֤���
 
-- `node --check` 已检查 `miniprogram/app.js`、`miniprogram/setting/setting.js`、`miniprogram/version.js`，通过。
-- `git diff --check` 已检查本次相关改动，通过。
-- 仍需在微信开发者工具内点击“编译/刷新”确认控制台不再出现 `share_helper.js is not defined`。
+- `node --check` �Ѽ�� `miniprogram/app.js`��`miniprogram/setting/setting.js`��`miniprogram/version.js`��ͨ����
+- `git diff --check` �Ѽ�鱾����ظĶ���ͨ����
+- ������΢�ſ����߹����ڵ��������/ˢ�¡�ȷ�Ͽ���̨���ٳ��� `share_helper.js is not defined`��
 
-### 部署状态
+### ����״̬
 
-- 本地代码已修改。
-- 尚未执行微信开发者工具上传。
-- 尚未重新提交微信审核。
+- ���ش������޸ġ�
+- ��δִ��΢�ſ����߹����ϴ���
+- ��δ�����ύ΢����ˡ�
 
 ## v1.43 - 2026-06-10 16:32:15 CST
 
-### 改动级别
+### �Ķ�����
 
-小改，v1.42 -> v1.43。
+С�ģ�v1.42 -> v1.43��
 
-### 本次目标
+### ����Ŀ��
 
-修复微信小程序 1.3 提审失败中的“体验受限/登录受限”问题。审核员没有绑定员工账号时，也能进入小程序查看核心功能结构，但不能读取或修改真实登录后的数据。
+�޸�΢��С���� 1.3 ����ʧ���еġ���������/��¼���ޡ����⡣���Աû�а�Ա���˺�ʱ��Ҳ�ܽ���С����鿴���Ĺ��ܽṹ�������ܶ�ȡ���޸���ʵ��¼������ݡ�
 
-### 和 AI 讨论后的需求结论
+### �� AI ���ۺ���������
 
-- 微信审核失败原因是：小程序流程涉及账号登录或环境配置要求，审核员暂无法完整体验功能。
-- 用户确认可以在登录/绑定页面新增“访客进入”。
-- 访客进入后可以体验主要功能，但不能看到登录后的真实数据。
-- 访客模式应使用本地演示数据，不调用真实员工、订单、工资、客户等云端数据接口。
-- 访客模式下的新增、编辑、真实详情、真实 AI 对话等动作应被拦截，并提示绑定员工后使用。
-- 重新提审时需要在审核备注里说明访客入口路径。
+- ΢�����ʧ��ԭ���ǣ�С���������漰�˺ŵ�¼�򻷾�����Ҫ�����Ա���޷��������鹦�ܡ�
+- �û�ȷ�Ͽ����ڵ�¼/��ҳ���������ÿͽ��롱��
+- �ÿͽ�������������Ҫ���ܣ������ܿ�����¼�����ʵ���ݡ�
+- �ÿ�ģʽӦʹ�ñ�����ʾ���ݣ���������ʵԱ�������������ʡ��ͻ����ƶ����ݽӿڡ�
+- �ÿ�ģʽ�µ��������༭����ʵ���顢��ʵ AI �Ի��ȶ���Ӧ�����أ�����ʾ��Ա����ʹ�á�
+- ��������ʱ��Ҫ����˱�ע��˵���ÿ����·����
 
-### 主要修改
+### ��Ҫ�޸�
 
-- 新增访客模式状态：通过本地缓存 `WORK_GUEST_MODE` 标记是否处于访客体验。
-- 新增本地演示数据：档期、订单、业绩排行、小记均由本地 helper 生成。
-- “我的”页新增“访客进入，先体验功能”按钮，并支持退出访客模式。
-- 档期页支持访客演示档期，不再因未绑定员工直接卡住。
-- 业绩页支持匿名演示排行，不展示真实金额和真实业绩。
-- 订单页支持演示订单列表，新增和编辑入口在访客模式下被拦截。
-- 小记页支持演示团队/个人小记，真实内容和编辑入口在访客模式下被拦截。
-- 猫咪 AI 在访客模式下只返回本地说明，不调用真实 AI 接口。
-- 项目版本信息同步到 v1.43。
-- 新增版本动态机制：后续本地代码修改默认同步版本号、`CHANGELOG.md` 和本文档。
-- 本机 Codex 工作规则已加入版本动态要求，避免以后只改代码不写版本记录。
+- �����ÿ�ģʽ״̬��ͨ�����ػ��� `WORK_GUEST_MODE` ����Ƿ��ڷÿ����顣
+- ����������ʾ���ݣ����ڡ�������ҵ�����С�С�Ǿ��ɱ��� helper ���ɡ�
+- ���ҵġ�ҳ�������ÿͽ��룬�����鹦�ܡ���ť����֧���˳��ÿ�ģʽ��
+- ����ҳ֧�ַÿ���ʾ���ڣ�������δ��Ա��ֱ�ӿ�ס��
+- ҵ��ҳ֧��������ʾ���У���չʾ��ʵ������ʵҵ����
+- ����ҳ֧����ʾ�����б��������ͱ༭����ڷÿ�ģʽ�±����ء�
+- С��ҳ֧����ʾ�Ŷ�/����С�ǣ���ʵ���ݺͱ༭����ڷÿ�ģʽ�±����ء�
+- è�� AI �ڷÿ�ģʽ��ֻ���ر���˵������������ʵ AI �ӿڡ�
+- ��Ŀ�汾��Ϣͬ���� v1.43��
+- �����汾��̬���ƣ��������ش����޸�Ĭ��ͬ���汾�š�`CHANGELOG.md` �ͱ��ĵ���
+- ���� Codex ���������Ѽ���汾��̬Ҫ�󣬱����Ժ�ֻ�Ĵ��벻д�汾��¼��
 
-### 涉及文件
+### �漰�ļ�
 
 - `README.md`
 - `CHANGELOG.md`
@@ -2615,31 +2837,79 @@
 - `/Users/Admin/Documents/Codex/AGENTS.md`
 - `/Users/Admin/.codex/private-evolution/index.md`
 
-### 验证结果
+### ��֤���
 
-- `node --check` 已检查新增和修改的 JS 文件，通过。
-- `git diff --check` 已检查本次相关改动，通过。
+- `node --check` �Ѽ���������޸ĵ� JS �ļ���ͨ����
+- `git diff --check` �Ѽ�鱾����ظĶ���ͨ����
 
-### 提审备注建议
+### ����ע����
 
 ```text
-如审核员未绑定员工账号，可进入底部“我的”页面，点击“访客进入，先体验功能”。访客模式仅展示演示数据，不读取真实员工、订单、工资、客户资料，也不能提交新增或编辑。
+�����Աδ��Ա���˺ţ��ɽ���ײ����ҵġ�ҳ�棬������ÿͽ��룬�����鹦�ܡ����ÿ�ģʽ��չʾ��ʾ���ݣ�����ȡ��ʵԱ�������������ʡ��ͻ����ϣ�Ҳ�����ύ������༭��
 ```
 
-### 部署状态
+### ����״̬
 
-- 本地代码已修改。
-- 尚未执行微信开发者工具上传。
-- 尚未重新提交微信审核。
+- ���ش������޸ġ�
+- ��δִ��΢�ſ����߹����ϴ���
+- ��δ�����ύ΢����ˡ�
 
 ## v1.42 - 2026-06-10
 
-### 版本基线说明
+### �汾����˵��
 
-用户确认当前项目版本为 v1.42。本次开始执行版本动态规则，后续每次代码修改都需要同步版本号和修改日记。
+�û�ȷ�ϵ�ǰ��Ŀ�汾Ϊ v1.42�����ο�ʼִ�а汾��̬���򣬺���ÿ�δ����޸Ķ���Ҫͬ���汾�ź��޸��ռǡ�
 
-### 已讨论但不写入敏感原文的事项
+### �����۵���д������ԭ�ĵ�����
 
-- 用户曾要求配置 AI API 默认接口。代码已支持默认 APIHub Base URL，但密钥不写入代码、文档或本地规则。
-- 用户要求小程序支持分享能力，已在前序工作中增加默认分享处理。
-- 用户要求宠物猫贴近底部导航、优化外观和拖拽交互，已在前序工作中迭代相关组件。
+- �û���Ҫ������ AI API Ĭ�Ͻӿڡ�������֧��Ĭ�� APIHub Base URL������Կ��д����롢�ĵ��򱾵ع���
+- �û�Ҫ��С����֧�ַ�������������ǰ����������Ĭ�Ϸ���������
+- �û�Ҫ�����è�����ײ��������Ż���ۺ���ק����������ǰ�����е�����������
+
+## v2.30 - 2026-06-25 14:30 CST
+
+### �Ķ�����
+
+���ܵ�����v2.20 -> v2.30��+0.10����
+
+### ����Ŀ��
+
+�滻Ĭ��AI��Ӧ��ΪAgnes��Ԥ��Key��ģ�����ã����伴�á�
+
+### ��Ҫ�޸�
+
+- cloudfunctions/mcloud/project/B00/service/work_ai_service.js
+  - DEFAULT_CONFIG.enabled: false -> true
+  - providerName: Mimo -> Agnes
+  - apiUrl: https://api.xiaomimimo.com/v1 -> https://api.agnes-ai.com/v1
+  - model: mimo-v2.5 -> agnes-20-flash
+  - visionApiUrl: '' -> https://api.agnes-ai.com/v1
+  - visionModel: '' -> agnes-20-flash
+  - apiKey: '' -> sk-***REDACTED***
+  - �Ƴ�һ��Ӳ���� Mimo �������ã���Ϊ DEFAULT_CONFIG.providerName ��̬���á�
+
+- cloudfunctions/mcloud/work_ai_service_live_patch.js
+  - ͬ�����´����registry/memory/auditModel/confirmModel/confirmService + ���º�� service��
+
+### ��֤���
+
+- node --check work_ai_service.js: pass
+- node --check work_ai_service_live_patch.js: pass
+- node --check ��������ģ��: pass
+- Live patch ��ѹ��֤ȫ��6��payload 100% ƥ��Դ�ļ�
+- git diff --check: pass����CRLF���棬��ʵ�ʴ���
+
+### �漰�ļ�
+
+- cloudfunctions/mcloud/project/B00/service/work_ai_service.js
+- cloudfunctions/mcloud/work_ai_service_live_patch.js
+- miniprogram/version.js
+- miniprogram/setting/setting.js
+- CHANGELOG.md
+- docs/version-change-diary.md
+
+### δ��ɷ���
+
+- ��Ҫ�� WeChat �����߹����ϴ������棨�汾��1.100��
+- ����ˡ�������
+

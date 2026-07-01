@@ -1,3 +1,4 @@
+<wxs src="../../../../../helper/filters.wxs" module="f" />
 <view class="page">
 	<view wx:if="{{!isLoad}}" class="empty">加载中...</view>
 
@@ -19,34 +20,34 @@
 		<view class="block-title">业绩概览</view>
 		<view class="hero">
 			<view class="hero-label">我的本月净业绩</view>
-			<view class="hero-money">¥{{data.my.performance || 0}}</view>
+			<view class="hero-money">{{f.fmtMoney(data.my.performance || 0)}}</view>
 			<view class="hero-sub">排名：{{data.my.rankNo ? '第' + data.my.rankNo + '名' : '暂无排名'}} · 收款 {{data.my.incomeCount || 0}} 笔 · 退款 {{data.my.refundCount || 0}} 笔</view>
 		</view>
 
 		<view class="grid">
 			<view class="metric">
 				<text>先发提成</text>
-				<view>¥{{data.my.currentCommission || 0}}</view>
+				<view>{{f.fmtMoney(data.my.currentCommission || 0)}}</view>
 			</view>
 			<view class="metric">
 				<text>释放提成</text>
-				<view>¥{{data.my.releaseCommission || 0}}</view>
+				<view>{{f.fmtMoney(data.my.releaseCommission || 0)}}</view>
 			</view>
 			<view class="metric">
 				<text>退款扣回</text>
-				<view class="danger">¥{{data.my.deductCommission || 0}}</view>
+				<view class="danger">{{f.fmtMoney(data.my.deductCommission || 0)}}</view>
 			</view>
 			<view class="metric">
 				<text>调整项</text>
-				<view>¥{{data.my.adjustCommission || 0}}</view>
+				<view>{{f.fmtMoney(data.my.adjustCommission || 0)}}</view>
 			</view>
 			<view class="metric">
 				<text>待释放</text>
-				<view>¥{{data.my.frozenRemain || 0}}</view>
+				<view>{{f.fmtMoney(data.my.frozenRemain || 0)}}</view>
 			</view>
 			<view class="metric">
 				<text>本月应发</text>
-				<view>¥{{data.my.payable || 0}}</view>
+				<view>{{f.fmtMoney(data.my.payable || 0)}}</view>
 			</view>
 		</view>
 
@@ -65,7 +66,7 @@
 				<view class="own-rank-title">我的排行</view>
 				<view class="own-rank-meta">{{data.my.rankNo ? '第' + data.my.rankNo + '名' : '暂无排名'}} · 只默认展示本人，点击展开看其他员工/团队</view>
 			</view>
-			<view class="own-rank-money">¥{{data.my.performance || 0}}</view>
+			<view class="own-rank-money">{{f.fmtMoney(data.my.performance || 0)}}</view>
 		</view>
 		<block wx:if="{{rankExpanded}}">
 			<view wx:if="{{rankList.length==0}}" class="empty small">暂无排行</view>
@@ -75,7 +76,7 @@
 					<view class="rank-name">{{item.name}}</view>
 					<view wx:if="{{item.amountVisible}}" class="rank-meta">收款 {{item.incomeCount || 0}} 笔 · 退款 {{item.refundCount || 0}} 笔</view>
 				</view>
-				<view wx:if="{{item.amountVisible}}" class="rank-money">¥{{item.netPerformance || item.performance || 0}}</view>
+				<view wx:if="{{item.amountVisible}}" class="rank-money">{{f.fmtMoney(item.netPerformance || item.performance || 0)}}</view>
 			</view>
 		</block>
 
@@ -83,8 +84,8 @@
 		<view wx:if="{{data.paymentList.length==0}}" class="empty small">暂无收款</view>
 		<view wx:for="{{data.paymentList}}" wx:key="_id" class="list-card">
 			<view class="list-title">{{item.PAYMENT_ORDER_TYPE_NAME || '订单'}}｜{{item.PAYMENT_CUSTOMER_SURNAME || item.PAYMENT_CUSTOMER_NAME || '客户'}}</view>
-			<view class="list-meta">{{item.PAYMENT_DATE}} · {{item.PAYMENT_TYPE}} · {{item.PAYMENT_DIRECTION}}</view>
-			<view class="list-money {{item.PAYMENT_AMOUNT_CENT<0?'danger':''}}">¥{{item.PAYMENT_AMOUNT}}</view>
+			<view class="list-meta">{{f.fmtDate(item.PAYMENT_DATE)}} · {{item.PAYMENT_TYPE}} · {{item.PAYMENT_DIRECTION}}</view>
+			<view class="list-money {{item.PAYMENT_AMOUNT_CENT<0?'danger':''}}">{{f.fmtMoney(item.PAYMENT_AMOUNT)}}</view>
 		</view>
 
 		<view class="section-head"><text>最近提成</text></view>
@@ -92,7 +93,7 @@
 		<view wx:for="{{data.commissionList}}" wx:key="_id" class="list-card">
 			<view class="list-title">{{item.COMMISSION_ORDER_TYPE_NAME || '订单'}}｜{{item.COMMISSION_CUSTOMER_SURNAME || item.COMMISSION_CUSTOMER_NAME || '客户'}}</view>
 			<view class="list-meta">{{item.COMMISSION_MONTH}} · {{item.COMMISSION_KIND}} · {{item.COMMISSION_ROLE_NAME}}</view>
-			<view class="list-money {{item.COMMISSION_AMOUNT_CENT<0?'danger':''}}">¥{{item.COMMISSION_AMOUNT}}</view>
+			<view class="list-money {{item.COMMISSION_AMOUNT_CENT<0?'danger':''}}">{{f.fmtMoney(item.COMMISSION_AMOUNT)}}</view>
 		</view>
 
 		<view class="block-title order-block-title">订单概览</view>
@@ -118,7 +119,7 @@
 				<text>未结算</text>
 			</view>
 			<view class="order-summary-item">
-				<view class="danger">¥{{orderSummary.unpaidTotal || 0}}</view>
+				<view class="danger">{{f.fmtMoney(orderSummary.unpaidTotal || 0)}}</view>
 				<text>未收合计</text>
 			</view>
 		</view>
@@ -136,12 +137,12 @@
 			<view class="order-card-line">
 				<text class="order-type" style="background:{{item.ORDER_TYPE_COLOR || '#537d96'}}">{{item.ORDER_TYPE_NAME || '订单'}}</text>
 				<text>{{item.ORDER_DATE_TEXT}}</text>
-				<text wx:if="{{item.ORDER_TIME}}">{{item.ORDER_TIME}}</text>
+				<text wx:if="{{item.ORDER_TIME}}">{{f.fmtTime(item.ORDER_TIME)}}</text>
 			</view>
 			<view class="order-card-money">
-				<view>订单 ¥{{item.ORDER_AMOUNT || 0}}</view>
-				<view>已收 ¥{{item.PAID_AMOUNT || 0}}</view>
-				<view class="danger">未收 ¥{{item.UNPAID_AMOUNT || 0}}</view>
+				<view>订单 {{f.fmtMoney(item.ORDER_AMOUNT || 0)}}</view>
+				<view>已收 {{f.fmtMoney(item.PAID_AMOUNT || 0)}}</view>
+				<view class="danger">未收 {{f.fmtMoney(item.UNPAID_AMOUNT || 0)}}</view>
 			</view>
 			<view class="order-card-settle">结算状态：{{item.ORDER_SETTLE_TEXT}}</view>
 		</view>

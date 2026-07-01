@@ -1,3 +1,4 @@
+<wxs src="../../../../../helper/filters.wxs" module="f" />
 <view class="page">
 	<view wx:if="{{!isLoad}}" class="empty">加载中...</view>
 	<view wx:if="{{isLoad}}">
@@ -40,7 +41,7 @@
 		<view wx:if="{{list.length==0}}" class="empty">暂无员工</view>
 		<view wx:for="{{list}}" wx:key="_id" class="card" bindtap="bindEditTap" data-idx="{{index}}">
 			<view class="name">{{item.STAFF_NAME}} <text wx:if="{{item.STAFF_STATUS==0}}">停用</text><text wx:if="{{item.STAFF_IS_ADMIN==1}}">管理员</text></view>
-			<view class="meta">{{item.STAFF_MOBILE}} ｜ {{item.ROLE_TEXT}}</view>
+			<view class="meta">{{f.fmtPhone(item.STAFF_MOBILE)}} ｜ {{item.ROLE_TEXT}}</view>
 			<view class="meta">绑定码 {{item.STAFF_BIND_CODE}} ｜ {{item.BIND_TEXT}}</view>
 		</view>
 	</view>

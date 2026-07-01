@@ -1,3 +1,4 @@
+<wxs src="../../../../../helper/filters.wxs" module="f" />
 <view class="page">
 	<view wx:if="{{isGuest}}" class="guest block">
 		<view>
@@ -25,7 +26,7 @@
 		<view class="avatar">{{me.staffInitial}}</view>
 		<view class="profile-main">
 			<view class="name">{{me.staff.STAFF_NAME}}</view>
-			<view class="mobile">{{me.staff.STAFF_MOBILE}}</view>
+			<view class="mobile">{{f.fmtPhone(me.staff.STAFF_MOBILE)}}</view>
 			<view class="roles">
 				<text wx:for="{{me.staff.STAFF_ROLES}}" wx:key="*this">{{item}}</text>
 			</view>

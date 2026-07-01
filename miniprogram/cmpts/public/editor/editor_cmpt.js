@@ -186,15 +186,10 @@ Component({
 
 		bindTextareaInput: function (e) {
 			let idx = pageHelper.dataset(e, 'idx');
-			let nodeList = this.data.nodeList;
-			let node = nodeList[idx];
-			if (node.type == 'text') {
-				node.val = e.detail.value;
-				nodeList[idx] = node;
-				this.setData({
-					nodeList
-				});
-			}
+			let val = e.detail.value;
+			this.setData({
+				['nodeList[' + idx + '].val']: val
+			});
 		},
 		getNodeList: function (e) {
 			let nodeList = this.data.nodeList;

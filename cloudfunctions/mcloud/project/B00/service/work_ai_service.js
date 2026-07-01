@@ -1,5 +1,5 @@
-﻿/**
- * Notes: 云屿摄影 AI 小助手服务
+/**
+ * Notes: ������Ӱ AI С���ַ���
  */
 
 const https = require('https');
@@ -25,15 +25,16 @@ const WorkAgentAuditModel = require('../model/work_agent_audit_model.js');
 const WorkAgentConfirmService = require('./work_agent_confirm_service.js');
 
 const SETUP_KEY = 'WORK_AI_CHAT_CONFIG';
+const PROVIDERS_STORE_KEY = 'WORK_AI_PROVIDERS_CONFIG';
 const LEGACY_OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
 
 const DEFAULT_CONFIG = {
-	enabled: false,
-	providerName: 'Mimo',
-	apiUrl: 'https://api.xiaomimimo.com/v1',
-	model: 'mimo-v2.5',
-	visionApiUrl: '',
-	visionModel: '',
+	enabled: true,
+	providerName: 'Agnes',
+	apiUrl: 'https://api.agnes-ai.com/v1',
+	model: 'agnes-20-flash',
+	visionApiUrl: 'https://api.agnes-ai.com/v1',
+	visionModel: 'agnes-20-flash',
 	visionApiKey: '',
 	apiKey: '',
 	personality: 'ops_cat',
@@ -44,32 +45,13 @@ const DEFAULT_CONFIG = {
 	maxTokens: 600,
 };
 
-const PERSONALITY_MAP = {
-	ops_cat: {
-		name: '值班小猫',
-		prompt: '性格：稳、细、会主动补漏。像摄影工作室里认真值班的伙伴，先把档期、客户、金额、参与人、附件这些关键点盯住；表达温和但不啰嗦。',
-	},
-	gentle_cat: {
-		name: '温柔小猫',
-		prompt: '性格：温柔、耐心、安抚感强。适合面对新员工、客户跟进话术、复杂信息整理；遇到缺信息时用轻柔方式追问。',
-	},
-	strict_cat: {
-		name: '审查小猫',
-		prompt: '性格：谨慎、专业、偏审核。对收款、提成、工资、取消、作废、审核等高风险事项要先核对对象、金额、日期、原因和唯一性；不要因敏感就自称不能操作，当前登录账号有权限时交给工具执行，后台会做最终权限和数据校验。',
-	},
-	sales_cat: {
-		name: '成交小猫',
-		prompt: '性格：懂销售、会提炼卖点。适合客户跟进、报价解释、拍摄服务推荐、活动话术；说话真诚，不夸大承诺。',
-	},
-};
-
 const LOCAL_APP_KNOWLEDGE = [
-	'本项目定位：摄影工作室可二次开发的档期、订单、员工业绩提成与工资结算小程序；云屿摄影是案例配置和真实业务样本。',
-	'核心工作台模块：档期日历、每日详情、订单新增/编辑/取消、事项档期、小记、休息申请、消息、问题反馈、我的业绩、我的工资。',
-	'管理中心模块：业绩看板、订单搜索、收款记录、提成记录、冻结提成、员工管理、工资预览/发放、订单审核、AI配置、反馈审查。',
-	'财务结构方向：收款账本按实际收款月份统计业绩，提成账本支持冻结/释放/扣回，工资单汇总不承担底层提成拆分。',
-	'AI权限边界：小猫能力跟随当前登录员工账号；普通员工按个人权限操作，管理员可执行管理端收款、退款/冲减、作废收款、查询提成/工资、发放工资、订单审核等动作；所有写入仍由后台服务做最终权限和数据校验。',
-	'AI写入规则：凡是AI执行写入动作，都要在团队小记自动追加一条全体可见的操作审查流水。',
+	'����Ŀ��λ����Ӱ�����ҿɶ��ο����ĵ��ڡ�������Ա��ҵ������빤�ʽ���С����������Ӱ�ǰ������ú���ʵҵ��������',
+	'���Ĺ���̨ģ�飺����������ÿ�����顢��������/�༭/ȡ��������ڡ�С�ǡ���Ϣ���롢��Ϣ�����ⷴ�����ҵ�ҵ�����ҵĹ��ʡ�',
+	'��������ģ�飺ҵ�����塢�����������տ��¼����ɼ�¼��������ɡ�Ա������������Ԥ��/���š�������ˡ�AI���á�������顣',
+	'����ṹ�����տ��˱���ʵ���տ��·�ͳ��ҵ��������˱�֧�ֶ���/�ͷ�/�ۻأ����ʵ����ܲ��е��ײ���ɲ�֡�',
+	'AIȨ�ޱ߽磺Сè�������浱ǰ��¼Ա���˺ţ���ͨԱ��������Ȩ�޲���������Ա��ִ�й������տ�˿�/����������տ��ѯ���/���ʡ����Ź��ʡ�������˵ȶ���������д�����ɺ�̨����������Ȩ�޺�����У�顣',
+	'AIд����򣺷���AIִ��д�붯������Ҫ���Ŷ�С���Զ�׷��һ��ȫ��ɼ��Ĳ��������ˮ��',
 ];
 
 const AGENT_CONFIRM_ACTIONS = {
@@ -115,7 +97,7 @@ function getApiKeyForRequest(config = {}, hasImages = false) {
 
 function getProviderNameForRequest(config = {}, hasImages = false) {
 	let provider = config.providerName || DEFAULT_CONFIG.providerName;
-	if (hasImages && (config.visionApiUrl || config.visionModel || config.visionApiKey)) return provider + ' · 视觉';
+	if (hasImages && (config.visionApiUrl || config.visionModel || config.visionApiKey)) return provider + ' �� �Ӿ�';
 	return provider;
 }
 
@@ -134,17 +116,17 @@ function classifyQueryType(message, pageContext = {}) {
 	let text = asText(message, 400);
 	if (!text) return 'chat';
 	// Screenshot recognition
-	if (/截图|图片|识别|录单|拍摄/.test(text)) return 'complex';
-	if (/收款|退款|冲减|作废|工资|提成|审核|财务|发工资|到账|已收|实收|付款|支付|转账|红包|定金|尾款/.test(text)) {
-		if (/查询|查一下|看看|看下|多少|列表|明细|记录|流水|详情|有没有|统计|预览|概览|汇总|排行|排名|情况/.test(text)) return 'query';
+	if (/��ͼ|ͼƬ|ʶ��|¼��|����/.test(text)) return 'complex';
+	if (/�տ�|�˿�|���|����|����|���|���|����|������|����|����|ʵ��|����|֧��|ת��|���|����|β��/.test(text)) {
+		if (/��ѯ|��һ��|����|����|����|�б�|��ϸ|��¼|��ˮ|����|��û��|ͳ��|Ԥ��|����|����|����|����|���/.test(text)) return 'query';
 		return 'write';
 	}
 	// Write actions: create/record/arrange/update orders, items, rests, notes
-	if (/新增|记录|安排|登记|录入|创建|添加|请假|休息|修改|更改|更正|调整|改期|改到|调到|换到|移到|挪到/.test(text)) return 'write';
+	if (/����|��¼|����|�Ǽ�|¼��|����|����|���|��Ϣ|�޸�|����|����|����|����|�ĵ�|����|����|�Ƶ�|Ų��/.test(text)) return 'write';
 	// Query actions: schedule, orders, notes
-	if (/查询|档期|小记|什么时候|安排|有什么|干什么|明天|今天|昨天|下周|这周/.test(text)) return 'query';
+	if (/��ѯ|����|С��|ʲôʱ��|����|��ʲô|��ʲô|����|����|����|����|����/.test(text)) return 'query';
 	// Function inquiry
-	if (/功能|怎么用|能做什么|小程序|帮助/.test(text)) return 'explain';
+	if (/����|��ô��|����ʲô|С����|����/.test(text)) return 'explain';
 	return 'chat';
 }
 
@@ -153,80 +135,80 @@ function compressStaffList(staffOptions = []) {
 	return staffOptions.slice(0, 40).map(item => {
 		let roles = Array.isArray(item.STAFF_ROLES) ? item.STAFF_ROLES.filter(r => r).slice(0, 2).join('/') : '';
 		return item.STAFF_NAME + (roles ? '(' + roles + ')' : '');
-	}).join('、');
+	}).join('��');
 }
 
 function compressTypeList(typeOptions = []) {
 	if (!typeOptions.length) return '';
-	return typeOptions.slice(0, 20).map(item => item.TYPE_NAME).join('、');
+	return typeOptions.slice(0, 20).map(item => item.TYPE_NAME).join('��');
 }
 
 function buildCorePrompt(staff, pageContext = {}) {
 	return [
-		'你是云屿摄影小程序里的小猫 AI 助手，语气简洁、友好、务实。',
-		'当前日期：' + timeUtil.time('Y-M-D') + '。',
-		'当前员工：' + (staff.STAFF_NAME || '员工') + '，管理员：' + (staff.STAFF_IS_ADMIN == 1 ? '是' : '否') + '。',
-		'你的业务权限基于当前登录员工账号：普通员工只能操作自己有权操作的数据；管理员可使用管理端能力；最终以后台服务校验为准，不要自称没有权限，除非系统返回无权限。',
-		'回答请控制在 200 字以内。',
+		'����������ӰС�������Сè AI ���֣�������ࡢ�Ѻá���ʵ��',
+		'��ǰ���ڣ�' + timeUtil.time('Y-M-D') + '��',
+		'��ǰԱ����' + (staff.STAFF_NAME || 'Ա��') + '������Ա��' + (staff.STAFF_IS_ADMIN == 1 ? '��' : '��') + '��',
+		'���ҵ��Ȩ�޻��ڵ�ǰ��¼Ա���˺ţ���ͨԱ��ֻ�ܲ����Լ���Ȩ���������ݣ�����Ա��ʹ�ù����������������Ժ�̨����У��Ϊ׼����Ҫ�Գ�û��Ȩ�ޣ�����ϵͳ������Ȩ�ޡ�',
+		'�ش�������� 200 �����ڡ�',
 	].join('\n');
 }
 
 function buildToolPrompt() {
 	return [
-		'你也是云屿摄影小程序内的受控执行型业务智能体。',
-		'用户说“今天/明天/后天”时必须严格按当前日期换算。',
-		'只允许这些动作：query_schedule、create_order、create_orders、join_order、cancel_order、update_order、create_item、create_rest、add_note、query_payments、save_payment、void_payment、query_commissions、query_payroll、pay_payroll、audit_order、none。',
-		'权限原则：不要因为动作敏感就直接拒绝；先按当前登录账号生成最准确的动作参数，后台会按员工/管理员权限拦截。',
-		'当用户要求取消/删除订单时用cancel_order；当用户要求修改/更正订单信息（如日期、时间、类型等）时用update_order。',
-		'用户说“这个是昨天的截图，修改一下”“记错了，应该是20号”等纠错场景：如果能找到原订单，优先用update_order修改日期；如果找不到明确订单，用cancel_order取消错误记录后重新create_order。',
-		'深度判断约束：先辨别“应收/报价/套餐金额”和“实收/已付/到账/红包/转账”；只有明确已收才生成收款；日期优先取截图/客户原话里的具体日期；遇到多个候选订单必须追问。',
-		'常见误导约束：红包/转账截图必须看清是对方付款且已领取/到账；“定金200”可视为实收定金，“399写真”通常是套餐/应收不是已收；“明天/今天”不能覆盖截图里的6月20日这类明确日期；同一天多单、同名客户、金额不清、收款方向不清时必须none追问。',
-		'破坏性动作约束：取消订单、作废收款、发工资、审核不通过必须有明确对象ID或唯一可定位对象，并有原因/说明；不能用模糊描述批量执行。',
-		'禁止编造订单ID、客户名、金额、收款状态、员工身份；缺少关键字段用none追问。',
-		'严禁幻觉：如果你返回none动作，reply里绝不能说"已修改/已帮你/已完成/已处理/已执行"等成功表述，否则用户会误以为操作成功了。none时只能说"需要补充XX信息"或"请提供XX"。',
-		'动作JSON格式：{"action":"...","reply":"...","data":{...}}。',
+		'��Ҳ��������ӰС�����ڵ��ܿ�ִ����ҵ�������塣',
+		'�û�˵������/����/���족ʱ�����ϸ񰴵�ǰ���ڻ��㡣',
+		'ֻ������Щ������query_schedule��create_order��create_orders��join_order��cancel_order��update_order��create_item��create_rest��add_note��query_payments��save_payment��void_payment��query_commissions��query_payroll��pay_payroll��audit_order��none��',
+		'Ȩ��ԭ�򣺲�Ҫ��Ϊ�������о�ֱ�Ӿܾ����Ȱ���ǰ��¼�˺�������׼ȷ�Ķ�����������̨�ᰴԱ��/����ԱȨ�����ء�',
+		'���û�Ҫ��ȡ��/ɾ������ʱ��cancel_order�����û�Ҫ���޸�/����������Ϣ�������ڡ�ʱ�䡢���͵ȣ�ʱ��update_order��',
+		'�û�˵�����������Ľ�ͼ���޸�һ�¡����Ǵ��ˣ�Ӧ����20�š��Ⱦ���������������ҵ�ԭ������������update_order�޸����ڣ�����Ҳ�����ȷ��������cancel_orderȡ�������¼������create_order��',
+		'����ж�Լ�����ȱ��Ӧ��/����/�ײͽ��͡�ʵ��/�Ѹ�/����/���/ת�ˡ���ֻ����ȷ���ղ������տ��������ȡ��ͼ/�ͻ�ԭ����ľ������ڣ����������ѡ��������׷�ʡ�',
+		'������Լ�������/ת�˽�ͼ���뿴���ǶԷ�����������ȡ/���ˣ�������200������Ϊʵ�ն��𣬡�399д�桱ͨ�����ײ�/Ӧ�ղ������գ�������/���족���ܸ��ǽ�ͼ���6��20��������ȷ���ڣ�ͬһ��൥��ͬ���ͻ������塢�տ����ʱ����none׷�ʡ�',
+		'�ƻ��Զ���Լ����ȡ�������������տ�����ʡ���˲�ͨ����������ȷ����ID��Ψһ�ɶ�λ���󣬲���ԭ��/˵����������ģ����������ִ�С�',
+		'��ֹ���충��ID���ͻ��������տ�״̬��Ա�����ݣ�ȱ�ٹؼ��ֶ���none׷�ʡ�',
+		'�Ͻ��þ�������㷵��none������reply�������˵"���޸�/�Ѱ���/�����/�Ѵ���/��ִ��"�ȳɹ������������û�������Ϊ�����ɹ��ˡ�noneʱֻ��˵"��Ҫ����XX��Ϣ"��"���ṩXX"��',
+		'����JSON��ʽ��{"action":"...","reply":"...","data":{...}}��',
 	].join('\n');
 }
 
 function buildWriteActionPrompt() {
 	return [
-		'query_schedule.data: startDate(YYYY-MM-DD)、endDate、scope(all/mine/joined/created)。',
-		'create_order.data: date(必填)、customerName(必填)、time、endTime、typeName、typeId、customerMobile、source、place、content、amount、deposit、final、extra、participants[]。',
-		'金额识别：amount/订单总应收，deposit/final/extra是应收结构，paidAmount/paidDeposit/paidFinal/payments才是实际已收。',
-		'create_orders.data: orders[]（2条及以上必须用create_orders）。',
-		'create_item.data: date(必填)、title(必填)、time、content。',
-		'create_rest.data: date(必填)、type(休息/请假/调休/外出)、reason。',
-		'add_note.data: noteType(team/personal)、title(必填)、content、date。',
-		'join_order.data: orderId、roleName。',
-		'cancel_order.data: orderId(或customerName+date)、reason。',
-		'update_order.data: orderId(或customerName+date作为查找条件)、newDate(新日期)、newTime、newType、newCustomerName、newPlace、newAmount、newContent。只传要修改的字段。',
-		'query_payments.data: month、keyword、orderId、type、direction、status、size。',
-		'query_payments权限：普通员工只能查自己的收款/业绩相关记录；管理员可查全店或指定员工。',
-		'save_payment.data: orderId(必填)、type(deposit/final/extra/product/supplement/refund/adjust或中文)、amount(必填)、date、baseType、note、refPaymentId。退款/冲减必须写原因note。',
-		'void_payment.data: paymentId(必填)、reason(必填)。',
-		'query_commissions.data: month、staffId/staffName、orderId、paymentId、kind、status、keyword、size。',
-		'query_commissions权限：普通员工只能查自己的提成；管理员可查全店或指定员工。',
-		'query_payroll.data: month、staffId/staffName；普通员工默认查自己，管理员可查指定员工。',
-		'pay_payroll.data: month(必填)、staffId/staffName(必填)、note；只有管理员可发工资，系统会按当前预览哈希校验后发放。',
-		'audit_order.data: orderId(必填)、pass(true/false)、reason、participants、orderEditTime。',
-		'缺少日期或客户名称时用none追问。',
-		'写入动作系统自动追加审查小记。',
+		'query_schedule.data: startDate(YYYY-MM-DD)��endDate��scope(all/mine/joined/created)��',
+		'create_order.data: date(����)��customerName(����)��time��endTime��typeName��typeId��customerMobile��source��place��content��amount��deposit��final��extra��participants[]��',
+		'���ʶ��amount/������Ӧ�գ�deposit/final/extra��Ӧ�սṹ��paidAmount/paidDeposit/paidFinal/payments����ʵ�����ա�',
+		'create_orders.data: orders[]��2�������ϱ�����create_orders����',
+		'create_item.data: date(����)��title(����)��time��content��',
+		'create_rest.data: date(����)��type(��Ϣ/���/����/���)��reason��',
+		'add_note.data: noteType(team/personal)��title(����)��content��date��',
+		'join_order.data: orderId��roleName��',
+		'cancel_order.data: orderId(��customerName+date)��reason��',
+		'update_order.data: orderId(��customerName+date��Ϊ��������)��newDate(������)��newTime��newType��newCustomerName��newPlace��newAmount��newContent��ֻ��Ҫ�޸ĵ��ֶΡ�',
+		'query_payments.data: month��keyword��orderId��type��direction��status��size��',
+		'query_paymentsȨ�ޣ���ͨԱ��ֻ�ܲ��Լ����տ�/ҵ����ؼ�¼������Ա�ɲ�ȫ���ָ��Ա����',
+		'save_payment.data: orderId(����)��type(deposit/final/extra/product/supplement/refund/adjust������)��amount(����)��date��baseType��note��refPaymentId���˿�/�������дԭ��note��',
+		'void_payment.data: paymentId(����)��reason(����)��',
+		'query_commissions.data: month��staffId/staffName��orderId��paymentId��kind��status��keyword��size��',
+		'query_commissionsȨ�ޣ���ͨԱ��ֻ�ܲ��Լ�����ɣ�����Ա�ɲ�ȫ���ָ��Ա����',
+		'query_payroll.data: month��staffId/staffName����ͨԱ��Ĭ�ϲ��Լ�������Ա�ɲ�ָ��Ա����',
+		'pay_payroll.data: month(����)��staffId/staffName(����)��note��ֻ�й���Ա�ɷ����ʣ�ϵͳ�ᰴ��ǰԤ����ϣУ��󷢷š�',
+		'audit_order.data: orderId(����)��pass(true/false)��reason��participants��orderEditTime��',
+		'ȱ�����ڻ�ͻ�����ʱ��none׷�ʡ�',
+		'д�붯��ϵͳ�Զ�׷�����С�ǡ�',
 	].join('\n');
 }
 
 function buildImagePrompt() {
 	return [
-		'图片识别规则：先判断截图类型，是聊天约档、订单信息、收款/红包/转账凭证、工资/提成/审核信息，还是无关图片；不要默认所有图片都是新增订单。',
-		'订单截图：逐张识别日期、时间、客户、电话、地点、拍摄类型、备注；一张图可能有多个订单，逐条提取；1条用create_order，2条及以上用create_orders。',
-		'本小程序“订单档期/每日详情”截图：顶部大标题形如2026.09.11/2026-09-11通常是页面日期，卡片灰底文字可能是备注、原拍摄日期或客户原话。',
-		'若顶部页面日期和卡片灰底备注里的日期冲突，例如顶部是2026.09.11但备注写“9.16摄影”，不要直接新增/修改订单；必须返回none追问用户：“这个订单档期按页面日期9.11，还是按备注里的9.16？”',
-		'只有当用户文字明确说“以页面日期为准”“这个是9.11”“爱公馆是9.11”“把9.16改成9.11”等纠错指令时，才可按用户明确指定日期执行。',
-		'多张相似截图必须逐张独立读取顶部日期，不要把第二张图的日期套到第一张图。',
-		'收款截图：必须确认付款方向、金额、是否已领取/到账、对应订单；只有在有orderId或当前页面唯一订单时才save_payment，否则用none追问订单对象。',
-		'财务/工资/审核截图：只提取系统能确认的字段；对象、月份、金额、员工、原因不唯一时用none追问，不要猜。',
-		'日期优先级：截图/图片中出现的具体日期（如6月20日、6/20）是订单日期的首要来源。',
-		'当用户文字中包含“今天/明天/后天/昨天”等相对日期时，如果截图中能找到明确日期，必须以截图日期为准，不要用文字中的相对日期换算。',
-		'示例：用户说“明天拍摄”但截图显示6/20，则date应为6/20对应的日期，而不是明天的日期。截图是客户或系统发出的真实档期凭证。',
+		'ͼƬʶ��������жϽ�ͼ���ͣ�������Լ����������Ϣ���տ�/���/ת��ƾ֤������/���/�����Ϣ�������޹�ͼƬ����ҪĬ������ͼƬ��������������',
+		'������ͼ������ʶ�����ڡ�ʱ�䡢�ͻ����绰���ص㡢�������͡���ע��һ��ͼ�����ж��������������ȡ��1����create_order��2����������create_orders��',
+		'��С���򡰶�������/ÿ�����顱��ͼ���������������2026.09.11/2026-09-11ͨ����ҳ�����ڣ���Ƭ�ҵ����ֿ����Ǳ�ע��ԭ�������ڻ�ͻ�ԭ����',
+		'������ҳ�����ںͿ�Ƭ�ҵױ�ע������ڳ�ͻ�����綥����2026.09.11����עд��9.16��Ӱ������Ҫֱ������/�޸Ķ��������뷵��none׷���û���������������ڰ�ҳ������9.11�����ǰ���ע���9.16����',
+		'ֻ�е��û�������ȷ˵����ҳ������Ϊ׼���������9.11������������9.11������9.16�ĳ�9.11���Ⱦ���ָ��ʱ���ſɰ��û���ȷָ������ִ�С�',
+		'�������ƽ�ͼ�������Ŷ�����ȡ�������ڣ���Ҫ�ѵڶ���ͼ�������׵���һ��ͼ��',
+		'�տ��ͼ������ȷ�ϸ���򡢽��Ƿ�����ȡ/���ˡ���Ӧ������ֻ������orderId��ǰҳ��Ψһ����ʱ��save_payment��������none׷�ʶ�������',
+		'����/����/��˽�ͼ��ֻ��ȡϵͳ��ȷ�ϵ��ֶΣ������·ݡ���Ա����ԭ��Ψһʱ��none׷�ʣ���Ҫ�¡�',
+		'�������ȼ�����ͼ/ͼƬ�г��ֵľ������ڣ���6��20�ա�6/20���Ƕ������ڵ���Ҫ��Դ��',
+		'���û������а���������/����/����/���족���������ʱ�������ͼ�����ҵ���ȷ���ڣ������Խ�ͼ����Ϊ׼����Ҫ�������е�������ڻ��㡣',
+		'ʾ�����û�˵���������㡱����ͼ��ʾ6/20����dateӦΪ6/20��Ӧ�����ڣ���������������ڡ���ͼ�ǿͻ���ϵͳ��������ʵ����ƾ֤��',
 	].join('\n');
 }
 
@@ -260,7 +242,7 @@ function normalizeModelsApiUrl(url) {
 
 function isMimoApi(apiUrl, providerName = '') {
 	let text = (asText(apiUrl, 400) + ' ' + asText(providerName, 80)).toLowerCase();
-	return text.indexOf('xiaomimimo.com') >= 0 || text.indexOf('mimo') >= 0 || text.indexOf('小米') >= 0;
+	return text.indexOf('xiaomimimo.com') >= 0 || text.indexOf('mimo') >= 0 || text.indexOf('С��') >= 0;
 }
 
 function normalizeModelForApi(model, apiUrl, providerName = '') {
@@ -301,7 +283,7 @@ class WorkAiService extends WorkPermissionService {
 		if (!entry) entry = this._rateMap[openId] = { timestamps: [] };
 		entry.timestamps = entry.timestamps.filter(t => now - t < windowMs);
 		if (entry.timestamps.length >= maxCalls) {
-			this.AppError('操作太频繁，请稍后再试');
+			this.AppError('����̫Ƶ�������Ժ�����');
 		}
 		entry.timestamps.push(now);
 	}
@@ -309,57 +291,215 @@ class WorkAiService extends WorkPermissionService {
 	_sanitizeUserInput(message) {
 		if (!message) return message;
 		// Strip system-role injection patterns
-		message = message.replace(/\b(system|assistant)\s*[:：]\s*/gi, '');
+		message = message.replace(/\b(system|assistant)\s*[:��]\s*/gi, '');
 		// Strip common instruction override attempts
 		message = message.replace(/\b(ignore|forget|disregard)\s+(all\s+)?(previous|above|prior)\s+(instructions?|rules?|prompts?)\b/gi, '');
 		// Strip role-play impersonation
-		message = message.replace(/\byou\s+are\s+now\b/gi, '请');
+		message = message.replace(/\byou\s+are\s+now\b/gi, '��');
 		return message.trim();
 	}
 
-	async getAdminConfig() {
-		let config = await this._getConfig();
-		return this._publicConfig(config);
+	_getDefaultProviders() {
+		return [
+			{
+				id: 'agnes',
+				providerName: 'Agnes',
+				apiUrl: 'https://api.agnes-ai.com/v1',
+				model: 'agnes-20-flash',
+				visionApiUrl: 'https://api.agnes-ai.com/v1',
+				visionModel: 'agnes-20-flash',
+				apiKey: '',
+				visionApiKey: '',
+			},
+			{
+				id: 'mimo',
+				providerName: 'MiMo',
+				apiUrl: 'https://api.xiaomimimo.com/v1',
+				model: 'mimo-v2.5',
+				visionApiUrl: '',
+				visionModel: '',
+				apiKey: '',
+				visionApiKey: '',
+			},
+		];
 	}
 
-	async saveAdminConfig(input = {}, options = {}) {
-		let current = await this._getConfig({ includeEnvKey: false });
-		let apiKey = asText(input.apiKey, 400);
-		let next = {
-			enabled: !!input.enabled,
-			providerName: asText(input.providerName, 60) || DEFAULT_CONFIG.providerName,
-			apiUrl: asText(input.apiUrl, 400) || DEFAULT_CONFIG.apiUrl,
-			model: normalizeModelForApi(input.model, input.apiUrl, input.providerName),
-			visionApiUrl: asText(input.visionApiUrl, 400),
-			visionModel: asText(input.visionModel, 120) ? normalizeModelForApi(input.visionModel, input.visionApiUrl || input.apiUrl, input.providerName) : '',
-			visionApiKey: options.clearVisionKey ? '' : (asText(input.visionApiKey, 400) || current.visionApiKey || ''),
-			apiKey: options.clearKey ? '' : (apiKey || current.apiKey || ''),
-			personality: PERSONALITY_MAP[input.personality] ? input.personality : DEFAULT_CONFIG.personality,
-			memoryEnabled: !!input.memoryEnabled,
-			memoryText: asText(input.memoryText, 2000),
-			systemPrompt: asText(input.systemPrompt, 3000) || DEFAULT_CONFIG.systemPrompt,
-			temperature: asNumber(input.temperature, DEFAULT_CONFIG.temperature, 0, 2),
-			maxTokens: Math.round(asNumber(input.maxTokens, DEFAULT_CONFIG.maxTokens, 128, 4000)),
+	async _getProvidersConfig() {
+		let raw = await setupUtil.get(PROVIDERS_STORE_KEY);
+		if (raw && !raw.providers && raw.providerName) {
+			let migrated = {
+				providers: [{
+					id: 'agnes',
+					providerName: raw.providerName || DEFAULT_CONFIG.providerName,
+					apiUrl: raw.apiUrl || DEFAULT_CONFIG.apiUrl,
+					model: raw.model || DEFAULT_CONFIG.model,
+					visionApiUrl: raw.visionApiUrl || '',
+					visionModel: raw.visionModel || '',
+					apiKey: raw.apiKey || DEFAULT_CONFIG.apiKey,
+					visionApiKey: raw.visionApiKey || '',
+				}],
+				activeProviderId: 'agnes',
+			};
+			await setupUtil.set(PROVIDERS_STORE_KEY, migrated);
+			return migrated;
+		}
+		if (!raw || !raw.providers || !raw.providers.length) {
+			let defaults = {
+				providers: this._getDefaultProviders(),
+				activeProviderId: 'agnes',
+			};
+			await setupUtil.set(PROVIDERS_STORE_KEY, defaults);
+			return defaults;
+		}
+		return raw;
+	}
+
+	async _getActiveProviderConfig() {
+		let providersConfig = await this._getProvidersConfig();
+		let activeId = providersConfig.activeProviderId || 'agnes';
+		let active = providersConfig.providers.find(p => p.id == activeId);
+		if (!active) active = providersConfig.providers[0];
+		if (!active) {
+			return {
+				enabled: true,
+				providerName: DEFAULT_CONFIG.providerName,
+				apiUrl: DEFAULT_CONFIG.apiUrl,
+				model: DEFAULT_CONFIG.model,
+				visionApiUrl: DEFAULT_CONFIG.visionApiUrl,
+				visionModel: DEFAULT_CONFIG.visionModel,
+				apiKey: DEFAULT_CONFIG.apiKey,
+				visionApiKey: DEFAULT_CONFIG.visionApiKey,
+				personality: DEFAULT_CONFIG.personality,
+				systemPrompt: DEFAULT_CONFIG.systemPrompt,
+				temperature: DEFAULT_CONFIG.temperature,
+				maxTokens: DEFAULT_CONFIG.maxTokens,
+			};
+		}
+		return {
+			enabled: true,
+			providerName: active.providerName || DEFAULT_CONFIG.providerName,
+			apiUrl: active.apiUrl || DEFAULT_CONFIG.apiUrl,
+			model: normalizeModelForApi(active.model || DEFAULT_CONFIG.model, active.apiUrl, active.providerName),
+			visionApiUrl: active.visionApiUrl || '',
+			visionModel: active.visionModel ? normalizeModelForApi(active.visionModel, active.visionApiUrl || active.apiUrl, active.providerName) : '',
+			apiKey: active.apiKey || getEnvApiKey() || DEFAULT_CONFIG.apiKey,
+			visionApiKey: active.visionApiKey || '',
+			personality: DEFAULT_CONFIG.personality,
+			systemPrompt: DEFAULT_CONFIG.systemPrompt,
+			temperature: DEFAULT_CONFIG.temperature,
+			maxTokens: DEFAULT_CONFIG.maxTokens,
 		};
+	}
 
-		this._assertApiUrl(normalizeChatApiUrl(next.apiUrl));
-		if (next.visionApiUrl) this._assertApiUrl(normalizeChatApiUrl(next.visionApiUrl));
-		if (next.enabled && !next.apiKey && !getEnvApiKey()) this.AppError('启用 AI 前请先填写 API Key');
+	async getAdminConfig() {
+		let providersConfig = await this._getProvidersConfig();
+		let active = await this._getActiveProviderConfig();
+		let publicProviders = providersConfig.providers.map(p => ({
+			id: p.id,
+			providerName: p.providerName,
+			apiUrl: p.apiUrl || '',
+			model: p.model || '',
+			visionApiUrl: p.visionApiUrl || '',
+			visionModel: p.visionModel || '',
+			hasApiKey: !!p.apiKey,
+			apiKeyMasked: this._maskKey(p.apiKey || ''),
+			hasVisionApiKey: !!p.visionApiKey,
+			visionApiKeyMasked: this._maskKey(p.visionApiKey || ''),
+		}));
+		return {
+			enabled: true,
+			providers: publicProviders,
+			activeProviderId: providersConfig.activeProviderId || 'agnes',
+			personality: active.personality || DEFAULT_CONFIG.personality,
+			personalityName: (PERSONALITY_MAP[active.personality] || PERSONALITY_MAP[DEFAULT_CONFIG.personality]).name,
+			personalities: Object.keys(PERSONALITY_MAP).map(key => ({ key, name: PERSONALITY_MAP[key].name })),
+			memoryEnabled: false,
+			memoryText: '',
+			systemPrompt: active.systemPrompt || DEFAULT_CONFIG.systemPrompt,
+			temperature: asNumber(active.temperature, DEFAULT_CONFIG.temperature, 0, 2),
+			maxTokens: Math.round(asNumber(active.maxTokens, DEFAULT_CONFIG.maxTokens, 128, 4000)),
+			contextLimit: estimateContextLimit(active.model),
+			visionContextLimit: estimateContextLimit(active.visionModel || active.model),
+			agentCatalog: agentRegistry.getPublicCatalog(),
+		};
+	}
 
-		await setupUtil.set(SETUP_KEY, next);
-		return this._publicConfig(await this._getConfig());
+	async saveProvidersConfig(input = {}) {
+		let raw = input.providers;
+		if (!Array.isArray(raw) || !raw.length) this.AppError('需要提供至少一个供应商');
+		let providers = [];
+		let savedConfig = await this._getProvidersConfig();
+		for (let p of raw) {
+			let id = asText(p.id, 40) || 'prov_' + Date.now() + '_' + Math.random().toString(36).slice(2,6);
+			let providerName = asText(p.providerName, 60);
+			if (!providerName) this.AppError('每个供应商都需要名称');
+			let apiUrl = asText(p.apiUrl, 400);
+			if (apiUrl) this._assertApiUrl(normalizeChatApiUrl(apiUrl));
+			let visionApiUrl = asText(p.visionApiUrl, 400);
+			if (visionApiUrl) this._assertApiUrl(normalizeChatApiUrl(visionApiUrl));
+			let saved = savedConfig.providers.find(sp => sp.id == id);
+			providers.push({
+				id,
+				providerName,
+				apiUrl: apiUrl || DEFAULT_CONFIG.apiUrl,
+				model: normalizeModelForApi(p.model, p.apiUrl, p.providerName),
+				visionApiUrl: visionApiUrl,
+				visionModel: asText(p.visionModel, 120) ? normalizeModelForApi(p.visionModel, visionApiUrl || apiUrl, p.providerName) : '',
+				apiKey: asText(p.apiKey, 400) || (saved ? saved.apiKey : '') || DEFAULT_CONFIG.apiKey,
+				visionApiKey: asText(p.visionApiKey, 400) || (saved ? saved.visionApiKey : '') || '',
+			});
+		}
+		let activeProviderId = asText(input.activeProviderId, 40) || 'agnes';
+		if (!providers.find(p => p.id == activeProviderId)) activeProviderId = providers[0].id;
+		let next = { providers, activeProviderId };
+		await setupUtil.set(PROVIDERS_STORE_KEY, next);
+		let loaded = await this._getProvidersConfig();
+		let active = await this._getActiveProviderConfig();
+		let publicProviders = loaded.providers.map(p => ({
+			id: p.id,
+			providerName: p.providerName,
+			apiUrl: p.apiUrl || '',
+			model: p.model || '',
+			visionApiUrl: p.visionApiUrl || '',
+			visionModel: p.visionModel || '',
+			hasApiKey: !!p.apiKey,
+			apiKeyMasked: this._maskKey(p.apiKey || ''),
+			hasVisionApiKey: !!p.visionApiKey,
+			visionApiKeyMasked: this._maskKey(p.visionApiKey || ''),
+		}));
+		return {
+			enabled: true,
+			providers: publicProviders,
+			activeProviderId: loaded.activeProviderId || 'agnes',
+			personality: active.personality || DEFAULT_CONFIG.personality,
+			personalityName: (PERSONALITY_MAP[active.personality] || PERSONALITY_MAP[DEFAULT_CONFIG.personality]).name,
+			personalities: Object.keys(PERSONALITY_MAP).map(key => ({ key, name: PERSONALITY_MAP[key].name })),
+			memoryEnabled: false,
+			memoryText: '',
+			systemPrompt: active.systemPrompt || DEFAULT_CONFIG.systemPrompt,
+			temperature: asNumber(active.temperature, DEFAULT_CONFIG.temperature, 0, 2),
+			maxTokens: Math.round(asNumber(active.maxTokens, DEFAULT_CONFIG.maxTokens, 128, 4000)),
+			contextLimit: estimateContextLimit(active.model),
+			visionContextLimit: estimateContextLimit(active.visionModel || active.model),
+			agentCatalog: agentRegistry.getPublicCatalog(),
+		};
+	}
+
+	// Legacy alias — delegates to saveProvidersConfig
+	async saveAdminConfig(input = {}, options = {}) {
+		return await this.saveProvidersConfig(input);
 	}
 
 	async chat(openId, message, history = [], attachments = [], pageContext = {}) {
 		let staff = await this.assertStaff(openId);
 		this._rateLimitCheck(openId);
-		let config = await this._getConfig();
+		let config = await this._getActiveProviderConfig();
 
-		if (!config.enabled) this.AppError('AI 小助手暂未启用，请管理员先配置');
-		if (!config.apiKey && !config.visionApiKey) this.AppError('AI API Key 未配置，请管理员先配置');
+		if (!config.enabled) this.AppError('AI С������δ���ã������Ա������');
+		if (!config.apiKey && !config.visionApiKey) this.AppError('AI API Key δ���ã������Ա������');
 
 		message = asText(message, 800);
-		if (!message) this.AppError('请输入要发送的内容');
+		if (!message) this.AppError('������Ҫ���͵�����');
 		message = this._sanitizeUserInput(message);
 		this._agentUserMessage = message;
 
@@ -385,7 +525,7 @@ class WorkAiService extends WorkPermissionService {
 		let selectedApiUrl = getApiUrlForRequest(config, hasImages);
 		let selectedApiKey = getApiKeyForRequest(config, hasImages);
 		this._assertApiUrl(selectedApiUrl);
-		if (!selectedApiKey) this.AppError(hasImages ? '图片识别 API Key 未配置，请管理员先配置视觉 Key 或主 Key' : 'AI API Key 未配置，请管理员先配置');
+		if (!selectedApiKey) this.AppError(hasImages ? 'ͼƬʶ�� API Key δ���ã������Ա�������Ӿ� Key ���� Key' : 'AI API Key δ���ã������Ա������');
 
 		let body = {
 			model: selectedModel,
@@ -400,7 +540,7 @@ class WorkAiService extends WorkPermissionService {
 				Authorization: 'Bearer ' + selectedApiKey,
 			});
 			let reply = this._pickReply(result);
-			if (!reply) this.AppError('AI 接口返回格式不支持，请检查接口是否兼容 Chat Completions');
+			if (!reply) this.AppError('AI �ӿڷ��ظ�ʽ��֧�֣�����ӿ��Ƿ���� Chat Completions');
 			let responseConfig = Object.assign({}, config, {
 				model: selectedModel,
 				providerName: getProviderNameForRequest(config, hasImages),
@@ -468,41 +608,58 @@ class WorkAiService extends WorkPermissionService {
 				}
 			}
 			console.error('AI chat failed:', err && err.message ? err.message : err);
-			this.AppError(err && err.safeMessage ? err.safeMessage : 'AI 接口调用失败，请检查后台配置');
+			this.AppError(err && err.safeMessage ? err.safeMessage : 'AI �ӿڵ���ʧ�ܣ������̨����');
 		}
 	}
 
 	async listModels(input = {}) {
-		let config = await this._getConfig();
+		let config;
+		if (input.providerId) {
+			let providersConfig = await this._getProvidersConfig();
+			let provider = providersConfig.providers.find(p => p.id == input.providerId);
+			if (provider) {
+				config = {
+					enabled: true,
+					providerName: provider.providerName,
+					apiUrl: provider.apiUrl,
+					model: provider.model,
+					visionApiUrl: provider.visionApiUrl,
+					visionModel: provider.visionModel,
+					apiKey: provider.apiKey,
+					visionApiKey: provider.visionApiKey,
+				};
+			}
+		}
+		if (!config) config = await this._getActiveProviderConfig();
 		let target = input.target == 'vision' ? 'vision' : 'text';
 		let apiUrl = asText(input.apiUrl, 400) || (target == 'vision' ? (config.visionApiUrl || config.apiUrl) : config.apiUrl) || DEFAULT_CONFIG.apiUrl;
 		let apiKey = asText(input.apiKey, 400) || (target == 'vision' ? (config.visionApiKey || config.apiKey) : config.apiKey) || getEnvApiKey();
 		let modelsApiUrl = normalizeModelsApiUrl(apiUrl);
 
 		this._assertApiUrl(modelsApiUrl);
-		if (!apiKey) this.AppError('请先填写或保存 API Key，再获取模型列表');
+		if (!apiKey) this.AppError('需要填写并保存 API Key 后再获取模型列表');
 
 		try {
 			let result = await this._getJson(modelsApiUrl, {
 				Authorization: 'Bearer ' + apiKey,
 			});
 			let models = this._parseModelList(result);
-			if (!models.length) this.AppError('AI 接口没有返回可用模型，可手动填写模型 ID');
+			if (!models.length) this.AppError('AI 接口没有返回可用模型，请手动填写模型 ID');
 			return { models };
 		} catch (err) {
 			if (err && err.name == 'AppError') throw err;
 			if (err && err.statusCode == 404) this.AppError('当前接口没有提供模型列表，请确认 Base URL 或手动填写模型 ID');
-			if (err && err.statusCode == 401) this.AppError('API Key 无效或无权获取模型列表');
+			if (err && err.statusCode == 401) this.AppError('API Key 无效，无权获取模型列表');
 			if (err && err.statusCode == 403) this.AppError('API Key 没有获取模型列表权限');
 			console.error('AI models failed:', err && err.message ? err.message : err);
-			this.AppError('获取模型列表失败，请稍后再试或手动填写模型 ID');
+			this.AppError('获取模型列表失败，请重试或手动填写模型 ID');
 		}
 	}
 
 	async _getConfig(options = {}) {
 		let saved = await setupUtil.get(SETUP_KEY);
 		let config = Object.assign({}, DEFAULT_CONFIG, saved || {});
-		if (!config.providerName || config.providerName == 'OpenAI兼容接口') config.providerName = DEFAULT_CONFIG.providerName;
+		if (!config.providerName || config.providerName == 'OpenAI���ݽӿ�') config.providerName = DEFAULT_CONFIG.providerName;
 		if (!config.apiUrl || config.apiUrl == LEGACY_OPENAI_API_URL) config.apiUrl = DEFAULT_CONFIG.apiUrl;
 		config.model = normalizeModelForApi(config.model, config.apiUrl, config.providerName);
 		if (config.visionModel) config.visionModel = normalizeModelForApi(config.visionModel, config.visionApiUrl || config.apiUrl, config.providerName);
@@ -549,12 +706,12 @@ class WorkAiService extends WorkPermissionService {
 		try {
 			parsed = new URL(url);
 		} catch (err) {
-			this.AppError('AI 接口地址格式错误');
+			this.AppError('AI �ӿڵ�ַ��ʽ����');
 		}
-		if (parsed.protocol != 'https:') this.AppError('AI 接口地址必须使用 https');
+		if (parsed.protocol != 'https:') this.AppError('AI �ӿڵ�ַ����ʹ�� https');
 		let host = String(parsed.hostname || '').toLowerCase();
-		if (!host || host == 'localhost' || host.endsWith('.local')) this.AppError('AI 接口地址不能使用本地域名');
-		if (this._isBlockedIp(host)) this.AppError('AI 接口地址不能使用内网或本机 IP');
+		if (!host || host == 'localhost' || host.endsWith('.local')) this.AppError('AI �ӿڵ�ַ����ʹ�ñ�������');
+		if (this._isBlockedIp(host)) this.AppError('AI �ӿڵ�ַ����ʹ�������򱾻� IP');
 	}
 
 	_isBlockedIp(host) {
@@ -573,11 +730,11 @@ class WorkAiService extends WorkPermissionService {
 	}
 
 	_buildMessages(config, staff, message, history) {
-		let staffName = staff && staff.STAFF_NAME ? staff.STAFF_NAME : '员工';
+		let staffName = staff && staff.STAFF_NAME ? staff.STAFF_NAME : 'Ա��';
 		let system = config.systemPrompt || DEFAULT_CONFIG.systemPrompt;
 		let personality = PERSONALITY_MAP[config.personality] || PERSONALITY_MAP[DEFAULT_CONFIG.personality];
 		system += '\n\n' + personality.prompt;
-		system += '\n\n当前用户：' + staffName + '。回答请控制在 200 字以内，除非用户明确要求详细说明。';
+		system += '\n\n��ǰ�û���' + staffName + '���ش�������� 200 �����ڣ������û���ȷҪ����ϸ˵����';
 
 		let messages = [{ role: 'system', content: system }];
 		messages = messages.concat(this._normalizeHistory(history));
@@ -606,8 +763,8 @@ class WorkAiService extends WorkPermissionService {
 
 		// Add page context for non-chat queries
 		if (queryType !== 'chat') {
-			parts.push('当前页面：' + JSON.stringify({ route: pageContext.route || '', orderId: pageContext.orderId || '', day: pageContext.day || '' }));
-			if (pageContext.day) parts.push('Date fallback: pageContext.day可作为默认写入日期。');
+			parts.push('��ǰҳ�棺' + JSON.stringify({ route: pageContext.route || '', orderId: pageContext.orderId || '', day: pageContext.day || '' }));
+			if (pageContext.day) parts.push('Date fallback: pageContext.day����ΪĬ��д�����ڡ�');
 		}
 
 		// Add tool instructions for action-capable queries
@@ -615,9 +772,9 @@ class WorkAiService extends WorkPermissionService {
 			parts.push(agentRegistry.buildToolPrompt(selectedSkills, queryType));
 			parts.push(agentRegistry.buildWriteActionPrompt(selectedSkills, queryType));
 		} else if (queryType === 'explain') {
-			parts.push('如果用户问小程序能做什么，按实际功能回答：档期、订单、事项、休息、小记、消息、反馈、业绩、工资、管理中心、收款、提成、审核、AI配置。');
+			parts.push('����û���С��������ʲô����ʵ�ʹ��ܻش𣺵��ڡ������������Ϣ��С�ǡ���Ϣ��������ҵ�������ʡ��������ġ��տ��ɡ���ˡ�AI���á�');
 		} else if (queryType === 'chat') {
-			parts.push('你是有性格、会主动补漏的工作台agent。回答业务问题要贴合摄影工作室场景。');
+			parts.push('�������Ը񡢻�������©�Ĺ���̨agent���ش�ҵ������Ҫ������Ӱ�����ҳ�����');
 		}
 
 		// Layer 2: Staff/type data (only for write/query/image queries)
@@ -634,8 +791,8 @@ class WorkAiService extends WorkPermissionService {
 					TYPE_ORDER: 'asc',
 					TYPE_ADD_TIME: 'asc',
 				}, 200);
-				parts.push('可用员工：' + compressStaffList(staffOptions));
-				parts.push('可用拍摄类型：' + compressTypeList(typeOptions));
+				parts.push('����Ա����' + compressStaffList(staffOptions));
+				parts.push('�����������ͣ�' + compressTypeList(typeOptions));
 			} catch (dbErr) {
 				console.error('AI build messages DB query failed:', dbErr && dbErr.message ? dbErr.message : dbErr);
 			}
@@ -656,13 +813,13 @@ class WorkAiService extends WorkPermissionService {
 		if (memoryPrompt) parts.push(memoryPrompt);
 
 		if (config.memoryEnabled && config.memoryText) {
-			parts.push('管理员维护的长期记忆/店内规则：' + asText(config.memoryText, 2000));
-			parts.push('长期记忆只作为回答和追问参考，不等于数据库事实；涉及订单、金额、收款、工资、审核等写入前仍必须依赖当前字段、页面上下文和后台校验。');
+			parts.push('����Աά���ĳ��ڼ���/���ڹ���' + asText(config.memoryText, 2000));
+			parts.push('���ڼ���ֻ��Ϊ�ش��׷�ʲο������������ݿ���ʵ���漰���������տ���ʡ���˵�д��ǰ�Ա���������ǰ�ֶΡ�ҳ�������ĺͺ�̨У�顣');
 		}
 
 		// Add knowledge base for non-trivial queries
 		if (queryType !== 'chat') {
-			parts.push('功能摘要：' + LOCAL_APP_KNOWLEDGE.join('；'));
+			parts.push('����ժҪ��' + LOCAL_APP_KNOWLEDGE.join('��'));
 		}
 
 		// Phase 4: Keyword-based knowledge retrieval
@@ -680,7 +837,7 @@ class WorkAiService extends WorkPermissionService {
 
 		if (hasImages) {
 			let last = messages[messages.length - 1];
-			let content = [{ type: 'text', text: last.content + '\n\n请结合截图先判断信息类型，再识别档期/订单/收款/提成/工资/审核信息；逐张检查所有图片，不确定对象或金额时先追问。' }];
+			let content = [{ type: 'text', text: last.content + '\n\n���Ͻ�ͼ���ж���Ϣ���ͣ���ʶ����/����/�տ�/���/����/�����Ϣ�����ż������ͼƬ����ȷ���������ʱ��׷�ʡ�' }];
 			for (let item of attachments) {
 				content.push({ type: 'image_url', image_url: { url: item.url } });
 			}
@@ -698,7 +855,7 @@ class WorkAiService extends WorkPermissionService {
 			if (Array.isArray(raw)) {
 				let textParts = raw.filter(p => p && p.type == 'text' && p.text).map(p => p.text).join('');
 				let imgCount = raw.filter(p => p && p.type == 'image_url').length;
-				raw = imgCount > 0 ? textParts + ` [附带${imgCount}张图片]` : textParts;
+				raw = imgCount > 0 ? textParts + ` [����${imgCount}��ͼƬ]` : textParts;
 			}
 			let limit = item.role == 'assistant' ? 4000 : 800;
 			let content = asText(raw, limit);
@@ -722,7 +879,7 @@ class WorkAiService extends WorkPermissionService {
 		if (this._shouldAckNoSupplement(message, history)) {
 			return this._localAgentResult(config, {
 				action: 'none',
-				reply: '收到，不补充。本次对话不再继续调用 AI。',
+				reply: '�յ��������䡣���ζԻ����ټ������� AI��',
 			});
 		}
 
@@ -743,31 +900,31 @@ class WorkAiService extends WorkPermissionService {
 			} else {
 				return this._localAgentResult(config, {
 					action: 'none',
-					reply: `只找到 ${orders.length} 个可选订单，没有第 ${intent.pickIndex} 条，请重新告诉我要改哪一条。`,
+					reply: `ֻ�ҵ� ${orders.length} ����ѡ������û�е� ${intent.pickIndex} ���������¸�����Ҫ����һ����`,
 				});
 			}
 		}
 		if (!orders.length) {
-			let target = intent.keyword ? `「${intent.keyword}」` : intent.date;
+			let target = intent.keyword ? `��${intent.keyword}��` : intent.date;
 			return this._localAgentResult(config, {
 				action: 'none',
-				reply: `${target} 没有找到可修改的订单档期，请确认客户名或原日期是否正确。`,
+				reply: `${target} û���ҵ����޸ĵĶ������ڣ���ȷ�Ͽͻ�����ԭ�����Ƿ���ȷ��`,
 			});
 		}
 		if (orders.length > 1) {
 			let lines = orders.slice(0, 8).map((order, idx) => {
-				let name = order.ORDER_CUSTOMER_NAME || order.ORDER_CUSTOMER_SURNAME || '未填客户';
-				return `${idx + 1}. ${order.ORDER_DATE || ''} ${order.ORDER_TIME || '未填时间'} ${order.ORDER_TYPE_NAME || '其他'}，客户${name}`;
+				let name = order.ORDER_CUSTOMER_NAME || order.ORDER_CUSTOMER_SURNAME || 'δ��ͻ�';
+				return `${idx + 1}. ${order.ORDER_DATE || ''} ${order.ORDER_TIME || 'δ��ʱ��'} ${order.ORDER_TYPE_NAME || '����'}���ͻ�${name}`;
 			}).join('\n');
 			return this._localAgentResult(config, {
 				action: 'none',
-				reply: `找到 ${orders.length} 个可能要修改的订单档期，请告诉我要改第几条：\n${lines}`,
+				reply: `�ҵ� ${orders.length} ������Ҫ�޸ĵĶ������ڣ��������Ҫ�ĵڼ�����\n${lines}`,
 			});
 		}
 
 		let order = orders[0];
 		let ret = await this._agentUpdateOrder(openId, staff, { orderId: order._id, newDate: intent.newDate }, pageContext);
-		ret.reply = `已把 ${order.ORDER_DATE || intent.date || '该'} 订单档期改到 ${intent.newDate}：${order.ORDER_TIME || ''} ${order.ORDER_TYPE_NAME || '其他'}，客户${order.ORDER_CUSTOMER_NAME || ''}。已同步写入全体小记审查流水。`.replace(/\s+/g, ' ').trim();
+		ret.reply = `�Ѱ� ${order.ORDER_DATE || intent.date || '��'} �������ڸĵ� ${intent.newDate}��${order.ORDER_TIME || ''} ${order.ORDER_TYPE_NAME || '����'}���ͻ�${order.ORDER_CUSTOMER_NAME || ''}����ͬ��д��ȫ��С�������ˮ��`.replace(/\s+/g, ' ').trim();
 		return this._localAgentResult(config, ret);
 	}
 
@@ -790,10 +947,10 @@ class WorkAiService extends WorkPermissionService {
 
 	_shouldAckNoSupplement(message, history = []) {
 		let text = asText(message, 40).replace(/\s+/g, '');
-		if (!/^(无补充|不用补充|不补充|没有补充|没了|不用|否)$/.test(text)) return false;
+		if (!/^(�޲���|���ò���|������|û�в���|û��|����|��)$/.test(text)) return false;
 		let normalized = this._normalizeHistory(history).reverse();
 		let lastAssistant = normalized.find(item => item.role == 'assistant' && item.content);
-		return !!(lastAssistant && /(补充|备注|确认|还需要)/.test(asText(lastAssistant.content, 1000)));
+		return !!(lastAssistant && /(����|��ע|ȷ��|����Ҫ)/.test(asText(lastAssistant.content, 1000)));
 	}
 
 	_parseLocalOrderDateUpdateIntent(message, history = [], pageContext = {}) {
@@ -803,7 +960,7 @@ class WorkAiService extends WorkPermissionService {
 		if (pending) return pending;
 
 		let text = asText(message, 800);
-		if (!/(只有|就一|唯一|一个|1个)/.test(text)) return null;
+		if (!/(ֻ��|��һ|Ψһ|һ��|1��)/.test(text)) return null;
 		let currentDate = this._extractSingleTextDate(text) || this._extractSpecificTextDate(text);
 		let normalizedHistory = this._normalizeHistory(history).filter(item => item.role == 'user').reverse();
 		for (let item of normalizedHistory) {
@@ -816,7 +973,7 @@ class WorkAiService extends WorkPermissionService {
 
 	_parsePendingOrderDateSelection(message, history = [], pageContext = {}) {
 		let text = asText(message, 40).replace(/\s+/g, '');
-		let m = text.match(/^(?:第)?([1-9])(?:条|个|项|号)?$/);
+		let m = text.match(/^(?:��)?([1-9])(?:��|��|��|��)?$/);
 		if (!m) return null;
 		let pickIndex = Number(m[1]);
 		let normalized = this._normalizeHistory(history).reverse();
@@ -824,7 +981,7 @@ class WorkAiService extends WorkPermissionService {
 		for (let item of normalized) {
 			let content = asText(item.content, 1200);
 			if (!content) continue;
-			if (item.role == 'assistant' && /找到\s*\d+\s*个.*订单档期/.test(content) && /(第几条|哪一条|哪一个客户|第几项)/.test(content)) {
+			if (item.role == 'assistant' && /�ҵ�\s*\d+\s*��.*��������/.test(content) && /(�ڼ���|��һ��|��һ���ͻ�|�ڼ���)/.test(content)) {
 				sawPendingQuestion = true;
 				continue;
 			}
@@ -838,16 +995,16 @@ class WorkAiService extends WorkPermissionService {
 	_parseOrderDateUpdateText(text, pageContext = {}) {
 		text = asText(text, 800);
 		if (!text) return null;
-		let hasBusinessWord = /(档期|订单|拍摄|日期)/.test(text);
+		let hasBusinessWord = /(����|����|����|����)/.test(text);
 		let hasDate = !!(this._extractSingleTextDate(text) || this._extractSpecificTextDate(text) || this._extractOrderedTextDates(text).length);
 		if (!hasBusinessWord && !hasDate) return null;
 		let correction = this._parseOrderDateCorrectionText(text, pageContext);
 		if (correction) return correction;
-		if (!/(改|修改|更改|更正|调整|调|换|移|挪)/.test(text)) return null;
+		if (!/(��|�޸�|����|����|����|��|��|��|Ų)/.test(text)) return null;
 
 		let patterns = [
-			/(?:把|将)?([\s\S]{0,60}?)(?:的)?(?:档期|订单|拍摄|日期)?\s*(?:改|修改|更改|更正|调整|调|换|移|挪)(?:到|为|成|至)\s*([\s\S]{1,60})/,
-			/(?:从)\s*([\s\S]{1,40}?)(?:改|修改|更改|更正|调整|调|换|移|挪)?(?:到|为|成|至)\s*([\s\S]{1,60})/,
+			/(?:��|��)?([\s\S]{0,60}?)(?:��)?(?:����|����|����|����)?\s*(?:��|�޸�|����|����|����|��|��|��|Ų)(?:��|Ϊ|��|��)\s*([\s\S]{1,60})/,
+			/(?:��)\s*([\s\S]{1,40}?)(?:��|�޸�|����|����|����|��|��|��|Ų)?(?:��|Ϊ|��|��)\s*([\s\S]{1,60})/,
 		];
 		for (let pattern of patterns) {
 			let m = text.match(pattern);
@@ -865,7 +1022,7 @@ class WorkAiService extends WorkPermissionService {
 	}
 
 	_parseOrderDateCorrectionText(text, pageContext = {}) {
-		let m = text.match(/^([\s\S]{1,80}?)(?:的)?(?:档期|订单|拍摄|日期)?\s*(?:应该是|应为|正确是|实际是|是|为)\s*([\s\S]{1,40})$/);
+		let m = text.match(/^([\s\S]{1,80}?)(?:��)?(?:����|����|����|����)?\s*(?:Ӧ����|ӦΪ|��ȷ��|ʵ����|��|Ϊ)\s*([\s\S]{1,40})$/);
 		if (!m) return null;
 		let targetDate = this._extractDateFromText(m[2], this._contextDate(pageContext));
 		if (!targetDate) return null;
@@ -880,16 +1037,16 @@ class WorkAiService extends WorkPermissionService {
 	_isWeakOrderKeyword(keyword) {
 		keyword = asText(keyword, 40).replace(/\s+/g, '');
 		if (!keyword) return true;
-		if (/^(今天|明天|后天|昨天|前天|大后天|大前天|日期|时间|上午|下午|晚上|中午)$/.test(keyword)) return true;
+		if (/^(����|����|����|����|ǰ��|�����|��ǰ��|����|ʱ��|����|����|����|����)$/.test(keyword)) return true;
 		return keyword.length < 2;
 	}
 
 	_extractOrderKeyword(text) {
 		text = asText(text, 120);
 		if (!text) return '';
-		text = text.replace(/(\d{4}\s*[年./-]\s*\d{1,2}\s*[月./-]\s*\d{1,2}\s*(?:日|号)?|\d{1,2}\s*[月./-]\s*\d{1,2}\s*(?:日|号)?|\d{1,2}\s*(?:日|号))/g, ' ');
-		text = text.replace(/(把|将|从|的|这个|那个|这条|那条|唯一|只有|一个|1个|第\d+条|订单|档期|拍摄|日期|客户|改|修改|更改|更正|调整|调到|调|换|移|挪|到|为|成|至|应该是|应为|正确是|实际是|是)/g, ' ');
-		text = text.replace(/[：:，,。.、；;（）()[\]【】"'“”‘’\s]+/g, ' ').trim();
+		text = text.replace(/(\d{4}\s*[��./-]\s*\d{1,2}\s*[��./-]\s*\d{1,2}\s*(?:��|��)?|\d{1,2}\s*[��./-]\s*\d{1,2}\s*(?:��|��)?|\d{1,2}\s*(?:��|��))/g, ' ');
+		text = text.replace(/(��|��|��|��|���|�Ǹ�|����|����|Ψһ|ֻ��|һ��|1��|��\d+��|����|����|����|����|�ͻ�|��|�޸�|����|����|����|����|��|��|��|Ų|��|Ϊ|��|��|Ӧ����|ӦΪ|��ȷ��|ʵ����|��)/g, ' ');
+		text = text.replace(/[��:��,��.����;����()[\]����"'��������\s]+/g, ' ').trim();
 		if (text.length > 40) text = text.slice(0, 40).trim();
 		return text;
 	}
@@ -902,7 +1059,7 @@ class WorkAiService extends WorkPermissionService {
 		if (!baseDate) return '';
 		let base = String(baseDate).match(/^(\d{4})-(\d{2})-(\d{2})$/);
 		if (!base) return '';
-		let m = text.replace(/\s+/g, '').match(/^(\d{1,2})(?:日|号)?$/) || text.match(/(^|[^\d])(\d{1,2})\s*(?:日|号)(?![张条位个名组批次套件])/);
+		let m = text.replace(/\s+/g, '').match(/^(\d{1,2})(?:��|��)?$/) || text.match(/(^|[^\d])(\d{1,2})\s*(?:��|��)(?![����λ�����������׼�])/);
 		let day = m ? Number(m[m.length - 1]) : 0;
 		if (!day || day < 1 || day > 31) return '';
 		return this._cleanDate(`${base[1]}-${base[2]}-${day}`, false);
@@ -915,7 +1072,7 @@ class WorkAiService extends WorkPermissionService {
 			let day = this._extractDateFromText(raw);
 			if (day && !list.includes(day)) list.push(day);
 		};
-		let re = /(\d{4}\s*[年./-]\s*\d{1,2}\s*[月./-]\s*\d{1,2}\s*(?:日|号)?|\d{1,2}\s*[月./-]\s*\d{1,2}\s*(?:日|号)?)/g;
+		let re = /(\d{4}\s*[��./-]\s*\d{1,2}\s*[��./-]\s*\d{1,2}\s*(?:��|��)?|\d{1,2}\s*[��./-]\s*\d{1,2}\s*(?:��|��)?)/g;
 		let m;
 		while ((m = re.exec(text))) pushDate(m[1]);
 		return list;
@@ -962,10 +1119,10 @@ class WorkAiService extends WorkPermissionService {
 	_mimoTextFallbackBody(body = {}) {
 		let userText = this._lastUserText(body.messages) || asText(this._agentUserMessage, 1200);
 		return {
-			model: normalizeModelForApi(body.model, DEFAULT_CONFIG.apiUrl, 'Mimo'),
+			model: normalizeModelForApi(body.model, DEFAULT_CONFIG.apiUrl, DEFAULT_CONFIG.providerName),
 			messages: [{
 				role: 'user',
-				content: '你是云屿摄影小程序里的小猫 AI 助手。请用中文简洁回答，不要编造后台真实数据。用户问题：' + userText,
+				content: '����������ӰС�������Сè AI ���֡��������ļ��ش𣬲�Ҫ�����̨��ʵ���ݡ��û����⣺' + userText,
 			}],
 		};
 	}
@@ -976,7 +1133,7 @@ class WorkAiService extends WorkPermissionService {
 		return err.statusCode == 400
 			|| err.statusCode == 422
 			|| msg.indexOf('param') >= 0
-			|| msg.indexOf('参数') >= 0;
+			|| msg.indexOf('����') >= 0;
 	}
 
 	_pickJsonObject(text) {
@@ -1024,7 +1181,7 @@ class WorkAiService extends WorkPermissionService {
 			action: 'agent_confirm',
 			id: pending.id,
 			data: pending,
-			reply: `已生成高风险确认申请：${pending.title}。请管理员到“AI确认队列”确认后再执行，当前还没有改动业务数据。`,
+			reply: `�����ɸ߷���ȷ�����룺${pending.title}�������Ա����AIȷ�϶��С�ȷ�Ϻ���ִ�У���ǰ��û�иĶ�ҵ�����ݡ�`,
 		};
 	}
 
@@ -1041,7 +1198,7 @@ class WorkAiService extends WorkPermissionService {
 		if (action == 'void_payment') return await this._agentVoidPayment(openId, staff, data || {});
 		if (action == 'pay_payroll') return await this._agentPayPayroll(openId, staff, data || {});
 		if (action == 'audit_order') return await this._agentAuditOrder(openId, staff, data || {});
-		this.AppError('该确认动作暂不支持执行：' + action);
+		this.AppError('��ȷ�϶����ݲ�֧��ִ�У�' + action);
 	}
 
 	async _handleAgentReply(openId, staff, reply, config, llmResult, attachments = [], pageContext = {}) {
@@ -1053,11 +1210,11 @@ class WorkAiService extends WorkPermissionService {
 		let actionNotAllowed = action && action.action && action.action != 'none' && !validActions.includes(action.action);
 		if (!action || !action.action || action.action == 'none' || actionNotAllowed) {
 			let replyText = action && action.reply ? asText(action.reply, 4000) : reply;
-			// Guard: detect model hallucination — reply claims success but action is none
-			if (action && replyText && /已(修改|改|更新|删除|取消|新增|创建|帮你|处理|完成|执行|设置|安排|录入|记录|搞定)/.test(replyText)) {
+			// Guard: detect model hallucination �� reply claims success but action is none
+			if (action && replyText && /��(�޸�|��|����|ɾ��|ȡ��|����|����|����|����|���|ִ��|����|����|¼��|��¼|�㶨)/.test(replyText)) {
 				replyText = actionNotAllowed
-					? 'AI 识别到了一个当前场景不允许直接执行的动作，没有实际写入。请换成更明确的业务指令，或先进入对应订单/财务页面后再试。'
-					: 'AI 没有实际执行这个操作，请用更明确的指令重试，例如："把客户XXX的9.16档期改成9.11"。如果还是不行，请手动在订单里修改。';
+					? 'AI ʶ����һ����ǰ����������ֱ��ִ�еĶ�����û��ʵ��д�롣�뻻�ɸ���ȷ��ҵ��ָ����Ƚ����Ӧ����/����ҳ������ԡ�'
+					: 'AI û��ʵ��ִ��������������ø���ȷ��ָ�����ԣ����磺"�ѿͻ�XXX��9.16���ڸĳ�9.11"��������ǲ��У����ֶ��ڶ������޸ġ�';
 			}
 			return {
 				reply: replyText,
@@ -1076,7 +1233,7 @@ class WorkAiService extends WorkPermissionService {
 		if (this._isConfirmRequiredAction(action.action)) ret = await this._agentCreatePendingConfirm(openId, staff, action.action, action.data || {}, pageContext);
 		else if (action.action == 'query_schedule') ret = await this._agentQuerySchedule(openId, staff, action.data || {});
 		else if (action.action == 'create_orders' && batchOrders.length) ret = await this._agentCreateOrders(openId, staff, batchPayload, attachments, pageContext);
-		else if (action.action == 'create_orders') ret = { reply: 'AI返回了批量新增动作但没有包含订单列表，请重新描述或上传截图。' };
+		else if (action.action == 'create_orders') ret = { reply: 'AI��������������������û�а��������б����������������ϴ���ͼ��' };
 		else if (action.action == 'create_order' && batchOrders.length) ret = await this._agentCreateOrders(openId, staff, batchPayload, attachments, pageContext);
 		else if (action.action == 'create_order') ret = await this._agentCreateOrder(openId, staff, action.data || {}, attachments, pageContext);
 		else if (action.action == 'join_order') ret = await this._agentJoinOrder(openId, staff, action.data || {}, pageContext);
@@ -1094,7 +1251,7 @@ class WorkAiService extends WorkPermissionService {
 		else if (action.action == 'audit_order') ret = await this._agentAuditOrder(openId, staff, action.data || {});
 		else {
 			return {
-				reply: action.reply || '这个操作我暂时不能直接执行。',
+				reply: action.reply || '�����������ʱ����ֱ��ִ�С�',
 				model: config.model,
 				providerName: config.providerName,
 				contextLimit: estimateContextLimit(config.model),
@@ -1103,7 +1260,7 @@ class WorkAiService extends WorkPermissionService {
 		}
 
 		return {
-			reply: ret.reply || action.reply || '已处理完成。',
+			reply: ret.reply || action.reply || '�Ѵ�����ɡ�',
 			action: ret.action,
 			id: ret.id,
 			data: ret.data || null,
@@ -1126,8 +1283,8 @@ class WorkAiService extends WorkPermissionService {
 		text = asText(text, 800);
 		if (!text) return '';
 		// Strip all whitespace so regexes match dates the AI outputs with
-		// spaces (e.g. "2026年 6月 20日" or "6 月 20 日").
-		text = text.replace(/[\s　]+/g, '');
+		// spaces (e.g. "2026�� 6�� 20��" or "6 �� 20 ��").
+		text = text.replace(/[\s��]+/g, '');
 		let found = {};
 		let pushDate = raw => {
 			try {
@@ -1138,7 +1295,7 @@ class WorkAiService extends WorkPermissionService {
 			}
 		};
 
-		let full = /(\d{4})[年./-](\d{1,2})[月./-](\d{1,2})(?:日|号)?(?!\d)/g;
+		let full = /(\d{4})[��./-](\d{1,2})[��./-](\d{1,2})(?:��|��)?(?!\d)/g;
 		let m;
 		while ((m = full.exec(text))) {
 			let yr = Number(m[1]);
@@ -1146,7 +1303,7 @@ class WorkAiService extends WorkPermissionService {
 			pushDate(`${m[1]}-${m[2]}-${m[3]}`);
 		}
 
-		let monthDay = /(^|[^\d.])(\d{1,2})[月./-](\d{1,2})(?:日|号)?(?!\d{4}(?![:：]))(?![张条位个名组批次套件])/g;
+		let monthDay = /(^|[^\d.])(\d{1,2})[��./-](\d{1,2})(?:��|��)?(?!\d{4}(?![:��]))(?![����λ�����������׼�])/g;
 		let year = Number(timeUtil.time('Y'));
 		let nowTs = Date.now();
 		let nowMonth = new Date().getMonth() + 1;
@@ -1161,7 +1318,7 @@ class WorkAiService extends WorkPermissionService {
 			let prev = new Date(year - 1, month - 1, dayNum);
 			if (prev.getTime() >= nowTs - 45 * 86400000) useYear = year - 1;
 		}
-		// Cross-year boundary: Dec→Jan or Jan→Dec within ~60 days
+		// Cross-year boundary: Dec��Jan or Jan��Dec within ~60 days
 		// Only apply when the day-range heuristics above did NOT already adjust the year.
 		else if (Math.abs(nowMonth - month) >= 11) {
 			let diff = candidate.getTime() - nowTs;
@@ -1179,10 +1336,10 @@ class WorkAiService extends WorkPermissionService {
 		let idx = text.indexOf(keyword);
 		if (idx < 0) return false;
 		let around = text.slice(Math.max(0, idx - 12), idx + keyword.length + 24);
-		if (/(上午|中午|下午|晚上|早上|凌晨|点|半|全天|拍摄|拍|视频|写真|跟拍|记录|新增|登记|安排|档期|事项|订单|休息|请假|跟进|客户|提醒)/.test(around)) return true;
+		if (/(����|����|����|����|����|�賿|��|��|ȫ��|����|��|��Ƶ|д��|����|��¼|����|�Ǽ�|����|����|����|����|��Ϣ|���|����|�ͻ�|����)/.test(around)) return true;
 		// Fallback: only match clear scheduling ACTION verbs, not nouns that appear in casual queries
-		// (e.g. "昨天的订单怎么样了" contains "订单" but is a query, not a scheduling action)
-		return /(记录|新增|登记|安排|录入|创建|添加|请假|休息)/.test(text);
+		// (e.g. "����Ķ�����ô����" contains "����" but is a query, not a scheduling action)
+		return /(��¼|����|�Ǽ�|����|¼��|����|����|���|��Ϣ)/.test(text);
 	}
 
 	_extractRelativeTextDate(text) {
@@ -1194,13 +1351,13 @@ class WorkAiService extends WorkPermissionService {
 		if (week) return week;
 
 		let rules = [
-			{ key: '大后天', days: 3 },
-			{ key: '后天', days: 2 },
-			{ key: '明天', days: 1 },
-			{ key: '今天', days: 0 },
-			{ key: '大前天', days: -3 },
-			{ key: '前天', days: -2 },
-			{ key: '昨天', days: -1 },
+			{ key: '�����', days: 3 },
+			{ key: '����', days: 2 },
+			{ key: '����', days: 1 },
+			{ key: '����', days: 0 },
+			{ key: '��ǰ��', days: -3 },
+			{ key: 'ǰ��', days: -2 },
+			{ key: '����', days: -1 },
 		];
 		for (let item of rules) {
 			if (text.includes(item.key) && this._hasRelativeDateContext(text, item.key)) {
@@ -1213,8 +1370,8 @@ class WorkAiService extends WorkPermissionService {
 	_computeWeekdayOffset(text, maxLen, requireContext) {
 		text = asText(text, maxLen);
 		if (!text) return '';
-		let weekMap = { '一': 1, '二': 2, '三': 3, '四': 4, '五': 5, '六': 6, '日': 0, '天': 0 };
-		let m = text.match(/(上上周|上上星期|上上礼拜|上周|上星期|上礼拜|下下周|下下星期|下下礼拜|下周|下星期|下礼拜|本周|这周|本星期|这星期|本礼拜|这礼拜|周|星期|礼拜)([一二三四五六日天])/);
+		let weekMap = { 'һ': 1, '��': 2, '��': 3, '��': 4, '��': 5, '��': 6, '��': 0, '��': 0 };
+		let m = text.match(/(������|��������|�������|����|������|�����|������|��������|�������|����|������|�����|����|����|������|������|�����|�����|��|����|���)([һ��������������])/);
 		if (!m) return '';
 		if (requireContext && !this._hasRelativeDateContext(text, m[0])) return '';
 		let target = weekMap[m[2]];
@@ -1226,12 +1383,12 @@ class WorkAiService extends WorkPermissionService {
 		let targetIso = target === 0 ? 7 : target;
 		let prefix = m[1];
 		let offset = targetIso - currentIso;
-		if (prefix == '下下周' || prefix == '下下星期' || prefix == '下下礼拜') offset += 14;
-		else if (prefix == '下周' || prefix == '下星期' || prefix == '下礼拜') offset += 7;
-		else if (prefix == '上上周' || prefix == '上上星期' || prefix == '上上礼拜') offset -= 14;
-		else if (prefix == '上周' || prefix == '上星期' || prefix == '上礼拜') offset -= 7;
-		else if (prefix == '本周' || prefix == '这周' || prefix == '本星期' || prefix == '这星期' || prefix == '本礼拜' || prefix == '这礼拜') {
-			// 本周/这周: stay in current week, no offset adjustment
+		if (prefix == '������' || prefix == '��������' || prefix == '�������') offset += 14;
+		else if (prefix == '����' || prefix == '������' || prefix == '�����') offset += 7;
+		else if (prefix == '������' || prefix == '��������' || prefix == '�������') offset -= 14;
+		else if (prefix == '����' || prefix == '������' || prefix == '�����') offset -= 7;
+		else if (prefix == '����' || prefix == '����' || prefix == '������' || prefix == '������' || prefix == '�����' || prefix == '�����') {
+			// ����/����: stay in current week, no offset adjustment
 		} else if (offset < 0) offset += 7;
 		// bare weekday (no prefix): offset == 0 means today, offset < 0 means next occurrence
 		return this._addDays(timeUtil.time('Y-M-D'), offset);
@@ -1248,7 +1405,7 @@ class WorkAiService extends WorkPermissionService {
 	_extractSpecificTextDate(text) {
 		text = asText(text, 800);
 		if (!text) return '';
-		let m = text.match(/(\d{4})\s*年\s*(\d{1,2})\s*月\s*(\d{1,2})\s*[日号]/);
+		let m = text.match(/(\d{4})\s*��\s*(\d{1,2})\s*��\s*(\d{1,2})\s*[�պ�]/);
 		if (m) {
 			let year = Number(m[1]), month = Number(m[2]), day = Number(m[3]);
 			if (year < 1990 || year > 2099) return '';
@@ -1257,7 +1414,7 @@ class WorkAiService extends WorkPermissionService {
 				return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 			}
 		}
-		m = text.match(/(\d{1,2})\s*月\s*(\d{1,2})\s*[日号](?![张条位个名组批次套件])/);
+		m = text.match(/(\d{1,2})\s*��\s*(\d{1,2})\s*[�պ�](?![����λ�����������׼�])/);
 		if (m) {
 			let year = Number(timeUtil.time('Y')), month = Number(m[1]), day = Number(m[2]);
 			if (month < 1 || month > 12 || day < 1 || day > 31) return '';
@@ -1277,10 +1434,10 @@ class WorkAiService extends WorkPermissionService {
 	_warnImageDateMismatch(resolvedDate, attachments) {
 		if (!attachments || !attachments.length) return;
 		let userMsg = this._agentUserMessage || '';
-		let hasRelativeKeyword = /[今天明天后天昨天前天大前天大后天]/.test(userMsg);
+		let hasRelativeKeyword = /[���������������ǰ���ǰ������]/.test(userMsg);
 		if (!hasRelativeKeyword) return;
 		// User message contains relative date keyword + image attachments.
-		// Check if user message also contains a specific date (e.g. "6月20日") that differs.
+		// Check if user message also contains a specific date (e.g. "6��20��") that differs.
 		let specificInMsg = this._extractSingleTextDate(userMsg) || this._extractSpecificTextDate(userMsg);
 		if (specificInMsg && specificInMsg !== resolvedDate) {
 			console.warn('AI date mismatch: user text has specific date', specificInMsg, 'but resolved to', resolvedDate, 'with', attachments.length, 'image(s)');
@@ -1290,7 +1447,7 @@ class WorkAiService extends WorkPermissionService {
 	_cleanActionDate(date, required = true, options = {}) {
 		date = asText(date, 30);
 		// Only use user-message hint when AI didn't provide a usable explicit date.
-		// This prevents user keywords like "明天" from overriding a screenshot date
+		// This prevents user keywords like "����" from overriding a screenshot date
 		// that the AI correctly extracted (e.g. "2026-06-25").
 		if (options.allowUserDateHint !== false && (!date || this._isDatePlaceholder(date))) {
 			let hint = this._extractRelativeTextDate(this._agentUserMessage || '');
@@ -1298,13 +1455,13 @@ class WorkAiService extends WorkPermissionService {
 		}
 		if (date) {
 			let relRules = [
-				{ key: '大后天', days: 3 },
-				{ key: '后天', days: 2 },
-				{ key: '明天', days: 1 },
-				{ key: '今天', days: 0 },
-				{ key: '大前天', days: -3 },
-				{ key: '前天', days: -2 },
-				{ key: '昨天', days: -1 },
+				{ key: '�����', days: 3 },
+				{ key: '����', days: 2 },
+				{ key: '����', days: 1 },
+				{ key: '����', days: 0 },
+				{ key: '��ǰ��', days: -3 },
+				{ key: 'ǰ��', days: -2 },
+				{ key: '����', days: -1 },
 			];
 			for (let r of relRules) {
 				if (date.includes(r.key)) return this._addDays(timeUtil.time('Y-M-D'), r.days);
@@ -1329,10 +1486,10 @@ class WorkAiService extends WorkPermissionService {
 		if (!date) return false;
 		let normalized = date.replace(/\s+/g, '').toUpperCase();
 		if (normalized == 'YYYY-MM-DD' || normalized == 'YYYY/MM/DD' || normalized == 'YYYY.MM.DD'
-			|| normalized == 'YYYY-MM-DD.' || normalized == 'YYYY年MM月DD日' || normalized == 'YYYY年MM月DD号'
+			|| normalized == 'YYYY-MM-DD.' || normalized == 'YYYY��MM��DD��' || normalized == 'YYYY��MM��DD��'
 			|| normalized == 'DATE' || normalized == '<DATE>' || normalized == 'YYYYMMDD') return true;
 		if (/\b(YYYY|MM|DD)\b/.test(normalized)) return true;
-		if (/^\d{4}[-/.年]\d{1,2}[-/.月]\d{1,2}[日号]?[(（]/.test(normalized)) return true;
+		if (/^\d{4}[-/.��]\d{1,2}[-/.��]\d{1,2}[�պ�]?[(��]/.test(normalized)) return true;
 		return false;
 	}
 
@@ -1379,12 +1536,12 @@ class WorkAiService extends WorkPermissionService {
 	_cleanDate(date, required = true) {
 		date = asText(date, 30)
 			.replace(/T\d.*/, '')
-			.replace(/\s+\d{1,2}[:：]\d{2}.*/, '')
-			.replace(/([日号])\s*[\d一-龥][\s\S]*$/, '$1')
-			.replace(/(\d{4}[-/.年]\d{1,2}[-/.月]\d{1,2})\s*[上下]午.*$/, '$1')
+			.replace(/\s+\d{1,2}[:��]\d{2}.*/, '')
+			.replace(/([�պ�])\s*[\dһ-��][\s\S]*$/, '$1')
+			.replace(/(\d{4}[-/.��]\d{1,2}[-/.��]\d{1,2})\s*[����]��.*$/, '$1')
 			.replace(/[./]/g, '-')
-			.replace(/年|月/g, '-')
-			.replace(/日|号/g, '')
+			.replace(/��|��/g, '-')
+			.replace(/��|��/g, '')
 			.replace(/\s+/g, '');
 		date = date.replace(/-+/g, '-').replace(/^-|-$/g, '');
 		if (!date && !required) return '';
@@ -1401,7 +1558,7 @@ class WorkAiService extends WorkPermissionService {
 					let prev = new Date(year - 1, month - 1, dayNum);
 					if (prev.getTime() >= Date.now() - 45 * 86400000) year -= 1;
 				}
-				// Cross-year boundary: Dec→Jan or Jan→Dec within ~60 days
+				// Cross-year boundary: Dec��Jan or Jan��Dec within ~60 days
 				// Only apply when the day-range heuristics above did NOT already adjust the year.
 				else if (Math.abs(nowMonth - month) >= 11) {
 					let diff = candidate.getTime() - Date.now();
@@ -1413,11 +1570,11 @@ class WorkAiService extends WorkPermissionService {
 		} else {
 			date = `${m[1]}-${String(Number(m[2])).padStart(2, '0')}-${String(Number(m[3])).padStart(2, '0')}`;
 		}
-		if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) this.AppError('AI操作缺少合法日期，无法识别具体日期。请用"6月20日""下周五"等明确日期重新说明，或在档期详情页中直接录单。');
+		if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) this.AppError('AI����ȱ�ٺϷ����ڣ��޷�ʶ��������ڡ�����"6��20��""������"����ȷ��������˵�������ڵ�������ҳ��ֱ��¼����');
 		let parts = date.split('-').map(num => Number(num));
 		let d = new Date(parts[0], parts[1] - 1, parts[2]);
 		if (d.getFullYear() != parts[0] || d.getMonth() + 1 != parts[1] || d.getDate() != parts[2]) {
-			this.AppError('AI操作识别的日期不存在（如2月30日），请用正确的日期重新说明');
+			this.AppError('AI����ʶ������ڲ����ڣ���2��30�գ���������ȷ����������˵��');
 		}
 		return date;
 	}
@@ -1425,25 +1582,25 @@ class WorkAiService extends WorkPermissionService {
 	_cleanTime(text) {
 		text = asText(text, 30);
 		if (!text) return '';
-		let m = text.match(/^(\d{1,2})[:：](\d{1,2})$/);
+		let m = text.match(/^(\d{1,2})[:��](\d{1,2})$/);
 		if (m) {
 			let h = Number(m[1]), min = Number(m[2]);
 			if (h > 23 || min > 59) return '';
 			return String(h).padStart(2, '0') + ':' + String(min).padStart(2, '0');
 		}
-		m = text.match(/^(上午|早上|中午|下午|晚上|凌晨)?\s*(\d{1,2})\s*点\s*(半|\d{1,2}分?)?\s*$/);
+		m = text.match(/^(����|����|����|����|����|�賿)?\s*(\d{1,2})\s*��\s*(��|\d{1,2}��?)?\s*$/);
 		if (m) {
 			let hour = Number(m[2]);
 			let period = m[1] || '';
 			if (hour > 23) return '';
-			if (hour === 12 && (period == '凌晨' || period == '晚上')) hour = 0;
-			else if ((period == '下午' || period == '晚上' || period == '中午') && hour < 12) hour += 12;
+			if (hour === 12 && (period == '�賿' || period == '����')) hour = 0;
+			else if ((period == '����' || period == '����' || period == '����') && hour < 12) hour += 12;
 			if (hour > 23) return '';
 			let minute = '00';
 			if (m[3]) {
-				if (m[3] === '半') { minute = '30'; }
+				if (m[3] === '��') { minute = '30'; }
 				else {
-					let minNum = Number(m[3].replace('分', ''));
+					let minNum = Number(m[3].replace('��', ''));
 					if (minNum > 59) return '';
 					minute = String(minNum).padStart(2, '0');
 				}
@@ -1459,7 +1616,7 @@ class WorkAiService extends WorkPermissionService {
 			if (!Number.isFinite(value) || value < 0) return 0;
 			return Math.round(value * 100) / 100;
 		}
-		let s = String(value).replace(/,/g, '').replace(/[¥￥元\s]/g, '');
+		let s = String(value).replace(/,/g, '').replace(/[����Ԫ\s]/g, '');
 		let num = Number(s);
 		if (!Number.isFinite(num)) {
 			let m = s.match(/(\d+(?:\.\d+)?)/);
@@ -1563,8 +1720,8 @@ class WorkAiService extends WorkPermissionService {
 			amount,
 			PAYMENT_DATE: date,
 			date,
-			PAYMENT_NOTE: note || 'AI识别实收',
-			note: note || 'AI识别实收',
+			PAYMENT_NOTE: note || 'AIʶ��ʵ��',
+			note: note || 'AIʶ��ʵ��',
 		};
 	}
 
@@ -1580,7 +1737,7 @@ class WorkAiService extends WorkPermissionService {
 				item.amount || item.PAYMENT_AMOUNT || item.paymentAmount,
 				this._cleanPaymentDate(item.date || item.PAYMENT_DATE, order.ORDER_DATE),
 				this._normalizeAgentBaseType(item.baseType || item.PAYMENT_BASE_TYPE || 'shoot', type),
-				asText(item.note || item.PAYMENT_NOTE || 'AI识别实收', 120)
+				asText(item.note || item.PAYMENT_NOTE || 'AIʶ��ʵ��', 120)
 			);
 			if (dto) list.push(dto);
 		}
@@ -1594,10 +1751,10 @@ class WorkAiService extends WorkPermissionService {
 		// Do NOT auto-assume ORDER_DEPOSIT as paidDeposit: deposit is an expected/contracted amount,
 		// not a confirmed receipt. Only create payment records from explicit "paid/received" fields.
 
-		if (paidDeposit) list.push(this._makePaymentDto('deposit', paidDeposit, order.ORDER_DATE, 'shoot', 'AI识别已收定金'));
-		if (paidFinal) list.push(this._makePaymentDto('final', paidFinal, order.ORDER_DATE, 'shoot', 'AI识别已收尾款'));
-		if (paidExtra) list.push(this._makePaymentDto('extra', paidExtra, order.ORDER_DATE, 'extra', 'AI识别已收加选/产品'));
-		if (!list.length && paidAmount) list.push(this._makePaymentDto('deposit', paidAmount, order.ORDER_DATE, 'shoot', 'AI识别实收'));
+		if (paidDeposit) list.push(this._makePaymentDto('deposit', paidDeposit, order.ORDER_DATE, 'shoot', 'AIʶ�����ն���'));
+		if (paidFinal) list.push(this._makePaymentDto('final', paidFinal, order.ORDER_DATE, 'shoot', 'AIʶ������β��'));
+		if (paidExtra) list.push(this._makePaymentDto('extra', paidExtra, order.ORDER_DATE, 'extra', 'AIʶ�����ռ�ѡ/��Ʒ'));
+		if (!list.length && paidAmount) list.push(this._makePaymentDto('deposit', paidAmount, order.ORDER_DATE, 'shoot', 'AIʶ��ʵ��'));
 
 		return list.filter(item => item);
 	}
@@ -1614,7 +1771,7 @@ class WorkAiService extends WorkPermissionService {
 		}
 		return {
 			id: type ? type._id : '',
-			name: type ? type.TYPE_NAME : (typeName || '其他'),
+			name: type ? type.TYPE_NAME : (typeName || '����'),
 			color: type ? type.TYPE_COLOR : '#49cdbf',
 		};
 	}
@@ -1636,7 +1793,7 @@ class WorkAiService extends WorkPermissionService {
 			}
 			if (!staff) continue;
 			let roles = Array.isArray(staff.STAFF_ROLES) ? staff.STAFF_ROLES : [];
-			let roleName = asText(item.roleName || item.role || '', 40) || roles[0] || '摄影';
+			let roleName = asText(item.roleName || item.role || '', 40) || roles[0] || '��Ӱ';
 			list.push({
 				staffId: staff._id,
 				staffName: staff.STAFF_NAME,
@@ -1676,7 +1833,7 @@ class WorkAiService extends WorkPermissionService {
 			let actionSummary = this._buildAgentAuditActionSummary(action, riskLevel, title, content, meta);
 			await WorkAgentAuditModel.insert({
 				AGENTAUDIT_ACTION: action,
-				AGENTAUDIT_TITLE: asText(title, 120) || 'AI操作记录',
+				AGENTAUDIT_TITLE: asText(title, 120) || 'AI������¼',
 				AGENTAUDIT_CONTENT: asText(content, 2000),
 				AGENTAUDIT_OPENID: asText(openId, 120),
 				AGENTAUDIT_STAFF_ID: staff && staff._id ? staff._id : '',
@@ -1700,8 +1857,8 @@ class WorkAiService extends WorkPermissionService {
 		if (riskLevel == 'high') tags.push('high_risk');
 		if (riskLevel == 'finance') tags.push('finance');
 		if (refType || refId) tags.push('has_ref');
-		if (/金额|收款|退款|工资|提成|转账|红包/.test(contentText)) tags.push('money_related');
-		if (/取消|作废|不通过|发放|审核/.test(contentText)) tags.push('sensitive_write');
+		if (/���|�տ�|�˿�|����|���|ת��|���/.test(contentText)) tags.push('money_related');
+		if (/ȡ��|����|��ͨ��|����|���/.test(contentText)) tags.push('sensitive_write');
 
 		return {
 			schemaVersion: 1,
@@ -1729,14 +1886,14 @@ class WorkAiService extends WorkPermissionService {
 	_extractAgentAuditSignals(text) {
 		text = asText(text, 600);
 		let signals = [];
-		let recordId = text.match(/记录ID[:：]\s*([A-Za-z0-9_\-]+)/);
-		if (recordId) signals.push({ label: '记录ID', value: asText(recordId[1], 80) });
-		let orderId = text.match(/订单(?:ID)?[:：]?\s*([A-Za-z0-9_\-]{6,})/);
-		if (orderId) signals.push({ label: '订单线索', value: asText(orderId[1], 80) });
-		let amount = text.match(/(?:金额|实收|工资)[:：]?\s*([\-]?\d+(?:\.\d{1,2})?)/);
-		if (amount) signals.push({ label: '金额线索', value: asText(amount[1], 40) });
-		let date = text.match(/\d{4}[-/.年]\d{1,2}[-/.月]\d{1,2}/);
-		if (date) signals.push({ label: '日期线索', value: asText(date[0], 40) });
+		let recordId = text.match(/��¼ID[:��]\s*([A-Za-z0-9_\-]+)/);
+		if (recordId) signals.push({ label: '��¼ID', value: asText(recordId[1], 80) });
+		let orderId = text.match(/����(?:ID)?[:��]?\s*([A-Za-z0-9_\-]{6,})/);
+		if (orderId) signals.push({ label: '��������', value: asText(orderId[1], 80) });
+		let amount = text.match(/(?:���|ʵ��|����)[:��]?\s*([\-]?\d+(?:\.\d{1,2})?)/);
+		if (amount) signals.push({ label: '�������', value: asText(amount[1], 40) });
+		let date = text.match(/\d{4}[-/.��]\d{1,2}[-/.��]\d{1,2}/);
+		if (date) signals.push({ label: '��������', value: asText(date[0], 40) });
 		return signals.slice(0, 6);
 	}
 
@@ -1749,23 +1906,23 @@ class WorkAiService extends WorkPermissionService {
 
 	_inferAgentAuditAction(title) {
 		title = asText(title, 120);
-		if (/新增订单|订单档期/.test(title)) return 'create_order';
-		if (/取消订单/.test(title)) return 'cancel_order';
-		if (/修改订单/.test(title)) return 'update_order';
-		if (/录入收款/.test(title)) return 'save_payment';
-		if (/作废收款/.test(title)) return 'void_payment';
-		if (/发放工资/.test(title)) return 'pay_payroll';
-		if (/审核订单/.test(title)) return 'audit_order';
-		if (/新增事项/.test(title)) return 'create_item';
-		if (/新增休息/.test(title)) return 'create_rest';
-		if (/新增小记/.test(title)) return 'add_note';
+		if (/��������|��������/.test(title)) return 'create_order';
+		if (/ȡ������/.test(title)) return 'cancel_order';
+		if (/�޸Ķ���/.test(title)) return 'update_order';
+		if (/¼���տ�/.test(title)) return 'save_payment';
+		if (/�����տ�/.test(title)) return 'void_payment';
+		if (/���Ź���/.test(title)) return 'pay_payroll';
+		if (/��˶���/.test(title)) return 'audit_order';
+		if (/��������/.test(title)) return 'create_item';
+		if (/������Ϣ/.test(title)) return 'create_rest';
+		if (/����С��/.test(title)) return 'add_note';
 		return 'agent_action';
 	}
 
 	_inferAgentAuditRisk(title, content) {
 		let text = asText(title + ' ' + content, 500);
-		if (/发放工资|作废收款|审核订单|取消订单|退款|冲减|不通过/.test(text)) return 'high';
-		if (/收款|提成|工资|金额|付款|转账|红包/.test(text)) return 'finance';
+		if (/���Ź���|�����տ�|��˶���|ȡ������|�˿�|���|��ͨ��/.test(text)) return 'high';
+		if (/�տ�|���|����|���|����|ת��|���/.test(text)) return 'finance';
 		return 'normal';
 	}
 
@@ -1774,7 +1931,7 @@ class WorkAiService extends WorkPermissionService {
 		let endDate = this._cleanDate(data.endDate || data.end || startDate);
 		if (endDate < startDate) endDate = startDate;
 		let dayCount = this._countDays(startDate, endDate);
-		if (dayCount > 14) this.AppError('AI一次最多查询14天档期，请缩小日期范围');
+		if (dayCount > 14) this.AppError('AIһ������ѯ14�쵵�ڣ�����С���ڷ�Χ');
 		let scope = asText(data.scope || 'all', 20);
 		if (!['all', 'mine', 'joined', 'created'].includes(scope)) scope = 'all';
 
@@ -1790,7 +1947,7 @@ class WorkAiService extends WorkPermissionService {
 					id: order._id,
 					time: order.ORDER_TIME || '',
 					typeName: order.ORDER_TYPE_NAME || '',
-					customer: order.canFull ? (order.ORDER_CUSTOMER_NAME || '') : ((order.ORDER_CUSTOMER_SURNAME || '') + '姓客户'),
+					customer: order.canFull ? (order.ORDER_CUSTOMER_NAME || '') : ((order.ORDER_CUSTOMER_SURNAME || '') + '�տͻ�'),
 					place: order.canFull ? (order.ORDER_PLACE || '') : '',
 					progress: order.ORDER_PROGRESS_DESC || '',
 				})),
@@ -1803,7 +1960,7 @@ class WorkAiService extends WorkPermissionService {
 				rests: (dayData.rests || []).map(rest => ({
 					id: rest._id,
 					staffName: rest.REST_STAFF_NAME || '',
-					type: rest.REST_TYPE || '休息',
+					type: rest.REST_TYPE || '��Ϣ',
 				})),
 				notes: (noteList || []).filter(note => note.NOTE_DATE == day).slice(0, 8).map(note => ({
 					id: note._id,
@@ -1819,17 +1976,17 @@ class WorkAiService extends WorkPermissionService {
 		let lines = [];
 		for (let row of rows) {
 			let parts = [];
-			for (let order of row.orders) parts.push(`${order.time || '全天'} ${order.typeName}${order.customer ? '｜' + order.customer : ''}${order.place ? '｜' + order.place : ''}`);
-			for (let item of row.items) parts.push(`${item.time || ''} 事项｜${item.title}`.trim());
-			for (let rest of row.rests) parts.push(`休息｜${rest.staffName}${rest.type ? '｜' + rest.type : ''}`);
-			for (let note of row.notes) parts.push(`小记｜${note.title}${note.content ? '：' + note.content.slice(0, 50) : ''}`);
-			if (parts.length) lines.push(`${row.day}：${parts.join('；')}`);
+			for (let order of row.orders) parts.push(`${order.time || 'ȫ��'} ${order.typeName}${order.customer ? '��' + order.customer : ''}${order.place ? '��' + order.place : ''}`);
+			for (let item of row.items) parts.push(`${item.time || ''} �����${item.title}`.trim());
+			for (let rest of row.rests) parts.push(`��Ϣ��${rest.staffName}${rest.type ? '��' + rest.type : ''}`);
+			for (let note of row.notes) parts.push(`С�ǣ�${note.title}${note.content ? '��' + note.content.slice(0, 50) : ''}`);
+			if (parts.length) lines.push(`${row.day}��${parts.join('��')}`);
 		}
 
-		let rangeText = startDate == endDate ? startDate : `${startDate} 至 ${endDate}`;
+		let rangeText = startDate == endDate ? startDate : `${startDate} �� ${endDate}`;
 		let reply = total
-			? `${rangeText} 共整理到 ${total} 条安排/小记：\n${lines.join('\n')}`
-			: `${rangeText} 暂无档期、小记或休息记录。`;
+			? `${rangeText} �������� ${total} ������/С�ǣ�\n${lines.join('\n')}`
+			: `${rangeText} ���޵��ڡ�С�ǻ���Ϣ��¼��`;
 		return {
 			action: 'query_schedule',
 			data: { startDate, endDate, scope, rows },
@@ -1857,13 +2014,13 @@ class WorkAiService extends WorkPermissionService {
 	}
 
 	_errorText(err) {
-		return asText((err && (err.msg || err.message || err.errMsg)) || '信息不足', 120);
+		return asText((err && (err.msg || err.message || err.errMsg)) || '��Ϣ����', 120);
 	}
 
 	async _buildAgentOrder(data = {}, attachments = [], options = {}) {
 		let date = this._cleanActionDate(data.date || data.ORDER_DATE, true, options);
 		let customerName = asText(data.customerName || data.ORDER_CUSTOMER_NAME, 80);
-		if (!customerName) this.AppError('AI新增订单缺少客户名称');
+		if (!customerName) this.AppError('AI��������ȱ�ٿͻ�����');
 		let type = await this._resolveType(data);
 		let participants = await this._resolveParticipants(data.participants || data.ORDER_PARTICIPANTS || []);
 		let order = {
@@ -1891,7 +2048,7 @@ class WorkAiService extends WorkPermissionService {
 	}
 
 	_orderLine(order = {}) {
-		return `${order.ORDER_DATE || ''} ${order.ORDER_TIME || ''} ${order.ORDER_TYPE_NAME || '其他'}，客户${order.ORDER_CUSTOMER_NAME || ''}`.replace(/\s+/g, ' ').trim();
+		return `${order.ORDER_DATE || ''} ${order.ORDER_TIME || ''} ${order.ORDER_TYPE_NAME || '����'}���ͻ�${order.ORDER_CUSTOMER_NAME || ''}`.replace(/\s+/g, ' ').trim();
 	}
 
 	_isSameOrderForDuplicate(order = {}, old = {}) {
@@ -1916,15 +2073,15 @@ class WorkAiService extends WorkPermissionService {
 		} catch (verifyErr) {
 			console.error('AI order post-save verify failed:', verifyErr && verifyErr.message ? verifyErr.message : verifyErr);
 		}
-		let participantText = participants.map(p => `${p.staffName || p.staffId}(${p.roleName})`).join('、');
-		let summary = `${staff.STAFF_NAME || '员工'}通过AI新增订单档期：${date} ${order.ORDER_TIME || ''}，${type.name}，客户${customerName}${order.ORDER_PLACE ? '，地点' + order.ORDER_PLACE : ''}${participantText ? '，参与人：' + participantText : ''}。记录ID：${ret.id}`;
-		let auditNoteId = await this._addAuditNote(openId, 'AI操作记录：新增订单档期', summary);
+		let participantText = participants.map(p => `${p.staffName || p.staffId}(${p.roleName})`).join('��');
+		let summary = `${staff.STAFF_NAME || 'Ա��'}ͨ��AI�����������ڣ�${date} ${order.ORDER_TIME || ''}��${type.name}���ͻ�${customerName}${order.ORDER_PLACE ? '���ص�' + order.ORDER_PLACE : ''}${participantText ? '�������ˣ�' + participantText : ''}����¼ID��${ret.id}`;
+		let auditNoteId = await this._addAuditNote(openId, 'AI������¼��������������', summary);
 		return {
 			action: 'create_order',
 			id: ret.id,
 			data: { date, order },
 			auditNoteId,
-			reply: `已新增订单档期：${date} ${order.ORDER_TIME || ''}，${type.name}，客户${customerName}。已同步写入全体小记审查流水。`,
+			reply: `�������������ڣ�${date} ${order.ORDER_TIME || ''}��${type.name}���ͻ�${customerName}����ͬ��д��ȫ��С�������ˮ��`,
 		};
 	}
 
@@ -1935,8 +2092,8 @@ class WorkAiService extends WorkPermissionService {
 			return {
 				action: 'create_order',
 				id: duplicate._id,
-				data: { date: built.date, order: built.order, skipped: [{ index: 1, reason: '系统已存在同日同客户且同类型的订单', duplicateId: duplicate._id }] },
-				reply: `没有新增订单：\n1. ${this._orderLine(built.order)} 已存在，已跳过。\n如果这是另一个不同订单，请补充不同客户信息或不同拍摄类型后再让我记录。`,
+				data: { date: built.date, order: built.order, skipped: [{ index: 1, reason: 'ϵͳ�Ѵ���ͬ��ͬ�ͻ���ͬ���͵Ķ���', duplicateId: duplicate._id }] },
+				reply: `û������������\n1. ${this._orderLine(built.order)} �Ѵ��ڣ���������\n���������һ����ͬ�������벹�䲻ͬ�ͻ���Ϣ��ͬ�������ͺ������Ҽ�¼��`,
 			};
 		}
 		return await this._saveBuiltAgentOrder(openId, staff, built);
@@ -1944,8 +2101,8 @@ class WorkAiService extends WorkPermissionService {
 
 	async _agentCreateOrders(openId, staff, data = {}, attachments = [], pageContext = {}) {
 		let rawOrders = this._extractBatchOrders(data);
-		if (!rawOrders.length) this.AppError('AI批量新增订单缺少订单列表');
-		if (rawOrders.length > 8) this.AppError('AI一次最多新增8条订单档期，请分批发送');
+		if (!rawOrders.length) this.AppError('AI������������ȱ�ٶ����б�');
+		if (rawOrders.length > 8) this.AppError('AIһ���������8���������ڣ����������');
 
 		let prepared = [];
 		let skipped = [];
@@ -1961,8 +2118,8 @@ class WorkAiService extends WorkPermissionService {
 			}
 		}
 		if (!prepared.length) {
-			let reason = skipped.length ? ('：' + skipped.map(item => `第${item.index}条${item.reason}`).join('；')) : '';
-			this.AppError('截图中识别到多条信息，但都缺少合法日期或客户名称，无法录入。建议在消息中注明日期（如"6月20日的订单"），或直接在档期详情页中录单。' + reason);
+			let reason = skipped.length ? ('��' + skipped.map(item => `��${item.index}��${item.reason}`).join('��')) : '';
+			this.AppError('��ͼ��ʶ�𵽶�����Ϣ������ȱ�ٺϷ����ڻ�ͻ����ƣ��޷�¼�롣��������Ϣ��ע�����ڣ���"6��20�յĶ���"������ֱ���ڵ�������ҳ��¼����' + reason);
 		}
 
 		let created = [];
@@ -1972,7 +2129,7 @@ class WorkAiService extends WorkPermissionService {
 			if (batchDuplicate) {
 				skipped.push({
 					index: built.sourceIndex || 0,
-					reason: '本批次已识别到同日同客户且同类型的订单',
+					reason: '��������ʶ��ͬ��ͬ�ͻ���ͬ���͵Ķ���',
 					line: this._orderLine(built.order),
 				});
 				continue;
@@ -1982,7 +2139,7 @@ class WorkAiService extends WorkPermissionService {
 			if (duplicate) {
 				skipped.push({
 					index: built.sourceIndex || 0,
-					reason: '系统已存在同日同客户且同类型的订单',
+					reason: 'ϵͳ�Ѵ���ͬ��ͬ�ͻ���ͬ���͵Ķ���',
 					duplicateId: duplicate._id,
 					line: this._orderLine(built.order),
 				});
@@ -1994,15 +2151,15 @@ class WorkAiService extends WorkPermissionService {
 
 		let lines = created.map((ret, idx) => {
 			let order = ret.data && ret.data.order ? ret.data.order : {};
-			return `${idx + 1}. ${ret.data.date} ${order.ORDER_TIME || ''} ${order.ORDER_TYPE_NAME || '其他'}，客户${order.ORDER_CUSTOMER_NAME || ''}`.replace(/\s+/g, ' ').trim();
+			return `${idx + 1}. ${ret.data.date} ${order.ORDER_TIME || ''} ${order.ORDER_TYPE_NAME || '����'}���ͻ�${order.ORDER_CUSTOMER_NAME || ''}`.replace(/\s+/g, ' ').trim();
 		});
 		let reply = created.length
-			? `已新增 ${created.length} 条订单档期：\n${lines.join('\n')}\n已同步写入全体小记审查流水。`
-			: '本次没有新增订单档期。';
+			? `������ ${created.length} ���������ڣ�\n${lines.join('\n')}\n��ͬ��д��ȫ��С�������ˮ��`
+			: '����û�������������ڡ�';
 		if (skipped.length) {
-			reply += `\n已跳过/未记录 ${skipped.length} 条：\n${skipped.map((item, idx) => `${idx + 1}. ${item.line || ('第' + item.index + '条')}：${item.reason}`).join('\n')}`;
+			reply += `\n������/δ��¼ ${skipped.length} ����\n${skipped.map((item, idx) => `${idx + 1}. ${item.line || ('��' + item.index + '��')}��${item.reason}`).join('\n')}`;
 		}
-		reply += '\n如果截图里还有我漏掉的订单，请告诉我是第几张图第几条，我会继续补录。';
+		reply += '\n�����ͼ�ﻹ����©���Ķ�������������ǵڼ���ͼ�ڼ������һ������¼��';
 		return {
 			action: 'create_orders',
 			id: created[0] ? created[0].id : '',
@@ -2019,7 +2176,7 @@ class WorkAiService extends WorkPermissionService {
 
 	async _agentJoinOrder(openId, staff, data = {}, pageContext = {}) {
 		let orderId = asText(data.orderId || data.id || data.ORDER_ID || pageContext.orderId || '', 120);
-		if (!orderId) this.AppError('当前没有可加入的订单，请先打开订单详情页，或告诉我订单ID');
+		if (!orderId) this.AppError('��ǰû�пɼ���Ķ��������ȴ򿪶�������ҳ��������Ҷ���ID');
 		let roleName = asText(data.roleName || data.role || '', 40);
 		let work = new WorkService();
 		let ret = await work.joinOrder(openId, orderId, roleName);
@@ -2028,8 +2185,8 @@ class WorkAiService extends WorkPermissionService {
 			id: orderId,
 			data: { orderId, roleName: ret.roleName || roleName, already: ret.already || false },
 			reply: ret.already
-				? '你已经是这个订单的参与人了，不需要重复添加。'
-				: `已把你加入这个订单的参与人，岗位：${ret.roleName || roleName || '按你的员工默认岗位'}。如果提成金额有问题，可以向管理员申诉调整。`,
+				? '���Ѿ�����������Ĳ������ˣ�����Ҫ�ظ����ӡ�'
+				: `�Ѱ��������������Ĳ����ˣ���λ��${ret.roleName || roleName || '�����Ա��Ĭ�ϸ�λ'}�������ɽ�������⣬���������Ա���ߵ�����`,
 		};
 	}
 
@@ -2037,28 +2194,28 @@ class WorkAiService extends WorkPermissionService {
 		let orderId = asText(data.orderId || data.id || data.ORDER_ID || '', 120);
 		let customerName = asText(data.customerName || data.ORDER_CUSTOMER_NAME || '', 80);
 		let date = this._cleanActionDate(data.date || data.ORDER_DATE, false);
-		let reason = asText(data.reason || '', 200) || 'AI助手取消';
+		let reason = asText(data.reason || '', 200) || 'AI����ȡ��';
 
 		if (!orderId && customerName && date) {
 			let found = await this._findOrderByCustomerAndDate(customerName, date);
 			if (found) orderId = found._id;
 		}
-		if (!orderId) this.AppError('没有找到要取消的订单，请提供订单ID、或客户名称+日期。');
+		if (!orderId) this.AppError('û���ҵ�Ҫȡ���Ķ��������ṩ����ID����ͻ�����+���ڡ�');
 
 		let work = new WorkService();
 		let existing = await WorkOrderModel.getOne(orderId);
-		if (!existing) this.AppError('订单不存在或已取消');
+		if (!existing) this.AppError('���������ڻ���ȡ��');
 
 		await work.cancelOrder(openId, orderId, reason);
-		let line = `${existing.ORDER_DATE || ''} ${existing.ORDER_TIME || ''} ${existing.ORDER_TYPE_NAME || '其他'}，客户${existing.ORDER_CUSTOMER_NAME || ''}`.replace(/\s+/g, ' ').trim();
-		let summary = `${staff.STAFF_NAME || '员工'}通过AI取消订单：${line}。原因：${reason}。记录ID：${orderId}`;
-		let auditNoteId = await this._addAuditNote(openId, 'AI操作记录：取消订单', summary);
+		let line = `${existing.ORDER_DATE || ''} ${existing.ORDER_TIME || ''} ${existing.ORDER_TYPE_NAME || '����'}���ͻ�${existing.ORDER_CUSTOMER_NAME || ''}`.replace(/\s+/g, ' ').trim();
+		let summary = `${staff.STAFF_NAME || 'Ա��'}ͨ��AIȡ��������${line}��ԭ��${reason}����¼ID��${orderId}`;
+		let auditNoteId = await this._addAuditNote(openId, 'AI������¼��ȡ������', summary);
 		return {
 			action: 'cancel_order',
 			id: orderId,
 			data: { orderId, reason },
 			auditNoteId,
-			reply: `已取消订单档期：${line}。原因：${reason}。`,
+			reply: `��ȡ���������ڣ�${line}��ԭ��${reason}��`,
 		};
 	}
 
@@ -2071,11 +2228,11 @@ class WorkAiService extends WorkPermissionService {
 			let found = await this._findOrderByCustomerAndDate(customerName, date);
 			if (found) orderId = found._id;
 		}
-		if (!orderId) this.AppError('没有找到要修改的订单，请提供订单ID、或客户名称+日期。');
+		if (!orderId) this.AppError('û���ҵ�Ҫ�޸ĵĶ��������ṩ����ID����ͻ�����+���ڡ�');
 
 		let work = new WorkService();
 		let existing = await WorkOrderModel.getOne(orderId);
-		if (!existing) this.AppError('订单不存在');
+		if (!existing) this.AppError('����������');
 
 		let newDate = this._cleanActionDate(data.newDate || data.updateDate, false);
 		let updates = {};
@@ -2097,25 +2254,25 @@ class WorkAiService extends WorkPermissionService {
 		let newContent = asText(data.newContent || data.updateContent, 800);
 		if (newContent) updates.ORDER_CONTENT = newContent;
 
-		if (!Object.keys(updates).length) this.AppError('请提供要修改的字段（日期、时间、类型、客户、地点、金额、备注）。');
+		if (!Object.keys(updates).length) this.AppError('���ṩҪ�޸ĵ��ֶΣ����ڡ�ʱ�䡢���͡��ͻ����ص㡢����ע����');
 
 		let merged = Object.assign({}, existing, updates);
 		let saved = await work.saveOrder(openId, merged);
-		let changed = Object.keys(updates).map(k => `${k}→${updates[k]}`).join('，');
-		let line = `${merged.ORDER_DATE || ''} ${merged.ORDER_TIME || ''} ${merged.ORDER_TYPE_NAME || '其他'}，客户${merged.ORDER_CUSTOMER_NAME || ''}`.replace(/\s+/g, ' ').trim();
-		let summary = `${staff.STAFF_NAME || '员工'}通过AI修改订单（ID：${orderId}）：${changed}。修改后：${line}`;
-		let auditNoteId = await this._addAuditNote(openId, 'AI操作记录：修改订单', summary);
+		let changed = Object.keys(updates).map(k => `${k}��${updates[k]}`).join('��');
+		let line = `${merged.ORDER_DATE || ''} ${merged.ORDER_TIME || ''} ${merged.ORDER_TYPE_NAME || '����'}���ͻ�${merged.ORDER_CUSTOMER_NAME || ''}`.replace(/\s+/g, ' ').trim();
+		let summary = `${staff.STAFF_NAME || 'Ա��'}ͨ��AI�޸Ķ�����ID��${orderId}����${changed}���޸ĺ�${line}`;
+		let auditNoteId = await this._addAuditNote(openId, 'AI������¼���޸Ķ���', summary);
 		return {
 			action: 'update_order',
 			id: orderId,
 			data: { orderId, updates, order: merged },
 			auditNoteId,
-			reply: `已修改订单档期：${line}。修改内容：${changed}。`,
+			reply: `���޸Ķ������ڣ�${line}���޸����ݣ�${changed}��`,
 		};
 	}
 
-	_assertAgentAdmin(staff, actionName = '该操作') {
-		if (!this.isAdminStaff(staff)) this.AppError(`${actionName}需要管理员权限，请切换管理员账号或让管理员处理。`);
+	_assertAgentAdmin(staff, actionName = '�ò���') {
+		if (!this.isAdminStaff(staff)) this.AppError(`${actionName}��Ҫ����ԱȨ�ޣ����л�����Ա�˺Ż��ù���Ա������`);
 	}
 
 	_adminLikeFromStaff(staff = {}) {
@@ -2124,7 +2281,7 @@ class WorkAiService extends WorkPermissionService {
 			ADMIN_ID: staff.STAFF_ID || staff._id || '',
 			ADMIN_NAME: staff.STAFF_NAME || '',
 			STAFF_NAME: staff.STAFF_NAME || '',
-			ADMIN_DESC: '小程序管理员',
+			ADMIN_DESC: 'С�������Ա',
 			ADMIN_PHONE: staff.STAFF_MOBILE || '',
 			ADMIN_TYPE: 1,
 			ADMIN_STATUS: 1,
@@ -2138,16 +2295,16 @@ class WorkAiService extends WorkPermissionService {
 	_centText(value) {
 		value = Number(value || 0);
 		if (!Number.isFinite(value)) value = 0;
-		return '¥' + (value / 100).toFixed(2);
+		return '��' + (value / 100).toFixed(2);
 	}
 
-	_boolInput(value, fieldName = '结果') {
+	_boolInput(value, fieldName = '���') {
 		if (value === true || value === 1 || value === '1') return true;
 		if (value === false || value === 0 || value === '0') return false;
 		let text = asText(value, 20);
-		if (/^(true|yes|pass|通过|同意|批准|审核通过)$/i.test(text)) return true;
-		if (/^(false|no|fail|驳回|拒绝|不通过|审核不通过)$/i.test(text)) return false;
-		this.AppError(`请明确${fieldName}是通过还是不通过`);
+		if (/^(true|yes|pass|ͨ��|ͬ��|��׼|���ͨ��)$/i.test(text)) return true;
+		if (/^(false|no|fail|����|�ܾ�|��ͨ��|��˲�ͨ��)$/i.test(text)) return false;
+		this.AppError(`����ȷ${fieldName}��ͨ�����ǲ�ͨ��`);
 	}
 
 	async _resolveStaffForAgent(staff, data = {}, allowSelf = true) {
@@ -2155,8 +2312,8 @@ class WorkAiService extends WorkPermissionService {
 		let staffName = asText(data.staffName || data.name || data.STAFF_NAME || '', 80);
 		if (!staffId && !staffName && allowSelf) return staff;
 		if (!this.isAdminStaff(staff)) {
-			if (staffId && staffId != staff._id && staffId != staff.STAFF_ID) this.AppError('普通员工只能查询自己的数据');
-			if (staffName && staffName != staff.STAFF_NAME) this.AppError('普通员工只能查询自己的数据');
+			if (staffId && staffId != staff._id && staffId != staff.STAFF_ID) this.AppError('��ͨԱ��ֻ�ܲ�ѯ�Լ�������');
+			if (staffName && staffName != staff.STAFF_NAME) this.AppError('��ͨԱ��ֻ�ܲ�ѯ�Լ�������');
 			return staff;
 		}
 		let target = null;
@@ -2169,7 +2326,7 @@ class WorkAiService extends WorkPermissionService {
 			target = (list || []).find(item => item.STAFF_NAME == staffName)
 				|| (list || []).find(item => item.STAFF_NAME && (staffName.includes(item.STAFF_NAME) || item.STAFF_NAME.includes(staffName)));
 		}
-		if (!target) this.AppError('没有找到指定员工，请提供准确员工姓名或员工ID');
+		if (!target) this.AppError('û���ҵ�ָ��Ա�������ṩ׼ȷԱ��������Ա��ID');
 		return target;
 	}
 
@@ -2184,8 +2341,8 @@ class WorkAiService extends WorkPermissionService {
 			let service = new WorkPaymentService();
 			ret = await service.listPayments(params, staff);
 		} else {
-			if (params.staffId && params.staffId != staff._id && params.staffId != staff.STAFF_ID) this.AppError('普通员工只能查询自己的收款记录');
-			if (params.staffName && params.staffName != staff.STAFF_NAME) this.AppError('普通员工只能查询自己的收款记录');
+			if (params.staffId && params.staffId != staff._id && params.staffId != staff.STAFF_ID) this.AppError('��ͨԱ��ֻ�ܲ�ѯ�Լ����տ��¼');
+			if (params.staffName && params.staffName != staff.STAFF_NAME) this.AppError('��ͨԱ��ֻ�ܲ�ѯ�Լ����տ��¼');
 			delete params.staffId;
 			delete params.staffName;
 			let service = new WorkPerformanceService();
@@ -2198,19 +2355,19 @@ class WorkAiService extends WorkPermissionService {
 		return {
 			action: 'query_payments',
 			data: { params, count: list.length, list },
-			reply: lines.length ? `收款记录如下：\n${lines.join('\n')}` : '没有查到符合条件的收款记录。',
+			reply: lines.length ? `�տ��¼���£�\n${lines.join('\n')}` : 'û�в鵽�����������տ��¼��',
 		};
 	}
 
 	async _agentSavePayment(openId, staff, data = {}) {
-		this._assertAgentAdmin(staff, '录入收款/退款/冲减');
+		this._assertAgentAdmin(staff, '¼���տ�/�˿�/���');
 		let orderId = asText(data.orderId || data.ORDER_ID || data.PAYMENT_ORDER_ID || '', 120);
-		if (!orderId) this.AppError('录入收款缺少订单ID或订单号');
+		if (!orderId) this.AppError('¼���տ�ȱ�ٶ���ID�򶩵���');
 		let amount = data.amount || data.PAYMENT_AMOUNT || data.paymentAmount;
-		if (amount === undefined || amount === null || String(amount).trim() === '') this.AppError('录入收款缺少金额');
+		if (amount === undefined || amount === null || String(amount).trim() === '') this.AppError('¼���տ�ȱ�ٽ��');
 		let type = asText(data.type || data.PAYMENT_TYPE || 'deposit', 40);
 		let note = asText(data.note || data.remark || data.PAYMENT_NOTE || '', 200);
-		if (/(refund|adjust|退款|冲减|调整)/i.test(type) && !note) this.AppError('退款/冲减必须填写原因或备注');
+		if (/(refund|adjust|�˿�|���|����)/i.test(type) && !note) this.AppError('�˿�/���������дԭ���ע');
 
 		let payment = {
 			PAYMENT_TYPE: type,
@@ -2223,31 +2380,31 @@ class WorkAiService extends WorkPermissionService {
 		let service = new WorkService();
 		let ret = await service.saveAdminOrderPayment(orderId, payment, staff);
 		let saved = ret.payment || (ret.payments && ret.payments[0]) || {};
-		let auditNoteId = await this._addAuditNote(openId, 'AI操作记录：录入收款', `${staff.STAFF_NAME || '管理员'}通过AI录入收款/退款/冲减：订单${orderId}，类型${saved.PAYMENT_TYPE || type}，金额${saved.PAYMENT_AMOUNT || amount}，日期${saved.PAYMENT_DATE || payment.PAYMENT_DATE}。备注：${note || '无'}`);
+		let auditNoteId = await this._addAuditNote(openId, 'AI������¼��¼���տ�', `${staff.STAFF_NAME || '����Ա'}ͨ��AI¼���տ�/�˿�/���������${orderId}������${saved.PAYMENT_TYPE || type}�����${saved.PAYMENT_AMOUNT || amount}������${saved.PAYMENT_DATE || payment.PAYMENT_DATE}����ע��${note || '��'}`);
 		return {
 			action: 'save_payment',
 			id: saved._id || saved.PAYMENT_ID || '',
 			data: ret,
 			auditNoteId,
-			reply: `已按管理员权限录入收款：订单${orderId}，类型${saved.PAYMENT_TYPE || type}，金额${saved.PAYMENT_AMOUNT || amount}。`,
+			reply: `�Ѱ�����ԱȨ��¼���տ����${orderId}������${saved.PAYMENT_TYPE || type}�����${saved.PAYMENT_AMOUNT || amount}��`,
 		};
 	}
 
 	async _agentVoidPayment(openId, staff, data = {}) {
-		this._assertAgentAdmin(staff, '作废收款');
+		this._assertAgentAdmin(staff, '�����տ�');
 		let paymentId = asText(data.paymentId || data.id || data.PAYMENT_ID || '', 120);
 		let reason = asText(data.reason || data.note || '', 200);
-		if (!paymentId) this.AppError('作废收款缺少收款ID');
-		if (!reason) this.AppError('作废收款必须填写原因');
+		if (!paymentId) this.AppError('�����տ�ȱ���տ�ID');
+		if (!reason) this.AppError('�����տ������дԭ��');
 		let service = new WorkService();
 		let ret = await service.voidAdminOrderPayment(paymentId, reason, staff);
-		let auditNoteId = await this._addAuditNote(openId, 'AI操作记录：作废收款', `${staff.STAFF_NAME || '管理员'}通过AI作废收款：${paymentId}。原因：${reason}`);
+		let auditNoteId = await this._addAuditNote(openId, 'AI������¼�������տ�', `${staff.STAFF_NAME || '����Ա'}ͨ��AI�����տ${paymentId}��ԭ��${reason}`);
 		return {
 			action: 'void_payment',
 			id: paymentId,
 			data: ret,
 			auditNoteId,
-			reply: `已按管理员权限作废收款：${paymentId}。原因：${reason}`,
+			reply: `�Ѱ�����ԱȨ�������տ${paymentId}��ԭ��${reason}`,
 		};
 	}
 
@@ -2264,8 +2421,8 @@ class WorkAiService extends WorkPermissionService {
 			let service = new WorkCommissionService();
 			ret = await service.listCommissions(params, staff);
 		} else {
-			if (params.staffId && params.staffId != staff._id && params.staffId != staff.STAFF_ID) this.AppError('普通员工只能查询自己的提成');
-			if (params.staffName && params.staffName != staff.STAFF_NAME) this.AppError('普通员工只能查询自己的提成');
+			if (params.staffId && params.staffId != staff._id && params.staffId != staff.STAFF_ID) this.AppError('��ͨԱ��ֻ�ܲ�ѯ�Լ������');
+			if (params.staffName && params.staffName != staff.STAFF_NAME) this.AppError('��ͨԱ��ֻ�ܲ�ѯ�Լ������');
 			delete params.staffId;
 			delete params.staffName;
 			let service = new WorkPerformanceService();
@@ -2278,7 +2435,7 @@ class WorkAiService extends WorkPermissionService {
 		return {
 			action: 'query_commissions',
 			data: { params, count: list.length, list },
-			reply: lines.length ? `提成记录如下：\n${lines.join('\n')}` : '没有查到符合条件的提成记录。',
+			reply: lines.length ? `��ɼ�¼���£�\n${lines.join('\n')}` : 'û�в鵽������������ɼ�¼��',
 		};
 	}
 
@@ -2288,8 +2445,8 @@ class WorkAiService extends WorkPermissionService {
 		let service = new WorkPayrollService();
 		let ret = await service.getPayrollForStaff(target._id, month);
 		let paid = ret.payrollList || ret.paidPayrolls || [];
-		let reply = `${ret.staffName || target.STAFF_NAME || '员工'} ${ret.month || month} 工资预览：待发${this._centText(ret.totalCent)}，当前提成${this._centText(ret.currentCent)}，释放${this._centText(ret.releaseCent)}，调整${this._centText(ret.adjustCent)}，扣回${this._centText(ret.deductCent)}，已发工资单${paid.length}条。`;
-		if (ret.legacyNeeded) reply = `${target.STAFF_NAME || '员工'} ${month} 属于旧工资入口月份，需要到旧入口查看/发放。`;
+		let reply = `${ret.staffName || target.STAFF_NAME || 'Ա��'} ${ret.month || month} ����Ԥ��������${this._centText(ret.totalCent)}����ǰ���${this._centText(ret.currentCent)}���ͷ�${this._centText(ret.releaseCent)}������${this._centText(ret.adjustCent)}���ۻ�${this._centText(ret.deductCent)}���ѷ����ʵ�${paid.length}����`;
+		if (ret.legacyNeeded) reply = `${target.STAFF_NAME || 'Ա��'} ${month} ���ھɹ�������·ݣ���Ҫ������ڲ鿴/���š�`;
 		return {
 			action: 'query_payroll',
 			data: ret,
@@ -2298,14 +2455,14 @@ class WorkAiService extends WorkPermissionService {
 	}
 
 	async _agentPayPayroll(openId, staff, data = {}) {
-		this._assertAgentAdmin(staff, '发放工资');
+		this._assertAgentAdmin(staff, '���Ź���');
 		let month = asText(data.month || '', 20);
-		if (!month) this.AppError('发工资必须提供月份');
-		if (!data.staffId && !data.STAFF_ID && !data.id && !data.staffName && !data.name && !data.STAFF_NAME) this.AppError('发工资必须提供员工姓名或员工ID');
+		if (!month) this.AppError('�����ʱ����ṩ�·�');
+		if (!data.staffId && !data.STAFF_ID && !data.id && !data.staffName && !data.name && !data.STAFF_NAME) this.AppError('�����ʱ����ṩԱ��������Ա��ID');
 		let target = await this._resolveStaffForAgent(staff, data, false);
 		let service = new WorkPayrollService();
 		let preview = await service.previewStaffMonth(target._id, month);
-		if (preview.legacyNeeded) this.AppError('切换月前工资需走旧发放入口');
+		if (preview.legacyNeeded) this.AppError('�л���ǰ�������߾ɷ������');
 		let operator = {
 			_id: staff._id,
 			STAFF_ID: staff.STAFF_ID || staff._id,
@@ -2313,31 +2470,31 @@ class WorkAiService extends WorkPermissionService {
 			source: 'ai_agent',
 		};
 		let ret = await service.payStaffMonth(target._id, month, preview.previewHash || '', operator, { note: asText(data.note || '', 200) });
-		let auditNoteId = await this._addAuditNote(openId, 'AI操作记录：发放工资', `${staff.STAFF_NAME || '管理员'}通过AI发放工资：${target.STAFF_NAME || target._id}，月份${month}，金额${this._centText(preview.totalCent)}。`);
+		let auditNoteId = await this._addAuditNote(openId, 'AI������¼�����Ź���', `${staff.STAFF_NAME || '����Ա'}ͨ��AI���Ź��ʣ�${target.STAFF_NAME || target._id}���·�${month}�����${this._centText(preview.totalCent)}��`);
 		return {
 			action: 'pay_payroll',
 			id: ret && (ret.payrollId || ret.id || ''),
 			data: ret,
 			auditNoteId,
-			reply: `已按管理员权限发放工资：${target.STAFF_NAME || ''} ${month}，金额${this._centText(preview.totalCent)}。`,
+			reply: `�Ѱ�����ԱȨ�޷��Ź��ʣ�${target.STAFF_NAME || ''} ${month}�����${this._centText(preview.totalCent)}��`,
 		};
 	}
 
 	async _agentAuditOrder(openId, staff, data = {}) {
-		this._assertAgentAdmin(staff, '审核订单');
+		this._assertAgentAdmin(staff, '��˶���');
 		let orderId = asText(data.orderId || data.id || data.ORDER_ID || '', 120);
-		if (!orderId) this.AppError('审核订单缺少订单ID');
-		let pass = this._boolInput(data.pass !== undefined ? data.pass : data.result, '审核结果');
+		if (!orderId) this.AppError('��˶���ȱ�ٶ���ID');
+		let pass = this._boolInput(data.pass !== undefined ? data.pass : data.result, '��˽��');
 		let reason = asText(data.reason || data.note || '', 200);
 		let service = new AdminWorkService();
 		let ret = await service.auditOrder(this._adminLikeFromStaff(staff), orderId, pass, reason, data.participants || null, Number(data.orderEditTime || 0));
-		let auditNoteId = await this._addAuditNote(openId, 'AI操作记录：审核订单', `${staff.STAFF_NAME || '管理员'}通过AI审核订单：${orderId}，结果：${pass ? '通过' : '不通过'}。说明：${reason || '无'}`);
+		let auditNoteId = await this._addAuditNote(openId, 'AI������¼����˶���', `${staff.STAFF_NAME || '����Ա'}ͨ��AI��˶�����${orderId}�������${pass ? 'ͨ��' : '��ͨ��'}��˵����${reason || '��'}`);
 		return {
 			action: 'audit_order',
 			id: orderId,
 			data: ret,
 			auditNoteId,
-			reply: `已按管理员权限审核订单：${pass ? '通过' : '不通过'}。${reason ? '说明：' + reason : ''}`,
+			reply: `�Ѱ�����ԱȨ����˶�����${pass ? 'ͨ��' : '��ͨ��'}��${reason ? '˵����' + reason : ''}`,
 		};
 	}
 
@@ -2396,7 +2553,7 @@ class WorkAiService extends WorkPermissionService {
 	async _agentCreateItem(openId, staff, data = {}) {
 		let date = this._cleanActionDate(data.date || data.ITEM_DATE);
 		let title = asText(data.title || data.ITEM_TITLE, 80);
-		if (!title) this.AppError('AI新增事项缺少标题');
+		if (!title) this.AppError('AI��������ȱ�ٱ���');
 		let item = {
 			ITEM_DATE: date,
 			ITEM_TIME: this._cleanTime(data.time || data.ITEM_TIME),
@@ -2408,16 +2565,16 @@ class WorkAiService extends WorkPermissionService {
 		let ret = await work.saveItem(openId, item, { forceActive: true });
 		let saved = await WorkItemModel.getOne(ret.id);
 		if (!saved || saved.ITEM_DATE != item.ITEM_DATE || saved.ITEM_TITLE != item.ITEM_TITLE || saved.ITEM_STATUS != 1) {
-			this.AppError('事项保存后校验失败，请重试');
+			this.AppError('������У��ʧ�ܣ�������');
 		}
-		let summary = `${staff.STAFF_NAME || '员工'}通过AI新增事项档期：${date} ${item.ITEM_TIME || ''}，${title}${item.ITEM_CONTENT ? '，备注：' + item.ITEM_CONTENT : ''}。记录ID：${ret.id}`;
-		let auditNoteId = await this._addAuditNote(openId, 'AI操作记录：新增事项档期', summary);
+		let summary = `${staff.STAFF_NAME || 'Ա��'}ͨ��AI��������ڣ�${date} ${item.ITEM_TIME || ''}��${title}${item.ITEM_CONTENT ? '����ע��' + item.ITEM_CONTENT : ''}����¼ID��${ret.id}`;
+		let auditNoteId = await this._addAuditNote(openId, 'AI������¼�����������', summary);
 		return {
 			action: 'create_item',
 			id: ret.id,
 			data: { date, item },
 			auditNoteId,
-			reply: `已新增事项档期：${date} ${item.ITEM_TIME || ''}，${title}。已同步写入全体小记审查流水。`,
+			reply: `����������ڣ�${date} ${item.ITEM_TIME || ''}��${title}����ͬ��д��ȫ��С�������ˮ��`,
 		};
 	}
 
@@ -2425,25 +2582,25 @@ class WorkAiService extends WorkPermissionService {
 		let date = this._cleanActionDate(data.date || data.REST_DATE);
 		let rest = {
 			REST_DATE: date,
-			REST_TYPE: asText(data.type || data.restType || data.REST_TYPE || '休息', 40) || '休息',
+			REST_TYPE: asText(data.type || data.restType || data.REST_TYPE || '��Ϣ', 40) || '��Ϣ',
 			REST_REASON: asText(data.reason || data.REST_REASON || '', 300),
 		};
 		let work = new WorkService();
 		let ret = await work.saveRest(openId, rest);
-		let summary = `${staff.STAFF_NAME || '员工'}通过AI新增休息/请假申请：${date}，${rest.REST_TYPE}${rest.REST_REASON ? '，原因：' + rest.REST_REASON : ''}。记录ID：${ret.id}`;
-		let auditNoteId = await this._addAuditNote(openId, 'AI操作记录：新增休息申请', summary);
+		let summary = `${staff.STAFF_NAME || 'Ա��'}ͨ��AI������Ϣ/������룺${date}��${rest.REST_TYPE}${rest.REST_REASON ? '��ԭ��' + rest.REST_REASON : ''}����¼ID��${ret.id}`;
+		let auditNoteId = await this._addAuditNote(openId, 'AI������¼��������Ϣ����', summary);
 		return {
 			action: 'create_rest',
 			id: ret.id,
 			data: { date, rest },
 			auditNoteId,
-			reply: `已新增${rest.REST_TYPE}申请：${date}${rest.REST_REASON ? '，' + rest.REST_REASON : ''}。已同步写入全体小记审查流水。`,
+			reply: `������${rest.REST_TYPE}���룺${date}${rest.REST_REASON ? '��' + rest.REST_REASON : ''}����ͬ��д��ȫ��С�������ˮ��`,
 		};
 	}
 
 	async _agentAddNote(openId, staff, data = {}) {
 		let title = asText(data.title || data.NOTE_TITLE, 80);
-		if (!title) this.AppError('AI新增小记缺少标题');
+		if (!title) this.AppError('AI����С��ȱ�ٱ���');
 		let note = {
 			NOTE_TYPE: (data.noteType || data.NOTE_TYPE) == 'personal' ? 'personal' : 'team',
 			NOTE_TITLE: title,
@@ -2453,16 +2610,16 @@ class WorkAiService extends WorkPermissionService {
 		let work = new WorkService();
 		let ret = await work.saveNote(openId, note);
 		let auditNoteId = '';
-		if (note.NOTE_TYPE != 'team' || !title.startsWith('AI操作记录')) {
-			let summary = `${staff.STAFF_NAME || '员工'}通过AI新增${note.NOTE_TYPE == 'team' ? '团队' : '个人'}小记：${title}。记录ID：${ret.id}`;
-			auditNoteId = await this._addAuditNote(openId, 'AI操作记录：新增小记', summary);
+		if (note.NOTE_TYPE != 'team' || !title.startsWith('AI������¼')) {
+			let summary = `${staff.STAFF_NAME || 'Ա��'}ͨ��AI����${note.NOTE_TYPE == 'team' ? '�Ŷ�' : '����'}С�ǣ�${title}����¼ID��${ret.id}`;
+			auditNoteId = await this._addAuditNote(openId, 'AI������¼������С��', summary);
 		}
 		return {
 			action: 'add_note',
 			id: ret.id,
 			data: { date: note.NOTE_DATE, note },
 			auditNoteId,
-			reply: `已新增${note.NOTE_TYPE == 'team' ? '团队' : '个人'}小记：${title}。已同步写入全体小记审查流水。`,
+			reply: `������${note.NOTE_TYPE == 'team' ? '�Ŷ�' : '����'}С�ǣ�${title}����ͬ��д��ȫ��С�������ˮ��`,
 		};
 	}
 
@@ -2535,8 +2692,8 @@ class WorkAiService extends WorkPermissionService {
 			});
 			req.on('timeout', () => req.destroy(new Error('AI request timeout')));
 			req.on('error', err => {
-				if (err && err.message == 'AI request timeout') err.safeMessage = 'AI 接口超时，请稍后重试';
-				else if (err && !err.safeMessage) err.safeMessage = 'AI 接口连接失败，请检查网络或后台配置';
+				if (err && err.message == 'AI request timeout') err.safeMessage = 'AI �ӿڳ�ʱ�����Ժ�����';
+				else if (err && !err.safeMessage) err.safeMessage = 'AI �ӿ�����ʧ�ܣ�����������̨����';
 				reject(err);
 			});
 			if (hasBody) req.write(body);
@@ -2550,12 +2707,12 @@ class WorkAiService extends WorkPermissionService {
 		else if (parsed && typeof parsed.error == 'string') msg = parsed.error;
 		else if (parsed && parsed.message) msg = String(parsed.message);
 		else if (parsed && parsed.msg) msg = String(parsed.msg);
-		if (statusCode == 401 || statusCode == 403) return 'AI 接口鉴权失败，请检查 API Key';
-		if (statusCode == 404) return 'AI 接口地址或模型不存在，请检查后台配置';
-		if (statusCode == 429) return 'AI 接口额度或频率受限，请稍后重试';
-		if (statusCode >= 500) return 'AI 服务或当前模型暂时不可用，请稍后重试；如果连续出现，请在AI配置里换一个可用模型。';
-		if (/param|parameter|参数/i.test(msg)) return 'AI 接口参数不兼容，请确认 Base URL 是 OpenAI 兼容的 /v1 地址、模型 ID 填写正确；如果是纯文本模型，图片识别模型请单独填写支持读图的模型。';
-		return msg ? ('AI 接口返回错误：' + msg.slice(0, 120)) : 'AI 接口返回错误，请检查后台配置';
+		if (statusCode == 401 || statusCode == 403) return 'AI �ӿڼ�Ȩʧ�ܣ����� API Key';
+		if (statusCode == 404) return 'AI �ӿڵ�ַ��ģ�Ͳ����ڣ������̨����';
+		if (statusCode == 429) return 'AI �ӿڶ�Ȼ�Ƶ�����ޣ����Ժ�����';
+		if (statusCode >= 500) return 'AI �����ǰģ����ʱ�����ã����Ժ����ԣ�����������֣�����AI�����ﻻһ������ģ�͡�';
+		if (/param|parameter|����/i.test(msg)) return 'AI �ӿڲ��������ݣ���ȷ�� Base URL �� OpenAI ���ݵ� /v1 ��ַ��ģ�� ID ��д��ȷ������Ǵ��ı�ģ�ͣ�ͼƬʶ��ģ���뵥����д֧�ֶ�ͼ��ģ�͡�';
+		return msg ? ('AI �ӿڷ��ش���' + msg.slice(0, 120)) : 'AI �ӿڷ��ش��������̨����';
 	}
 }
 

@@ -1,3 +1,4 @@
+<wxs src="../../../../../helper/filters.wxs" module="f" />
 <view class="page">
 	<view class="filters">
 		<picker range="{{staffList}}" range-key="STAFF_NAME" value="{{staffIndex}}" bindchange="bindStaffChange" disabled="{{!hasStaff}}">
@@ -11,9 +12,9 @@
 	<view wx:if="{{!hasStaff}}" class="empty">暂无可发工资员工</view>
 
 	<view wx:if="{{data}}" class="summary">
-		<view><text>先发</text><view>¥{{currentText}}</view></view>
-		<view><text>释放</text><view>¥{{releaseText}}</view></view>
-		<view><text>应发</text><view>¥{{totalText}}</view></view>
+		<view><text>先发</text><view>{{f.fmtMoney(currentText)}}</view></view>
+		<view><text>释放</text><view>{{f.fmtMoney(releaseText)}}</view></view>
+		<view><text>应发</text><view>{{f.fmtMoney(totalText)}}</view></view>
 	</view>
 
 	<view wx:if="{{isLegacy}}" class="empty">旧月份工资请继续使用旧后台兼容入口</view>
@@ -28,7 +29,7 @@
 	<view wx:for="{{items}}" wx:key="commissionId" class="card">
 		<view class="title">{{item.customerSurname}}{{item.customerName}}｜{{item.kind}}</view>
 		<view class="meta">{{item.month}} · {{item.roleName}} · {{item.orderNo}}</view>
-		<view class="amount">¥{{item.amount}}</view>
+		<view class="amount">{{f.fmtMoney(item.amount)}}</view>
 	</view>
 
 	<view wx:if="{{data && !isLegacy}}" class="section">待释放冻结</view>
@@ -36,7 +37,7 @@
 	<view wx:for="{{frozenItems}}" wx:key="commissionId" class="card">
 		<view class="title">{{item.customerSurname}}{{item.customerName}}｜冻结</view>
 		<view class="meta">{{item.month}} · {{item.roleName}}</view>
-		<view class="amount muted">¥{{item.amount}}</view>
+		<view class="amount muted">{{f.fmtMoney(item.amount)}}</view>
 	</view>
 </view>
 

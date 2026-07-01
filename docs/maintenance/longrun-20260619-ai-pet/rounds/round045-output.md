@@ -1,3 +1,0 @@
-﻿Claude round failed: 程序“claude.exe”无法运行: 无法找到指定文件。所在位置 C:\Users\Administrator\AppData\Roaming\npm\claude.ps1:12 字符: 12
-+   $input | & "$basedir/node_modules/@anthropic-ai/claude-code/bin/cla ...
-+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~。
