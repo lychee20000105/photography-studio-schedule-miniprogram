@@ -1,3 +1,116 @@
+## v2.48 - 2026-07-04
+
+### Change Level
+
+Patch fix, v2.47 -> v2.48, +0.01.
+
+### Goal
+
+Stop the work pet from treating a cloud-function `aiUnavailable` fallback as an ordinary assistant reply.
+
+### Key Changes
+
+- The front-end legacy cloud-call path now detects `data.aiUnavailable` from `work/ai_chat`.
+- Both cloud-returned AI fallback replies and thrown generic unavailable errors now show the same explicit real-API-failure notice.
+- Acceptance remains strict: a real API success requires a real model reply, not a local fallback.
+
+### Files
+
+- miniprogram/cmpts/work_pet/work_pet.js
+- miniprogram/version.js
+- miniprogram/setting/setting.js
+- CHANGELOG.md
+- README.md
+- docs/version-change-diary.md
+
+### Verification
+
+- `node --check miniprogram/version.js` passed.
+- `node --check miniprogram/setting/setting.js` passed.
+- `node --check miniprogram/cmpts/work_pet/work_pet.js` passed.
+- `node --check cloudfunctions/mcloud/project/B00/service/work_ai_service.js` passed.
+- `node --check cloudfunctions/mcloud/work_ai_service_live_patch.js` passed.
+- `node tools/verify_live_patch.js` passed.
+- `git diff --check` passed with existing Windows line-ending warnings only.
+- WeChat DevTools simulator loaded `v2.48`.
+- Real API test message `API TEST 0704B reply OK0704B` did not return `OK0704B`; the upstream API is still not verified as working.
+- The user-facing result now correctly shows an explicit real-API-failure notice instead of treating the fallback as success.
+
+### Deployment Status
+
+- `work_ai_service_live_patch.js` incrementally deployed to `mcloud`; patch size `45.3 KB`.
+- WeChat development version `2.48` uploaded successfully; package size `1.6 MB` / `1,666,766 Byte`.
+- No audit submission and no production release.
+
+## v2.47 - 2026-07-04
+
+### Change Level
+
+Patch fix, v2.46 -> v2.47, +0.01.
+
+### Goal
+
+Stop the work pet from presenting the old generic unavailable message after a failed real API test.
+
+### Key Changes
+
+- Front-end chat catch now converts the old generic AI unavailable error into an explicit cloud/AI-call failure notice.
+- The notice records the important truth: this is a real API call failure, not a successful upstream model response.
+- Kept the v2.46 12-second upstream timeout guard.
+
+### Files
+
+- miniprogram/cmpts/work_pet/work_pet.js
+- cloudfunctions/mcloud/project/B00/service/work_ai_service.js
+- cloudfunctions/mcloud/work_ai_service_live_patch.js
+- miniprogram/version.js
+- miniprogram/setting/setting.js
+- CHANGELOG.md
+- README.md
+- docs/version-change-diary.md
+
+### Verification
+
+- Pending in this turn after checks, upload, and simulator retest.
+
+### Deployment Status
+
+- Pending in this turn.
+
+## v2.46 - 2026-07-04
+
+### Change Level
+
+Patch fix, v2.45 -> v2.46, +0.01.
+
+### Goal
+
+Prevent the work pet AI cloud call from timing out at the cloud-function layer before the service can return a controlled fallback.
+
+### Key Changes
+
+- Reduced upstream AI HTTP timeout from 45 seconds to 12 seconds.
+- Kept the existing v2.45 fallback response path, but made it reachable under the current 20-second cloud-function limit.
+- Verified and recorded that the real upstream API has not yet produced a successful model response in simulator testing.
+
+### Files
+
+- cloudfunctions/mcloud/project/B00/service/work_ai_service.js
+- cloudfunctions/mcloud/work_ai_service_live_patch.js
+- miniprogram/version.js
+- miniprogram/setting/setting.js
+- CHANGELOG.md
+- README.md
+- docs/version-change-diary.md
+
+### Verification
+
+- Pending in this turn after regeneration and deployment.
+
+### Deployment Status
+
+- Pending in this turn.
+
 ## v2.45 - 2026-07-04
 
 ### Change Level

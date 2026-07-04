@@ -2,11 +2,38 @@
 
 基于微信云开发的摄影工作室内部经营小程序，覆盖档期、订单、收款、员工业绩提成、工资结算、小程序内管理中心和 AI 小助手配置。
 
-当前本地代码版本：`v2.45`
+当前本地代码版本：`v2.48`
 
-当前开源稳定基线：`v2.45.0`
-
+当前开源稳定基线：`v2.48.0`
 最近本地修改时间：`2026-07-04`
+
+## v2.48.0 Release Notes
+
+Make the work pet distinguish a cloud-function fallback from a real upstream model reply. When `work/ai_chat` returns `aiUnavailable`, the front end now shows an explicit real-API-failure notice instead of treating the fallback as a normal assistant answer.
+
+Key changes:
+- Detect `data.aiUnavailable` from the cloud AI route.
+- Use one explicit failure notice for both returned fallback replies and thrown generic unavailable errors.
+- Do not mark the API as working until a real model reply is observed.
+- Simulator retest with `API TEST 0704B reply OK0704B` still did not return `OK0704B`; the upstream API remains unverified.
+
+## v2.47.0 Release Notes
+
+Make the work pet report real API failure explicitly when the cloud AI call still returns the old generic unavailable error. Simulator testing still has not verified a successful upstream model response.
+
+Key changes:
+- Replace the old generic front-end chat error with an explicit cloud/AI-call failure notice.
+- Keep the v2.46 12-second upstream timeout guard.
+- Retest with a unique `OK0704` prompt before marking the API as working.
+
+## v2.46.0 Release Notes
+
+Keep the work pet cloud-function call from being killed by the current 20-second cloud timeout before it can return a controlled fallback. The upstream AI API still has not been verified as successfully returning a real model reply in simulator testing.
+
+Key changes:
+- Reduce upstream AI HTTP timeout from 45 seconds to 12 seconds.
+- Keep the controlled external-AI-unavailable fallback reachable under the current cloud-function timeout.
+- Regenerate and deploy the mcloud live patch after verification.
 
 ## v2.45.0 Release Notes
 

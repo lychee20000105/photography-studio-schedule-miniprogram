@@ -1,3 +1,67 @@
+## v2.48 - 2026-07-04
+
+Make the work pet distinguish a cloud-function fallback from a real upstream model reply.
+
+### Fixes
+
+- Detect `data.aiUnavailable` returned by `work/ai_chat` in the front-end legacy cloud-call path.
+- Replace returned fallback replies and thrown generic AI unavailable errors with one explicit real-API-failure notice.
+- Keep the acceptance rule strict: the API is not considered working until a real model reply is observed.
+
+### Verification
+
+- `node --check miniprogram/version.js` passed.
+- `node --check miniprogram/setting/setting.js` passed.
+- `node --check miniprogram/cmpts/work_pet/work_pet.js` passed.
+- `node --check cloudfunctions/mcloud/project/B00/service/work_ai_service.js` passed.
+- `node --check cloudfunctions/mcloud/work_ai_service_live_patch.js` passed.
+- `node tools/verify_live_patch.js` passed.
+- `git diff --check` passed with existing Windows line-ending warnings only.
+- WeChat DevTools simulator loaded `v2.48`; sending `API TEST 0704B reply OK0704B` did not return `OK0704B`.
+- Simulator result: the work pet displayed the explicit real-API-failure notice, so upstream API success is still not verified.
+
+### Deployment
+
+- `work_ai_service_live_patch.js` incrementally deployed to `mcloud`; patch size `45.3 KB`.
+- WeChat development version `2.48` uploaded successfully; package size `1.6 MB` / `1,666,766 Byte`.
+- No audit submission and no production release.
+
+## v2.47 - 2026-07-04
+
+Make the work pet report real API failure explicitly when the cloud AI call still returns the old generic unavailable error.
+
+### Fixes
+
+- Replace the old generic front-end chat error with an explicit cloud/AI-call failure notice.
+- Keep the user-facing test result honest: the real upstream API still did not return `OK0704`.
+- Continue to keep v2.46's 12-second upstream timeout guard.
+
+### Verification
+
+- Pending in this turn after checks, upload, and simulator retest.
+
+### Deployment
+
+- Pending in this turn.
+
+## v2.46 - 2026-07-04
+
+Keep the work pet cloud-function call from being killed by the current 20-second cloud timeout before it can return a controlled fallback.
+
+### Fixes
+
+- Reduce the upstream AI HTTP request timeout from 45 seconds to 12 seconds.
+- Preserve the v2.45 fallback path so the front end can receive an explicit external-AI-unavailable reply instead of only a generic call failure.
+- Record the current verification truth: simulator testing still has not shown a successful real upstream model reply.
+
+### Verification
+
+- Pending in this turn after live patch regeneration and deployment.
+
+### Deployment
+
+- Pending in this turn.
+
 ## v2.45 - 2026-07-04
 
 Stabilize the work pet agent by disabling the unreliable external stream shortcut, normalizing Agnes model IDs, supporting /responses endpoints, and returning an online fallback reply when the upstream AI provider is unavailable.

@@ -1,14 +1,47 @@
 module.exports = {
-	current: '2.45',
-	previous: '2.44',
+	current: '2.48',
+	previous: '2.47',
 	date: '2026-07-04',
-	time: '19:35 CST',
+	time: '20:45 CST',
 	level: 'patch',
-	levelText: 'Work pet AI endpoint compatibility',
-	name: 'Work pet AI endpoint compatibility',
-	summary: 'Stabilize the work pet agent by disabling the unreliable external stream shortcut, normalizing Agnes model IDs, supporting /responses endpoints, and returning an online fallback reply when the upstream AI provider is unavailable.',
+	levelText: 'Work pet AI unavailable state handling',
+	name: 'Work pet AI unavailable state handling',
+	summary: 'Make the work pet treat cloud aiUnavailable responses as real upstream API failures instead of normal assistant replies.',
 	changeLog: '/docs/version-change-diary.md',
 	history: [
+	{
+		version: '2.48',
+		date: '2026-07-04',
+		name: 'Work pet AI unavailable state handling',
+		summary: 'Make the work pet treat cloud aiUnavailable responses as real upstream API failures instead of normal assistant replies.',
+		items: [
+			'Detect data.aiUnavailable from work/ai_chat responses in the front-end legacy cloud-call path.',
+			'Replace both returned fallback replies and thrown generic errors with the same explicit real-API-failure notice.',
+			'Keep the verification rule strict: API success requires a real model reply, such as the requested OK0704B response.',
+		],
+	},
+	{
+		version: '2.47',
+		date: '2026-07-04',
+		name: 'Work pet explicit API failure notice',
+		summary: 'Make the work pet show an explicit real-API-failure notice when the cloud AI call still returns the old generic unavailable error.',
+		items: [
+			'Replace the old generic front-end chat error with an explicit cloud/AI-call failure notice.',
+			'Keep simulator verification honest: the real upstream API still has not returned OK0704.',
+			'Deploy and upload a fresh development version after the v2.46 timeout guard.',
+		],
+	},
+	{
+		version: '2.46',
+		date: '2026-07-04',
+		name: 'Work pet AI timeout guard',
+		summary: 'Keep the cloud function from timing out before it can return the work pet fallback when the upstream AI provider is slow or unreachable.',
+		items: [
+			'Reduce the upstream AI HTTP request timeout from 45 seconds to 12 seconds.',
+			'Leave room inside the current 20-second cloud-function limit for controlled fallback handling.',
+			'Record that the real upstream API has not yet returned a successful model reply in simulator testing.',
+		],
+	},
 	{
 		version: '2.45',
 		date: '2026-07-04',

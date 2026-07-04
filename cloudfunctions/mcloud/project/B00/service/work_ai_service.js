@@ -2725,7 +2725,7 @@ class WorkAiService extends WorkPermissionService {
 					'Content-Type': 'application/json',
 					'Content-Length': Buffer.byteLength(body),
 				} : {}, extraHeaders || {}),
-				timeout: 45000,
+				timeout: 12000,
 			}, res => {
 				let chunks = '';
 				res.setEncoding('utf8');

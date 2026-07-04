@@ -13,6 +13,7 @@ const LOCAL_IMAGE_DIR = 'work_pet_images';
 const CHAT_RENDER_LIMIT = 50; // B11: max messages rendered at once
 const STREAM_FLUSH_INTERVAL = 100; // B19: buffer flush interval ms
 const STREAM_URL_KEY = 'WORK_PET_STREAM_URL'; // B19: cloud function HTTP trigger URL
+const AI_UNAVAILABLE_NOTICE = '\u5c0f\u732b\u4e91\u51fd\u6570\u8fd4\u56de\u4e86 AI \u5931\u8d25\u72b6\u6001\uff1a\u5916\u90e8 AI \u63a5\u53e3\u4ecd\u672a\u771f\u5b9e\u6d4b\u901a\u3002\u8fd9\u4e0d\u662f\u6a21\u578b\u56de\u590d\uff0c\u4e5f\u4e0d\u4f1a\u8bb0\u4e3a API \u6210\u529f\u3002';
 const AGENT_VERSION = {
 	version: '0.4.0',
 	date: '2026-06-24',
@@ -1025,7 +1026,10 @@ Component({
 					this._typewriterDisplay(reply, messages, _sendThreadId);
 					return; // typewriter handles setData and _saveChat
 				} catch (err) {
-					let msg = (err && err.msg) || (err && err.message) || 'AI 小助手暂时不可用，请稍后再试。';
+					let msg = (err && err.msg) || (err && err.message) || '';
+					if (!msg || /AI\s*(服务|小助手)?\s*暂时不可用|AI\s*服务暂时不可用|unavailable/i.test(msg)) {
+						msg = AI_UNAVAILABLE_NOTICE;
+					}
 					messages = trimMessages(messages.concat([{ role: 'assistant', content: msg }]));
 				}
 
@@ -1610,6 +1614,9 @@ Component({
 				}, { hint: false });
 				let data = res && res.data ? res.data : {};
 				reply = data.reply || '我收到啦，但 AI 没有返回文字。';
+				if (data.aiUnavailable || /AI\s*(服务|小助手)?\s*暂时不可用|AI\s*服务暂时不可用|外部\s*AI\s*接口.*(没有正常返回|未测通)|unavailable/i.test(reply)) {
+					reply = AI_UNAVAILABLE_NOTICE;
+				}
 				this._applyContextMeta(data);
 				this._refreshPageAfterAgentAction(data);
 			}
