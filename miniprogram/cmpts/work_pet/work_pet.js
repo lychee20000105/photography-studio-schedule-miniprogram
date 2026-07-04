@@ -1450,7 +1450,9 @@ Component({
 		},
 		// B19: Streaming AI chat via wx.request enableChunked
 		async _sendChatStreaming(text, history, attachments, messages, _sendThreadId) {
-			let streamUrl = wx.getStorageSync(STREAM_URL_KEY) || '';
+			// Keep the assistant usable through the stable cloud function route.
+			// The external streaming endpoint has no reliable fallback once chunk mode starts.
+			let streamUrl = '';
 			if (!streamUrl) return false;
 
 			let token = '';

@@ -1,14 +1,27 @@
 module.exports = {
-	current: '2.44',
-	previous: '2.43',
+	current: '2.45',
+	previous: '2.44',
 	date: '2026-07-04',
-	time: '20:20 CST',
+	time: '19:35 CST',
 	level: 'patch',
-	levelText: '小猫 Agent 前端流式失败兜底',
-	name: '小猫 Agent 发送兜底修复',
-	summary: 'work_pet.js 修复流式 HTTP 请求失败后卡在发送/思考状态的问题，失败时自动回退普通云函数调用，并同步释放发送按钮。',
+	levelText: 'Work pet AI endpoint compatibility',
+	name: 'Work pet AI endpoint compatibility',
+	summary: 'Stabilize the work pet agent by disabling the unreliable external stream shortcut, normalizing Agnes model IDs, supporting /responses endpoints, and returning an online fallback reply when the upstream AI provider is unavailable.',
 	changeLog: '/docs/version-change-diary.md',
 	history: [
+	{
+		version: '2.45',
+		date: '2026-07-04',
+		name: 'Work pet AI endpoint compatibility',
+		summary: 'Stabilize the work pet agent by disabling the unreliable external stream shortcut, normalizing Agnes model IDs, supporting /responses endpoints, and returning an online fallback reply when the upstream AI provider is unavailable.',
+		items: [
+			'Ignore WORK_PET_STREAM_URL for now so the pet uses the stable work/ai_chat cloud-function path.',
+			'Normalize legacy Agnes model IDs such as agnes-20-flash to agnes-2.0-flash.',
+			'Support OpenAI Responses-style /responses endpoints with input/max_output_tokens and response output parsing.',
+			'Return a local online fallback reply instead of the generic unavailable error when the upstream provider fails.',
+			'Regenerated and incrementally deployed work_ai_service_live_patch.js to mcloud.',
+		],
+	},
 	{
 		version: '2.44',
 		date: '2026-07-04',

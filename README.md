@@ -2,13 +2,24 @@
 
 基于微信云开发的摄影工作室内部经营小程序，覆盖档期、订单、收款、员工业绩提成、工资结算、小程序内管理中心和 AI 小助手配置。
 
-当前本地代码版本：`v2.44`
+当前本地代码版本：`v2.45`
 
-当前开源稳定基线：`v2.44.0`
+当前开源稳定基线：`v2.45.0`
 
 最近本地修改时间：`2026-07-04`
 
-## v2.44.0 版本说明
+## v2.45.0 Release Notes
+
+Stabilize the work pet agent by disabling the unreliable external stream shortcut, normalizing Agnes model IDs, supporting /responses endpoints, and returning an online fallback reply when the upstream AI provider is unavailable.
+
+Key changes:
+- Ignore WORK_PET_STREAM_URL for now so the pet uses the stable work/ai_chat cloud-function path.
+- Normalize legacy Agnes model IDs such as agnes-20-flash to agnes-2.0-flash.
+- Support OpenAI Responses-style /responses endpoints with input/max_output_tokens and response output parsing.
+- Return a local online fallback reply instead of the generic unavailable error when the upstream provider fails.
+- Regenerated and incrementally deployed work_ai_service_live_patch.js to mcloud.
+
+## v2.44.0 Version Notes
 
 v2.44.0 修复云屿小猫 Agent 前端发送兜底问题：当本地缓存的流式 HTTP 地址失效或请求失败时，小猫会自动回退到普通 `work/ai_chat` 云函数调用，并释放发送/思考状态，避免聊天面板一直卡在“思考中”或发送按钮永久灰掉。
 

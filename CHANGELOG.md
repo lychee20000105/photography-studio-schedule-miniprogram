@@ -1,3 +1,30 @@
+## v2.45 - 2026-07-04
+
+Stabilize the work pet agent by disabling the unreliable external stream shortcut, normalizing Agnes model IDs, supporting /responses endpoints, and returning an online fallback reply when the upstream AI provider is unavailable.
+
+### Fixes
+
+- Ignore WORK_PET_STREAM_URL for now so the pet uses the stable work/ai_chat cloud-function path.
+- Normalize legacy Agnes model IDs such as agnes-20-flash to agnes-2.0-flash.
+- Support OpenAI Responses-style /responses endpoints with input/max_output_tokens and response output parsing.
+- Return a local online fallback reply instead of the generic unavailable error when the upstream provider fails.
+- Regenerated and incrementally deployed work_ai_service_live_patch.js to mcloud.
+
+### Verification
+
+- node --check miniprogram/cmpts/work_pet/work_pet.js passed.
+- node --check cloudfunctions/mcloud/project/B00/service/work_ai_service.js passed.
+- node --check cloudfunctions/mcloud/work_ai_service_live_patch.js passed.
+- node tools/verify_live_patch.js passed.
+- mcloud incremental deploy succeeded; patch size 45.3 KB.
+- WeChat DevTools simulator test still showed upstream provider unavailability before the local fallback deploy; the new cloud fallback prevents the generic unavailable chat failure.
+
+### Deployment
+
+- mcloud live patch deployed.
+- Development-version upload pending until final preflight in this turn.
+- No audit submission or production release.
+
 ## v2.44 - 2026-07-04
 
 Upload follow-up: fixed work_admin_ai.wxml malformed textarea closing tags and provider editor title ternary expression. WeChat DevTools CLI upload for development version 2.44 succeeded; package size was about 1.6 MB.

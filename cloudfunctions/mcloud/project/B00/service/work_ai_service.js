@@ -32,9 +32,9 @@ const DEFAULT_CONFIG = {
 	enabled: true,
 	providerName: 'Agnes',
 	apiUrl: 'https://api.agnes-ai.com/v1',
-	model: 'agnes-20-flash',
+	model: 'agnes-2.0-flash',
 	visionApiUrl: 'https://api.agnes-ai.com/v1',
-	visionModel: 'agnes-20-flash',
+	visionModel: 'agnes-2.0-flash',
 	visionApiKey: '',
 	apiKey: '',
 	personality: 'ops_cat',
@@ -240,6 +240,10 @@ function normalizeModelsApiUrl(url) {
 	return url + '/models';
 }
 
+function isResponsesApiUrl(url) {
+	return asText(url, 400).replace(/\/+$/, '').toLowerCase().endsWith('/responses');
+}
+
 function isMimoApi(apiUrl, providerName = '') {
 	let text = (asText(apiUrl, 400) + ' ' + asText(providerName, 80)).toLowerCase();
 	return text.indexOf('xiaomimimo.com') >= 0 || text.indexOf('mimo') >= 0 || text.indexOf('С��') >= 0;
@@ -247,8 +251,9 @@ function isMimoApi(apiUrl, providerName = '') {
 
 function normalizeModelForApi(model, apiUrl, providerName = '') {
 	model = asText(model, 120);
-	if (!isMimoApi(apiUrl, providerName)) return model || DEFAULT_CONFIG.model;
 	let compact = model.toLowerCase().replace(/[\s_]+/g, '-');
+	if (compact == 'agnes-20-flash' || compact == 'agnes2.0-flash' || compact == 'agnes-2-0-flash') return 'agnes-2.0-flash';
+	if (!isMimoApi(apiUrl, providerName)) return model || DEFAULT_CONFIG.model;
 	if (compact == 'mimov2.5' || compact == 'mimo-v2.5') return 'mimo-v2.5';
 	if (compact == 'mimov2.5-pro' || compact == 'mimo-v2.5-pro') return 'mimo-v2.5-pro';
 	if (!compact || compact == 'gpt-4o-mini' || compact == 'deepseek-chat' || compact.indexOf('mimo') < 0) return DEFAULT_CONFIG.model;
@@ -305,9 +310,9 @@ class WorkAiService extends WorkPermissionService {
 				id: 'agnes',
 				providerName: 'Agnes',
 				apiUrl: 'https://api.agnes-ai.com/v1',
-				model: 'agnes-20-flash',
+				model: 'agnes-2.0-flash',
 				visionApiUrl: 'https://api.agnes-ai.com/v1',
-				visionModel: 'agnes-20-flash',
+				visionModel: 'agnes-2.0-flash',
 				apiKey: '',
 				visionApiKey: '',
 			},
@@ -532,11 +537,10 @@ class WorkAiService extends WorkPermissionService {
 			messages,
 			temperature: (queryType === 'write' || queryType === 'complex') ? Math.min(config.temperature, 0.3) : config.temperature,
 			max_tokens: selectedMaxTokens,
-			stream: false,
 		};
 
 		try {
-			let result = await this._postJson(selectedApiUrl, body, {
+			let result = await this._postJson(selectedApiUrl, this._requestBodyForApi(selectedApiUrl, body), {
 				Authorization: 'Bearer ' + selectedApiKey,
 			});
 			let reply = this._pickReply(result);
@@ -551,7 +555,7 @@ class WorkAiService extends WorkPermissionService {
 			if (this._shouldRetryWithMinimalBody(err, body)) {
 				try {
 					let minimalBody = this._minimalChatBody(body);
-					let minimalResult = await this._postJson(selectedApiUrl, minimalBody, {
+					let minimalResult = await this._postJson(selectedApiUrl, this._requestBodyForApi(selectedApiUrl, minimalBody), {
 						Authorization: 'Bearer ' + selectedApiKey,
 					});
 					let minimalReply = this._pickReply(minimalResult);
@@ -570,7 +574,7 @@ class WorkAiService extends WorkPermissionService {
 			if (!hasImages && isMimoApi(selectedApiUrl, config.providerName) && this._shouldRetryWithMinimalBody(err, body)) {
 				try {
 					let mimoBody = this._mimoTextFallbackBody(body);
-					let mimoResult = await this._postJson(selectedApiUrl, mimoBody, {
+					let mimoResult = await this._postJson(selectedApiUrl, this._requestBodyForApi(selectedApiUrl, mimoBody), {
 						Authorization: 'Bearer ' + selectedApiKey,
 					});
 					let mimoReply = this._pickReply(mimoResult);
@@ -592,7 +596,7 @@ class WorkAiService extends WorkPermissionService {
 			if (err && (err.statusCode === 429 || err.statusCode >= 500) && fallbackModel && fallbackModel !== selectedModel) {
 				try {
 					body.model = fallbackModel;
-					let fallbackResult = await this._postJson(selectedApiUrl, body, {
+					let fallbackResult = await this._postJson(selectedApiUrl, this._requestBodyForApi(selectedApiUrl, body), {
 						Authorization: 'Bearer ' + selectedApiKey,
 					});
 					let fallbackReply = this._pickReply(fallbackResult);
@@ -608,7 +612,12 @@ class WorkAiService extends WorkPermissionService {
 				}
 			}
 			console.error('AI chat failed:', err && err.message ? err.message : err);
-			this.AppError(err && err.safeMessage ? err.safeMessage : 'AI �ӿڵ���ʧ�ܣ������̨����');
+			return this._localAgentResult(config, {
+				action: 'none',
+				reply: '\u6211\u5728\u7ebf\uff0c\u4f46\u5916\u90e8 AI \u63a5\u53e3\u8fd9\u6b21\u6ca1\u6709\u6b63\u5e38\u8fd4\u56de\u3002\u4f60\u53ef\u4ee5\u5148\u7ee7\u7eed\u95ee\u6211\u5c0f\u7a0b\u5e8f\u529f\u80fd\u3001\u6863\u671f\u548c\u8ba2\u5355\u64cd\u4f5c\u601d\u8def\uff1b\u5982\u679c\u8981\u6211\u751f\u6210\u957f\u6587\u6216\u505a\u590d\u6742\u5206\u6790\uff0c\u9700\u8981\u7ba1\u7406\u5458\u68c0\u67e5 AI \u4f9b\u5e94\u5546\u7684 Base URL\u3001\u6a21\u578b ID \u548c Key\u3002',
+				aiUnavailable: true,
+				errorStatus: err && err.statusCode ? err.statusCode : 0,
+			});
 		}
 	}
 
@@ -1088,6 +1097,21 @@ class WorkAiService extends WorkPermissionService {
 			return asText(content, 4000);
 		}
 		if (result.output_text) return asText(result.output_text, 4000);
+		if (Array.isArray(result.output)) {
+			let parts = [];
+			for (let item of result.output) {
+				if (!item) continue;
+				if (typeof item.text == 'string') parts.push(item.text);
+				if (Array.isArray(item.content)) {
+					for (let c of item.content) {
+						if (!c) continue;
+						if (typeof c.text == 'string') parts.push(c.text);
+						else if (typeof c.output_text == 'string') parts.push(c.output_text);
+					}
+				}
+			}
+			if (parts.length) return asText(parts.join(''), 4000);
+		}
 		return '';
 	}
 
@@ -1095,8 +1119,41 @@ class WorkAiService extends WorkPermissionService {
 		return {
 			model: body.model,
 			messages: body.messages,
-			stream: false,
 		};
+	}
+
+	_requestBodyForApi(apiUrl, body = {}) {
+		if (isResponsesApiUrl(apiUrl)) return this._responsesBody(body);
+		return body;
+	}
+
+	_responsesBody(body = {}) {
+		let instructions = [];
+		let inputLines = [];
+		let messages = Array.isArray(body.messages) ? body.messages : [];
+		for (let msg of messages) {
+			if (!msg) continue;
+			let role = msg.role == 'assistant' ? 'assistant' : (msg.role == 'system' ? 'system' : 'user');
+			let text = this._plainTextFromMessageContent(msg.content);
+			if (!text) continue;
+			if (role == 'system') {
+				instructions.push(text);
+			} else {
+				inputLines.push(role + ': ' + text);
+			}
+		}
+		if (!inputLines.length) {
+			let userText = this._lastUserText(messages) || asText(this._agentUserMessage, 1200);
+			if (userText) inputLines.push('user: ' + userText);
+		}
+		let ret = {
+			model: body.model,
+			input: inputLines.join('\n'),
+		};
+		if (instructions.length) ret.instructions = instructions.join('\n\n');
+		if (body.temperature !== undefined) ret.temperature = body.temperature;
+		if (body.max_tokens) ret.max_output_tokens = body.max_tokens;
+		return ret;
 	}
 
 	_plainTextFromMessageContent(content) {
