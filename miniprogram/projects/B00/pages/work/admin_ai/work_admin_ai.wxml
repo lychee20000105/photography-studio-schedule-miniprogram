@@ -46,7 +46,7 @@
 
 			<view wx:if="{{providerEditorOpen}}" class="provider-editor">
 				<view class="editor-head">
-					<view class="editor-title">{{providerEditIndex>=0?'编辑供应商:'新增供应商}}</view>
+					<view class="editor-title">{{providerEditIndex>=0?'编辑供应商':'新增供应商'}}</view>
 					<button class="editor-close" bindtap="bindProviderEditorCancelTap">×</button>
 				</view>
 				<view class="editor-grid">
@@ -190,14 +190,14 @@
 			</view>
 			<view class="form-group">
 				<view class="label">系统提示词</view>
-				<textarea value="{{form.systemPrompt}}" data-field="systemPrompt" bindinput="bindInput" maxlength="3000" auto-height="{{true}}" placeholder="告诉 AI 它是谁、怎么回答、不能做什么。</textarea>
+				<textarea value="{{form.systemPrompt}}" data-field="systemPrompt" bindinput="bindInput" maxlength="3000" auto-height="{{true}}" placeholder="告诉 AI 它是谁、怎么回答、不能做什么。"></textarea>
 			</view>
 			<view class="form-group">
 				<view class="label-line">
 					<view class="label">长期记忆</view>
 					<switch checked="{{form.memoryEnabled}}" color="#537d96" bindchange="bindMemoryEnabledChange" />
 				</view>
-				<textarea value="{{form.memoryText}}" data-field="memoryText" bindinput="bindInput" maxlength="2000" auto-height="{{true}}" placeholder="只写稳定规则：店内偏好、报价口径、客户跟进原则、团队默认习惯。不要写 API Key、手机号、客户隐私或一次性聊天内容。</textarea>
+				<textarea value="{{form.memoryText}}" data-field="memoryText" bindinput="bindInput" maxlength="2000" auto-height="{{true}}" placeholder="只写稳定规则：店内偏好、报价口径、客户跟进原则、团队默认习惯。不要写 API Key、手机号、客户隐私或一次性聊天内容。"></textarea>
 				<view class="key-state">开启后，小猫会把这段作为管理员维护的店内规则参考；真实订单、金额、收款、工资和审核仍以后台数据为准。</view>
 			</view>
 		</view>

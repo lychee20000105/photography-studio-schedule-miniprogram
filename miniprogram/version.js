@@ -1,14 +1,25 @@
 module.exports = {
-	current: '2.43',
-	previous: '2.42',
-	date: '2026-07-01',
-	time: '12:00 CST',
-	level: 'minor',
-	levelText: 'setData路径优化 + 死代码清理',
-	name: 'B31 setData 路径优化',
-	summary: 'editor_cmpt.js bindTextareaInput 改为路径式 setData、calendar_lib.js animation/touchDirection 合并 setData、tools.wxs 移除死代码。',
+	current: '2.44',
+	previous: '2.43',
+	date: '2026-07-04',
+	time: '20:20 CST',
+	level: 'patch',
+	levelText: '小猫 Agent 前端流式失败兜底',
+	name: '小猫 Agent 发送兜底修复',
+	summary: 'work_pet.js 修复流式 HTTP 请求失败后卡在发送/思考状态的问题，失败时自动回退普通云函数调用，并同步释放发送按钮。',
 	changeLog: '/docs/version-change-diary.md',
 	history: [
+	{
+		version: '2.44',
+		date: '2026-07-04',
+		name: '小猫 Agent 发送兜底修复',
+		summary: '修复小猫 Agent 前端流式请求失败后不回退、不释放发送状态的问题。',
+		items: [
+			'流式 HTTP 请求 fail 时自动回退到普通 work/ai_chat 云函数调用',
+			'回退失败时把错误提示写入聊天记录，并清理 chatLoading/chatSending/chatStreaming/chatThinkPhase',
+			'90 秒安全超时同步释放 chatSending/chatStreaming/chatThinkPhase，避免发送按钮永久灰掉',
+		],
+	},
 	{
 		version: '2.43',
 		date: '2026-07-01',

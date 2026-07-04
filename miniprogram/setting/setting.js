@@ -3,10 +3,10 @@ module.exports = {
 	CLOUD_ID: 'yunyukeji-d4g7waei5d5d6cdeb', //云服务id ,本地测试环境
 
 	// #### 版本信息
-	VER: 'v2.43',
-	APP_VERSION: '2.43',
-	APP_VERSION_DATE: '2026-07-01',
-	APP_VERSION_NAME: 'setData路径优化+死代码清理',
+	VER: 'v2.44',
+	APP_VERSION: '2.44',
+	APP_VERSION_DATE: '2026-07-04',
+	APP_VERSION_NAME: '小猫Agent发送兜底修复',
 	COMPANY: '云屿摄影｜技术由云屿科技支持',
 
 	// #### 系统参数

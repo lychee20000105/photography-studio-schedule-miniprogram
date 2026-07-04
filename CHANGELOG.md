@@ -1,3 +1,23 @@
+## v2.44 - 2026-07-04
+
+Upload follow-up: fixed work_admin_ai.wxml malformed textarea closing tags and provider editor title ternary expression. WeChat DevTools CLI upload for development version 2.44 succeeded; package size was about 1.6 MB.
+
+小猫 Agent 前端发送兜底修复。聚焦用户侧“发送后一直思考/按钮灰掉/小猫不能用”的场景，增强流式请求失败后的普通云函数回退。
+
+### 修复
+
+- `work_pet.js` 流式 HTTP 请求失败时，自动回退到普通 `work/ai_chat` 云函数调用。
+- 回退也失败时，把错误提示写入当前聊天记录，并清理 `chatLoading`、`chatSending`、`chatStreaming`、`chatThinkPhase`。
+- 90 秒安全超时同步释放发送、流式和思考状态，避免发送按钮永久不可用。
+
+### 验证
+
+- `node --check miniprogram/cmpts/work_pet/work_pet.js` 通过。
+- `node --check miniprogram/version.js` 通过。
+- `node --check miniprogram/setting/setting.js` 通过。
+- `node tools/verify_live_patch.js` 通过。
+- `git diff --check` 通过。
+
 ## v2.43 - 2026-07-01
 
 B31 setData 路径优化 + 死代码清理批次。聚焦前端渲染性能微优化，减少无用 setData 调用。

@@ -931,7 +931,14 @@ Component({
 			let _sendingTimeout = setTimeout(() => {
 				if (this._isSending) {
 					this._isSending = false;
-					if (!this._destroyed) this.setData({ chatLoading: false });
+					if (!this._destroyed) {
+						this.setData({
+							chatLoading: false,
+							chatSending: false,
+							chatStreaming: false,
+							chatThinkPhase: false,
+						});
+					}
 				}
 			}, 90000);
 			// Capture the target thread ID before any async work, so that switching
@@ -1518,8 +1525,9 @@ Component({
 						}
 					},
 					fail: (err) => {
+						console.warn('B19 streaming failed, falling back to legacy:', err);
 						this._cleanupStreaming();
-						reject(err);
+						resolve(false);
 					},
 				});
 				this._streamReqTask = reqTask;
