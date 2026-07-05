@@ -1,3 +1,56 @@
+## v2.51 - 2026-07-05
+
+### Change Level
+
+Patch fix, v2.50 -> v2.51, +0.01.
+
+### Goal
+
+After the Xiaomi MiMo recharge follow-up, make the work pet user-facing chat reliable again: no garbled send button, recent update records are readable Chinese, and the MiMo fallback prompt is no longer corrupted.
+
+### Key Changes
+
+- `work_pet.wxml`: changed the send button from `&#x2191;` to `发送` to avoid WeChat rendering the entity as visible garbage.
+- `work_pet.wxss`: reduced the send label font size so it fits the circular button.
+- `version.js` / `setting.js`: bumped to v2.51 and localized recent records to Chinese.
+- `work_ai_service.js`: repaired the MiMo minimal fallback prompt string.
+- `work_ai_service_live_patch.js`: regenerated `servicePayload` from the patched service source.
+
+### Files
+
+- cloudfunctions/mcloud/project/B00/service/work_ai_service.js
+- cloudfunctions/mcloud/work_ai_service_live_patch.js
+- miniprogram/cmpts/work_pet/work_pet.wxml
+- miniprogram/cmpts/work_pet/work_pet.wxss
+- miniprogram/version.js
+- miniprogram/setting/setting.js
+- CHANGELOG.md
+- README.md
+- docs/version-change-diary.md
+
+### Verification
+
+- `node --check cloudfunctions/mcloud/project/B00/service/work_ai_service.js` passed.
+- `node --check cloudfunctions/mcloud/work_ai_service_live_patch.js` passed.
+- `node --check miniprogram/cmpts/work_pet/work_pet.js` passed.
+- `node --check miniprogram/version.js` passed.
+- `node --check miniprogram/setting/setting.js` passed.
+- `miniprogram/app.json` and `project.config.json` parsed successfully.
+- Live patch `servicePayload` decompresses to exactly the current `work_ai_service.js`.
+- `git diff --check` passed with existing Windows line-ending warnings only.
+- Real cloud chat retest through DevTools automator passed: `work/ai_chat` returned `OK0705-B3I52R`, provider `MiMo`, model `mimo-v2.5`, and `usage.total_tokens=537`.
+- Post-deploy retest also passed: `work/ai_chat` returned `OK0705-YYX8PK`, provider `MiMo`, model `mimo-v2.5`, and `usage.total_tokens=774`.
+
+### Deployment Status
+
+- `work_ai_service_live_patch.js` incrementally deployed to `mcloud`; patch size `46.6 KB`.
+- WeChat development version `2.51` uploaded successfully; latest package size `1.6 MB` / `1,668,495 Byte`.
+- Pending: commit, push, and finish closeout.
+
+### Remaining Risk
+
+- `work_ai_service.js` still contains historical U+FFFD corruption outside the one MiMo fallback prompt repaired in this patch. A full cloud AI service encoding restoration should be scheduled separately.
+
 ## v2.50 - 2026-07-05
 
 ### Change Level

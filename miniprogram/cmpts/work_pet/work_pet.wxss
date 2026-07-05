@@ -1368,7 +1368,7 @@
 
 .send-arrow {
 	color: #fff;
-	font-size: 36rpx;
+	font-size: 24rpx;
 	font-weight: 900;
 	line-height: 1;
 }

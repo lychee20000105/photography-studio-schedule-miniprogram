@@ -1,3 +1,28 @@
+## v2.51 - 2026-07-05
+
+Fix the work pet chat UI after the Xiaomi MiMo recharge follow-up: the send button no longer renders as an entity/garbled string, recent update records are Chinese, the MiMo minimal fallback prompt is readable again, and the cloud chat route was retested with a real MiMo response.
+
+### Fixes
+
+- Replaced the work pet send button entity arrow with the stable Chinese label `发送` and adjusted its font size for the circular button.
+- Updated `version.js` and `setting.js` to v2.51, and rewrote the recent v2.51/v2.50/v2.49 records in Chinese.
+- Repaired the MiMo minimal fallback prompt in `WorkAiService._mimoTextFallbackBody()` and regenerated `work_ai_service_live_patch.js` so cloud runtime loads the patched service.
+- Removed the remaining U+FFFD characters from `miniprogram/setting/setting.js` comments.
+
+### Verification
+
+- `node --check` passed for `work_ai_service.js`, `work_ai_service_live_patch.js`, `work_pet.js`, `version.js`, and `setting.js`.
+- `miniprogram/app.json` and `project.config.json` parsed successfully.
+- `git diff --check` passed with existing Windows line-ending warnings only.
+- Live patch service payload was decompressed and confirmed identical to the current `work_ai_service.js`.
+- Real Xiaomi/MiMo cloud chat retest passed through DevTools automator: `work/ai_chat` returned `OK0705-B3I52R`, provider `MiMo`, model `mimo-v2.5`, and `usage.total_tokens=537`.
+- Post-deploy cloud chat retest also passed: `work/ai_chat` returned `OK0705-YYX8PK`, provider `MiMo`, model `mimo-v2.5`, and `usage.total_tokens=774`.
+
+### Deployment
+
+- `work_ai_service_live_patch.js` incrementally deployed to `mcloud`; patch size `46.6 KB`. WeChat development version `2.51` uploaded successfully; package size `1.6 MB` / `1,668,362 Byte`. Commit, push, and finish closeout are handled after verification.
+- No audit submission and no production release.
+
 ## v2.50 - 2026-07-05
 
 Restore the work pet admin AI config route and verify the MiMo cloud chat route after the Xiaomi MiMo recharge.

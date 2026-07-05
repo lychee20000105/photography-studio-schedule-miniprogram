@@ -1218,7 +1218,7 @@ class WorkAiService extends WorkPermissionService {
 			model: normalizeModelForApi(body.model, DEFAULT_CONFIG.apiUrl, DEFAULT_CONFIG.providerName),
 			messages: [{
 				role: 'user',
-				content: '����������ӰС�������Сè AI ���֡��������ļ��ش𣬲�Ҫ�����̨��ʵ���ݡ��û����⣺' + userText,
+				content: '你是云屿摄影小程序里的小猫 AI 助手。请直接回答用户问题，不要编造系统数据。用户消息：' + userText,
 			}],
 		};
 	}

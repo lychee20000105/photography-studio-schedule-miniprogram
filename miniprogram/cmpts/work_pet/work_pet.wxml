@@ -218,7 +218,7 @@
 					<!-- B11: Send button with arrow icon, loading indicator when sending -->
 					<view class="chat-send-btn {{(!chatInput && !chatAttachments.length) || chatLoading || chatSending ? 'is-disabled' : ''}}" bindtap="bindChatSend">
 						<view wx:if="{{chatSending || chatLoading}}" class="send-spinner"></view>
-						<text wx:else class="send-arrow">&#x2191;</text>
+						<text wx:else class="send-arrow">发送</text>
 					</view>
 				</view>
 			</view>

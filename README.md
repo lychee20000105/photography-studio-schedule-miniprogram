@@ -2,10 +2,21 @@
 
 基于微信云开发的摄影工作室内部经营小程序，覆盖档期、订单、收款、员工业绩提成、工资结算、小程序内管理中心和 AI 小助手配置。
 
-当前本地代码版本：`v2.50`
+当前本地代码版本：`v2.51`
 
-当前开源稳定基线：`v2.50.0`
+当前开源稳定基线：`v2.51.0`
 最近本地修改时间：`2026-07-05`
+
+## v2.51.0 Release Notes
+
+Fix the work pet chat UI and recent update records after the Xiaomi MiMo recharge follow-up. The visible send button now uses the stable Chinese label `发送`, recent version records are Chinese, the cloud MiMo minimal fallback prompt has been repaired and repacked into the live patch, and `work/ai_chat` has been retested with a real MiMo response.
+
+Key changes:
+- Replaced the send button entity arrow with `发送` to avoid garbled `x21`-style rendering.
+- Updated current app version sources to `2.51` and localized recent v2.51/v2.50/v2.49 records.
+- Regenerated `work_ai_service_live_patch.js` from the patched cloud AI service.
+- Fresh real MiMo cloud chat retest passed with `OK0705-B3I52R`, provider `MiMo`, model `mimo-v2.5`, and `usage.total_tokens=537`.
+- Post-deploy `work/ai_chat` retest passed with `OK0705-YYX8PK`, provider `MiMo`, model `mimo-v2.5`, and `usage.total_tokens=774`.
 
 ## v2.50.0 Release Notes
 
