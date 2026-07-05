@@ -1,3 +1,44 @@
+## v2.57 - 2026-07-05
+
+### 改动级别
+
+小修复，v2.56 -> v2.57，+0.01。
+
+### 修改原因
+
+小猫截图/文字录单不能只依赖“同一天 + 同客户/手机号”判断重复。婚礼、订婚、宝宝宴等低频事件类订单，如果同客户在全局可见订单里已经存在类似事件单，就属于有争议的新单，必须先询问；写真等高频业务可以新增，但新增后需要提示这个客户其他时间的订单，方便核对是否把旧单误当新单。
+
+### 关键变更
+
+- 新增同客户历史订单上下文判断，前端保存前调用 `work/order_list` 获取全局可见订单。
+- 事件类关键词覆盖婚礼、婚宴、结婚、订婚、宝宝宴、满月、百日、周岁、生日宴、寿宴、求婚、活动跟拍。
+- 事件类同客户历史事件单会生成争议提示，并暂存待确认订单；回复“确认新增”才继续保存，回复“取消”则不写入。
+- 非事件类同客户其他日期订单不阻断保存；保存成功后追加历史档期提醒。
+- 同一天同客户/同手机号仍作为争议拦截。
+- 批量 `create_orders` 遇到争议会停下等待确认，不再静默跳过。
+- `miniprogram/version.js`、`setting.js`、`README.md` 和 `CHANGELOG.md` 的最近可见更新记录恢复中文。
+
+### 涉及文件
+
+- `miniprogram/cmpts/work_pet/work_pet.js`
+- `miniprogram/version.js`
+- `miniprogram/setting/setting.js`
+- `README.md`
+- `CHANGELOG.md`
+- `docs/version-change-diary.md`
+
+### 验证
+
+- `node --check miniprogram/cmpts/work_pet/work_pet.js` 通过。
+- `node --check miniprogram/version.js` 通过。
+- `node --check miniprogram/setting/setting.js` 通过。
+- 本地组件逻辑模拟覆盖：事件类同客户历史订单拦截、写真类新增后历史提醒、同日同客户写真拦截、争议确认后继续新增。
+
+### 部署状态
+
+- 微信开发版 `2.57` 已上传成功；包体 `1.6 MB` / `1,690,350 Byte`。
+- 本次未修改云函数；订单保存仍走 `work/order_save`。
+
 ## v2.56 - 2026-07-05
 
 ### Change Level

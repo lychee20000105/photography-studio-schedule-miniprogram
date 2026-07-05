@@ -2,36 +2,47 @@
 
 基于微信云开发的摄影工作室内部经营小程序，覆盖档期、订单、收款、员工业绩提成、工资结算、小程序内管理中心和 AI 小助手配置。
 
-当前本地代码版本：`v2.56`
+当前本地代码版本：`v2.57`
 
-当前开源稳定基线：`v2.56.0`
+当前开源稳定基线：`v2.57.0`
 最近本地修改时间：`2026-07-05`
+
+## v2.57.0 Release Notes
+
+小猫争议订单校验修复：录单前先按同客户姓名或手机号检查全局可见历史订单，低频事件类订单先问再写，高频写真类订单保存后提示历史档期，方便核对是否把旧单误当新单。
+
+关键变化：
+- 婚礼、订婚、宝宝宴、生日宴、求婚、满月、百日、周岁等事件类订单，不再只检查同一天；只要全局可见订单里同客户已有事件类订单，就先提示争议并等待“确认新增”或“取消”。
+- 写真、证件照、亲子照等高频业务仍可正常新增；新增成功后会列出该客户其他时间的订单提醒核对。
+- 同一天同客户/同手机号订单仍然作为争议拦截。
+- 批量 `create_orders` 遇到争议订单会停下询问，不再静默跳过。
+- 当前版本名、最近版本记录和更新说明恢复中文展示。
 
 ## v2.56.0 Release Notes
 
-Prevent screenshot order recording from being hijacked by the user instruction text. When a message includes images, the prompt is treated as an instruction only; order facts must come from parsed AI action data.
+小猫截图录单防误触：带图片消息中的文字只作为用户指令，不再被当成订单事实；订单事实必须来自 AI 解析出的 action 数据。
 
-Key changes:
-- Do not run quick text order creation when image attachments are present.
-- Require an explicit date for quick text order creation instead of silently using the current calendar day.
-- Keep parsed `create_order` actions working for screenshot recognition results.
-- Verified that the image instruction prompt does not create a fake current-day order, no-date text does not create an order, and parsed screenshot action data still saves.
+关键变化：
+- 当前消息带图片附件时，不触发纯文字快速录单。
+- 纯文字快速录单必须包含明确日期，不再静默使用当前日历日期。
+- 截图识别出的 `create_order` 动作仍可正常走 `work/order_save` 保存。
+- 已验证截图提示词不会创建假订单、无日期文字不会创建订单、截图 action 数据仍能保存。
 
 ## v2.55.0 Release Notes
 
-Restore the work pet order/schedule creation path when recognized AI actions were displayed as raw `create_order` JSON instead of being executed.
+小猫录单动作恢复：当 AI 返回 `create_order` / `create_orders` JSON 时，前端会解析并执行，不再只显示原始 JSON。
 
-Key changes:
-- Parse AI action JSON embedded in normal assistant replies.
-- Execute `create_order` and `create_orders` through the existing `work/order_save` route, preserving the current account-permission and backend validation boundary.
-- Add a shared text fallback for direct order/schedule entry requests.
-- Write a team-note audit trail for fallback-created orders.
-- Keep unconfirmed deposit hints in notes instead of marking them as paid.
+关键变化：
+- 解析普通回复里嵌入的 AI action JSON。
+- `create_order` 和 `create_orders` 统一通过现有 `work/order_save` 保存，保留账号权限和后端校验边界。
+- 新增直接文字录单兜底，简单档期录入不完全依赖上游聊天接口。
+- 前端兜底新增订单后写入团队小记审计流水。
+- 未确认已收的定金只写入备注，不直接标记为已收。
 
-Verification:
-- `node --check miniprogram/cmpts/work_pet/work_pet.js` passed.
-- Component-level Node simulation passed for parsed `create_order` execution and conservative deposit handling.
-- Fresh DevTools automator end-to-end write/query is still a local-tool compatibility gap, not counted as upstream API success.
+验证：
+- `node --check miniprogram/cmpts/work_pet/work_pet.js` 通过。
+- 组件级 Node 模拟通过：可解析 `create_order` 并保守处理定金。
+- DevTools automator 端到端写入/查询仍是本地工具兼容性缺口，不计为上游 API 成功。
 
 ## v2.54.0 Release Notes
 

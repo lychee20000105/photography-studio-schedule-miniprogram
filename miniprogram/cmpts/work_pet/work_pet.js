@@ -424,6 +424,111 @@ function normalizeAgentOrderData(data = {}, pageContext = {}) {
 	};
 }
 
+function normalizeAgentCompareText(value) {
+	return String(value || '').replace(/\s+/g, '').toLowerCase();
+}
+
+function normalizeAgentMobile(value) {
+	return String(value || '').replace(/\D/g, '');
+}
+
+const AGENT_EVENT_ORDER_KEYWORDS = [
+	'\u5a5a\u793c',
+	'\u5a5a\u5bb4',
+	'\u7ed3\u5a5a',
+	'\u8ba2\u5a5a',
+	'\u8ba2\u5a5a\u5bb4',
+	'\u5b9d\u5b9d\u5bb4',
+	'\u6ee1\u6708',
+	'\u767e\u65e5',
+	'\u5468\u5c81',
+	'\u751f\u65e5\u5bb4',
+	'\u5bff\u5bb4',
+	'\u6c42\u5a5a',
+	'\u6d3b\u52a8\u8ddf\u62cd',
+];
+
+function getAgentOrderTypeName(order = {}) {
+	return order.ORDER_TYPE_NAME || order.typeName || order.type || '';
+}
+
+function isAgentEventOrderType(typeName = '') {
+	let text = normalizeAgentCompareText(typeName);
+	if (!text) return false;
+	return AGENT_EVENT_ORDER_KEYWORDS.some(keyword => {
+		let item = normalizeAgentCompareText(keyword);
+		return item && text.indexOf(item) >= 0;
+	});
+}
+
+function isSameAgentDate(order = {}, intent = {}) {
+	return !!(order.ORDER_DATE && intent.date && order.ORDER_DATE == intent.date);
+}
+
+function isSameOrSimilarAgentType(a = '', b = '') {
+	a = normalizeAgentCompareText(a);
+	b = normalizeAgentCompareText(b);
+	if (!a || !b) return false;
+	if (a == b) return true;
+	if (a.length < 2 || b.length < 2) return false;
+	return a.indexOf(b) >= 0 || b.indexOf(a) >= 0;
+}
+
+function isSameDisputeCustomer(order = {}, intent = {}) {
+	let mobile = normalizeAgentMobile(intent.customerMobile);
+	let oldMobile = normalizeAgentMobile(order.ORDER_CUSTOMER_MOBILE);
+	if (mobile && oldMobile && mobile == oldMobile) return true;
+	let name = normalizeAgentCompareText(intent.customer);
+	let oldName = normalizeAgentCompareText(order.ORDER_CUSTOMER_NAME);
+	if (!name || !oldName) return false;
+	return name == oldName;
+}
+
+function dedupeAgentOrders(list = []) {
+	let seen = {};
+	let ret = [];
+	for (let order of list) {
+		if (!order) continue;
+		let key = order._id || order.ORDER_ID || `${order.ORDER_DATE || ''}|${order.ORDER_TIME || ''}|${order.ORDER_CUSTOMER_NAME || ''}|${order.ORDER_TYPE_NAME || ''}`;
+		if (seen[key]) continue;
+		seen[key] = true;
+		ret.push(order);
+	}
+	return ret;
+}
+
+function buildAgentOrderDisputeContext(orders = [], intent = {}) {
+	let sameCustomer = (orders || []).filter(order => isSameDisputeCustomer(order, intent));
+	let eventLike = isAgentEventOrderType(intent.typeName);
+	let sameDay = sameCustomer.filter(order => isSameAgentDate(order, intent));
+	let eventDisputes = eventLike
+		? sameCustomer.filter(order => {
+			let oldType = getAgentOrderTypeName(order);
+			return isAgentEventOrderType(oldType) || isSameOrSimilarAgentType(intent.typeName, oldType);
+		})
+		: [];
+	let disputes = dedupeAgentOrders(sameDay.concat(eventDisputes));
+	let relatedOrders = dedupeAgentOrders(sameCustomer.filter(order => !disputes.some(item => (item._id || item.ORDER_ID) && (item._id || item.ORDER_ID) == (order._id || order.ORDER_ID))));
+	return {
+		eventLike,
+		disputes,
+		relatedOrders,
+		totalSameCustomer: sameCustomer.length,
+	};
+}
+
+function describeDisputeOrder(order = {}, idx = 0) {
+	return `${idx + 1}. ${order.ORDER_DATE || ''} ${order.ORDER_TIME || '\u5168\u5929'} ${order.ORDER_TYPE_NAME || '\u5176\u4ed6'}\uff0c\u5ba2\u6237${order.ORDER_CUSTOMER_NAME || order.ORDER_CUSTOMER_SURNAME || ''}\uff0c\u8ba2\u5355\u00a5${order.ORDER_AMOUNT || 0}\uff0c\u5b9e\u6536\u00a5${order.PAID_AMOUNT || order.ORDER_ACTUAL_AMOUNT || 0}`;
+}
+
+function buildRelatedAgentOrderReminder(relatedOrders = []) {
+	relatedOrders = relatedOrders || [];
+	if (!relatedOrders.length) return '';
+	let lines = relatedOrders.slice(0, 5).map((order, idx) => describeDisputeOrder(order, idx)).join('\n');
+	let more = relatedOrders.length > 5 ? `\n\u8fd8\u6709 ${relatedOrders.length - 5} \u6761\u672a\u5c55\u793a\u3002` : '';
+	return `\n\n\u53e6\u5916\u63d0\u9192\uff1a\u8fd9\u4e2a\u5ba2\u6237\u8fd8\u6709\u5176\u4ed6\u6863\u671f\uff0c\u8bf7\u6838\u5bf9\u662f\u5426\u628a\u65e7\u5355\u8bef\u5f53\u65b0\u5355\uff1a\n${lines}${more}`;
+}
+
 function extractQuickOrderKeyword(text) {
 	text = String(text || '').slice(0, 120);
 	if (!text) return '';
@@ -1142,7 +1247,8 @@ Component({
 					let history = trimMessages(messages.slice(0, -1));
 
 					// B19: Try streaming first for normal AI chat (no quick/missedImage shortcuts)
-					let quickRet = await this._tryHandleQuickCreateOrder(text, { hasAttachments: attachments.length > 0 });
+					let quickRet = await this._tryHandlePendingAgentOrderConfirm(text);
+					if (!quickRet) quickRet = await this._tryHandleQuickCreateOrder(text, { hasAttachments: attachments.length > 0 });
 					if (!quickRet) quickRet = shouldQuickAckNoSupplement(text, history)
 						? { action: 'none', reply: '收到，不补充。本次对话不再继续调用 AI。' }
 						: await this._tryHandleQuickDateUpdate(text, history);
@@ -1265,7 +1371,65 @@ Component({
 				|| types[0]
 				|| {};
 		},
-		async _saveAgentOrderData(rawData = {}, attachments = [], source = '') {
+		async _findAgentOrderDisputes(intent = {}) {
+			let empty = {
+				eventLike: isAgentEventOrderType(intent && intent.typeName),
+				disputes: [],
+				relatedOrders: [],
+				totalSameCustomer: 0,
+				checkFailed: false,
+			};
+			if (!intent || !intent.customer) return empty;
+			let data = await cloudHelper.callCloudData('work/order_list', {
+				month: 'all',
+				scope: 'all',
+			}, { hint: false });
+			if (!data || !Array.isArray(data.list)) {
+				empty.checkFailed = true;
+				return empty;
+			}
+			return Object.assign(empty, buildAgentOrderDisputeContext(data.list, intent));
+		},
+		_savePendingAgentOrder(rawData = {}, attachments = [], source = '', disputes = []) {
+			this._pendingAgentOrder = {
+				rawData,
+				attachments: attachments || [],
+				source,
+				disputes: disputes || [],
+				time: Date.now(),
+			};
+		},
+		async _tryHandlePendingAgentOrderConfirm(text) {
+			let pending = this._pendingAgentOrder;
+			if (!pending) return null;
+			text = String(text || '').replace(/\s+/g, '');
+			if (!text) return null;
+			let cancelWords = ['\u53d6\u6d88', '\u4e0d\u65b0\u589e', '\u4e0d\u8981\u65b0\u589e', '\u522b\u65b0\u589e', '\u7b97\u4e86', '\u653e\u5f03'];
+			if (cancelWords.indexOf(text) >= 0) {
+				this._pendingAgentOrder = null;
+				return {
+					action: 'none',
+					reply: '\u5df2\u53d6\u6d88\u8fd9\u6b21\u6709\u4e89\u8bae\u7684\u622a\u56fe\u5f55\u5355\uff0c\u6ca1\u6709\u5199\u5165\u65b0\u8ba2\u5355\u3002',
+				};
+			}
+			let confirmWords = ['\u786e\u8ba4\u65b0\u589e', '\u4ecd\u7136\u65b0\u589e', '\u7ee7\u7eed\u65b0\u589e', '\u65b0\u589e', '\u65b0\u5efa', '\u662f\u65b0\u589e', '\u786e\u5b9a\u65b0\u589e'];
+			if (confirmWords.indexOf(text) >= 0) {
+				this._pendingAgentOrder = null;
+				let ret = await this._saveAgentOrderData(
+					pending.rawData,
+					pending.attachments,
+					pending.source || '\u5c0f\u732b\u622a\u56fe\u8bc6\u522b',
+					{ skipDisputeCheck: true }
+				);
+				if (ret && ret.reply) ret.reply = '\u5df2\u6309\u4f60\u786e\u8ba4\u7ee7\u7eed\u65b0\u589e\u3002\n' + ret.reply;
+				return ret;
+			}
+			return {
+				action: 'none',
+				reply: '\u8fd9\u6761\u6709\u4e89\u8bae\u7684\u8ba2\u5355\u8fd8\u5728\u7b49\u4f60\u786e\u8ba4\u3002\u5982\u679c\u786e\u5b9a\u662f\u7b2c\u4e8c\u6761\u8ba2\u5355\uff0c\u8bf7\u56de\u590d\u300c\u786e\u8ba4\u65b0\u589e\u300d\uff1b\u5982\u679c\u4e0d\u8981\u65b0\u589e\uff0c\u8bf7\u56de\u590d\u300c\u53d6\u6d88\u300d\u3002',
+			};
+		},
+		async _saveAgentOrderData(rawData = {}, attachments = [], source = '', options = {}) {
 			let pageContext = this._getPageContext();
 			let intent = rawData.customer || rawData.customerName || rawData.ORDER_CUSTOMER_NAME
 				? normalizeAgentOrderData(rawData, pageContext)
@@ -1275,6 +1439,28 @@ Component({
 					action: 'none',
 					reply: '\u5df2\u8bc6\u522b\u5230\u5f55\u5355\u610f\u56fe\uff0c\u4f46\u7f3a\u5c11\u65e5\u671f\u6216\u5ba2\u6237\u540d\uff0c\u6240\u4ee5\u6ca1\u6709\u5199\u5165\u7cfb\u7edf\u3002\u8bf7\u8865\u4e00\u53e5\uff1a\u65e5\u671f+\u5ba2\u6237+\u9879\u76ee\u3002',
 				};
+			}
+			if (!options.skipDisputeCheck) {
+				let check = await this._findAgentOrderDisputes(intent);
+				if (check.checkFailed) {
+					return {
+						action: 'none',
+						reply: '\u6211\u5148\u4e0d\u5199\u5165\u3002\u521a\u624d\u6ca1\u6709\u62c9\u5230\u5168\u5c40\u5386\u53f2\u8ba2\u5355\uff0c\u65e0\u6cd5\u505a\u540c\u540d/\u540c\u7535\u8bdd\u4e89\u8bae\u6821\u9a8c\u3002\u8bf7\u7a0d\u540e\u91cd\u8bd5\uff0c\u6216\u5230\u6863\u671f\u9875\u624b\u52a8\u5f55\u5165\u3002',
+					};
+				}
+				if (check.disputes.length) {
+					this._savePendingAgentOrder(rawData, attachments, source, check.disputes);
+					let existing = check.disputes.slice(0, 5).map((order, idx) => describeDisputeOrder(order, idx)).join('\n');
+					let incoming = `${intent.date} ${intent.time || '\u5168\u5929'} ${intent.typeName || '\u672a\u586b\u7c7b\u578b'}\uff0c\u5ba2\u6237${intent.customer}\uff0c\u91d1\u989d\u00a5${intent.amount || 0}`;
+					let reason = check.eventLike
+						? '\u540c\u5ba2\u6237\u5728\u5168\u5c40\u6863\u671f\u91cc\u5df2\u6709\u5a5a\u793c/\u8ba2\u5a5a/\u5b9d\u5b9d\u5bb4\u7b49\u4e8b\u4ef6\u7c7b\u8ba2\u5355'
+						: '\u540c\u4e00\u5929\u5df2\u6709\u540c\u540d/\u540c\u7535\u8bdd\u8ba2\u5355';
+					return {
+						action: 'none',
+						reply: `\u6211\u5148\u4e0d\u5199\u5165\u3002\u539f\u56e0\uff1a${reason}\uff0c\u8fd9\u79cd\u6709\u4e89\u8bae\u7684\u5f55\u5355\u9700\u8981\u4f60\u786e\u8ba4\uff1a\n\n\u5df2\u6709\uff1a\n${existing}\n\n\u65b0\u8bc6\u522b\uff1a\n${incoming}\n\n\u5982\u679c\u8fd9\u662f\u7b2c\u4e8c\u6761\u8ba2\u5355\uff0c\u8bf7\u56de\u590d\u300c\u786e\u8ba4\u65b0\u589e\u300d\uff1b\u5982\u679c\u662f\u540c\u4e00\u5355\u6216\u4e0d\u8981\u65b0\u589e\uff0c\u8bf7\u56de\u590d\u300c\u53d6\u6d88\u300d\u3002`,
+					};
+				}
+				options.relatedOrders = check.relatedOrders || [];
 			}
 			let type = await this._resolveWorkOrderType(intent.typeName, intent.typeId);
 			let attachIds = (attachments || []).map(item => {
@@ -1321,8 +1507,8 @@ Component({
 			return {
 				action: 'create_order',
 				id,
-				data: { date: intent.date, order },
-				reply: `\u5df2\u65b0\u589e\u8ba2\u5355\u6863\u671f\uff1a${intent.date} ${intent.time || ''}\uff0c${order.ORDER_TYPE_NAME}\uff0c\u5ba2\u6237${intent.customer}\u3002\u5df2\u8d70\u5f53\u524d\u8d26\u53f7\u6743\u9650\u4fdd\u5b58\uff0c\u5e76\u5199\u5165\u56e2\u961f\u5c0f\u8bb0\u5ba1\u67e5\u6d41\u6c34\u3002`,
+				data: { date: intent.date, order, relatedOrders: options.relatedOrders || [] },
+				reply: `\u5df2\u65b0\u589e\u8ba2\u5355\u6863\u671f\uff1a${intent.date} ${intent.time || ''}\uff0c${order.ORDER_TYPE_NAME}\uff0c\u5ba2\u6237${intent.customer}\u3002\u5df2\u8d70\u5f53\u524d\u8d26\u53f7\u6743\u9650\u4fdd\u5b58\uff0c\u5e76\u5199\u5165\u56e2\u961f\u5c0f\u8bb0\u5ba1\u67e5\u6d41\u6c34\u3002${buildRelatedAgentOrderReminder(options.relatedOrders || [])}`,
 			};
 		},
 		async _tryHandleQuickCreateOrder(text, options = {}) {
@@ -1349,6 +1535,10 @@ Component({
 				let saved = [];
 				for (let item of list) {
 					let ret = await this._saveAgentOrderData(item, attachments, '\u5c0f\u732b\u622a\u56fe\u8bc6\u522b');
+					if (ret && ret.action == 'none' && ret.reply) {
+						if (saved.length) ret.reply = `\u524d\u9762\u5df2\u5148\u4fdd\u5b58 ${saved.length} \u6761\uff0c\u4f46\u540e\u7eed\u6709\u4e00\u6761\u9047\u5230\u4e89\u8bae\uff0c\u6211\u5148\u505c\u4e0b\u7b49\u4f60\u786e\u8ba4\u3002\n\n${ret.reply}`;
+						return ret;
+					}
 					if (ret && ret.action == 'create_order') saved.push(ret);
 				}
 				if (!saved.length) return null;
@@ -1357,10 +1547,11 @@ Component({
 					let order = item.data && item.data.order ? item.data.order : {};
 					return `${idx + 1}. ${order.ORDER_DATE || ''} ${order.ORDER_TIME || ''} ${order.ORDER_TYPE_NAME || ''}\uff0c\u5ba2\u6237${order.ORDER_CUSTOMER_NAME || ''}`;
 				}).join('\n');
+				let reminders = saved.map(item => buildRelatedAgentOrderReminder((item.data && item.data.relatedOrders) || []).trim()).filter(Boolean).join('\n\n');
 				return {
 					action: 'create_orders',
 					data: { dates },
-					reply: `\u5df2\u65b0\u589e ${saved.length} \u6761\u8ba2\u5355\u6863\u671f\uff0c\u5df2\u8d70\u5f53\u524d\u8d26\u53f7\u6743\u9650\u4fdd\u5b58\uff1a\n${lines}`,
+					reply: `\u5df2\u65b0\u589e ${saved.length} \u6761\u8ba2\u5355\u6863\u671f\uff0c\u5df2\u8d70\u5f53\u524d\u8d26\u53f7\u6743\u9650\u4fdd\u5b58\uff1a\n${lines}${reminders ? '\n\n' + reminders : ''}`,
 				};
 			}
 			return null;
@@ -1872,7 +2063,8 @@ Component({
 		async _sendChatLegacy(text, history, attachments) {
 			let reply = '';
 			let missedImage = findMissedImageFollowup(text, history);
-			let quickRet = await this._tryHandleQuickCreateOrder(text, { hasAttachments: (attachments || []).length > 0 });
+			let quickRet = await this._tryHandlePendingAgentOrderConfirm(text);
+			if (!quickRet) quickRet = await this._tryHandleQuickCreateOrder(text, { hasAttachments: (attachments || []).length > 0 });
 			if (!quickRet) quickRet = shouldQuickAckNoSupplement(text, history)
 				? { action: 'none', reply: '收到，不补充。本次对话不再继续调用 AI。' }
 				: await this._tryHandleQuickDateUpdate(text, history);

@@ -1,52 +1,77 @@
+## v2.57 - 2026-07-05
+
+小猫争议订单校验修复：录单前先做同客户历史订单判断，低频事件类先问再写，高频写真类保存后提醒历史档期。
+
+### 修复
+
+- 小猫新增订单前先调用 `work/order_list` 拉取全局可见订单，按同客户姓名或手机号建立本地争议判断。
+- 婚礼、订婚、宝宝宴、生日宴、求婚、满月、百日、周岁等事件类订单，只要同客户已有事件类历史订单，就先暂停写入并提示回复“确认新增”或“取消”。
+- 写真、证件照、亲子照等高频业务不会因为其他日期历史订单直接拦截；保存成功后会列出该客户其他档期，方便核对是否记错。
+- 同一天同客户/同手机号订单仍然作为争议拦截。
+- 批量 `create_orders` 遇到争议订单会停下询问，不再静默跳过有争议的一条。
+- 当前版本名和最近更新记录恢复中文。
+
+### 验证
+
+- `node --check miniprogram/cmpts/work_pet/work_pet.js` 通过。
+- `node --check miniprogram/version.js` 通过。
+- `node --check miniprogram/setting/setting.js` 通过。
+- 组件级本地模拟覆盖：事件类同客户历史订单拦截、写真类新增后历史提醒、同日同客户写真拦截、争议确认后继续新增。
+
+### 部署
+
+- 微信开发版 `2.57` 已上传成功；包体 `1.6 MB` / `1,690,350 Byte`。
+- 本次未修改云函数；保存仍走现有 `work/order_save`，继续保留账号权限和后端校验边界。
+
 ## v2.56 - 2026-07-05
 
-Prevent screenshot order recording from being hijacked by the user instruction text.
+小猫截图录单防误触：防止把截图消息里的用户提示词误当成订单事实。
 
-### Fixes
+### 修复
 
-- Do not run quick text order creation when the current message has image attachments.
-- Require an explicit date for quick text order creation instead of silently using the current calendar day.
-- Keep parsed `create_order` actions working so screenshot-recognized facts still save through `work/order_save`.
+- 当前消息带图片附件时，不再触发纯文字快速录单。
+- 纯文字快速录单必须包含明确日期，不再静默使用当前日历日期。
+- 保留 AI 解析出的 `create_order` 动作，截图识别出的真实订单事实仍通过 `work/order_save` 保存。
 
-### Verification
+### 验证
 
-- `node --check miniprogram/cmpts/work_pet/work_pet.js` passed.
-- Regression simulation passed: the default screenshot instruction prompt with attachments returned `null` and did not call order save.
-- Regression simulation passed: no-date text such as "help me record this" returned `null` and did not call order save.
-- Regression simulation passed: parsed screenshot `create_order` action preserved date/customer/amount data and saved through the existing order-save path.
+- `node --check miniprogram/cmpts/work_pet/work_pet.js` 通过。
+- 回归模拟通过：带附件的截图提示词返回 `null`，没有调用订单保存。
+- 回归模拟通过：无日期文字不会创建订单。
+- 回归模拟通过：截图解析出的 `create_order` 保留日期、客户和金额，并通过现有订单保存链路。
 
-### Deployment
+### 部署
 
-- WeChat development version `2.56` uploaded successfully; package size `1.6 MB` / `1,682,366 Byte`.
-- No cloud function code changed in v2.56; the v2.55 `mcloud` live patch remains deployed and active.
+- 微信开发版 `2.56` 已上传成功；包体 `1.6 MB` / `1,682,366 Byte`。
+- v2.56 未修改云函数；v2.55 的 `mcloud` live patch 仍为线上生效版本。
 
 ## v2.55 - 2026-07-05
 
-Restore the work pet order/schedule creation path when AI returns `create_order` / `create_orders` JSON as visible text instead of an already-executed backend action.
+恢复小猫订单/档期记录链路：当 AI 把 `create_order` / `create_orders` JSON 作为可见文本返回时，前端会解析并执行，而不是只显示原始 JSON。
 
-### Fixes
+### 修复
 
-- Parse AI action JSON embedded in a normal reply, including prefixed text and fenced JSON blocks.
-- Execute parsed `create_order` and `create_orders` actions through the existing `work/order_save` route so the current account permission, field whitelist, duplicate checks, and backend validation still apply.
-- Add a shared front-end save fallback for direct text requests such as "record/add/order/schedule", so basic schedule entry does not depend on a successful upstream chat reply.
-- Write a team note audit trail after front-end fallback order creation.
-- Keep deposit handling conservative: unconfirmed deposit values are written into notes as a reference, not marked as paid deposit.
+- 解析普通回复中嵌入的 AI action JSON，支持前缀文本和代码块。
+- 解析出的 `create_order` 和 `create_orders` 通过现有 `work/order_save` 保存，继续保留账号权限、字段白名单、重复校验和后端校验。
+- 新增共享前端保存兜底，让简单档期录入不完全依赖上游聊天接口成功。
+- 前端兜底新增订单后写入团队小记审计流水。
+- 定金处理保持保守：未确认已收的定金写入备注参考，不标记为已收定金。
 
-### Verification
+### 验证
 
-- `node --check miniprogram/cmpts/work_pet/work_pet.js` passed.
-- Component-level Node simulation passed: `_tryHandleAgentActionReply()` parsed a `create_order` JSON reply, called `work/order_save`, resolved the order type, preserved the customer/date/amount, and did not mark an unconfirmed deposit as paid.
-- DevTools automator could not complete a fresh end-to-end component write because this local DevTools/automator version exposes HTTP on `--port` but does not provide a compatible websocket for the installed SDK. This is recorded as a remaining verification gap, not counted as API success.
+- `node --check miniprogram/cmpts/work_pet/work_pet.js` 通过。
+- 组件级 Node 模拟通过：`_tryHandleAgentActionReply()` 能解析 `create_order` JSON、调用 `work/order_save`、解析订单类型、保留客户/日期/金额，并且不把未确认定金标为已收。
+- DevTools automator 因本机版本兼容问题未完成全新端到端组件写入验证；这是剩余验证缺口，不计为 API 成功。
 
-### Deployment
+### 部署
 
-- WeChat development version `2.55` uploaded successfully; package size `1.6 MB` / `1,681,448 Byte`.
-- Cloud function incremental deploy later succeeded for `work_ai_service_live_patch.js` (`40.5 KB`) and `index.js` (`450 B`) on `mcloud`.
-- `mcloud` info check after deployment returned `Active`, timeout `20`, runtime `Nodejs16.13`.
+- 微信开发版 `2.55` 已上传成功；包体 `1.6 MB` / `1,681,448 Byte`。
+- 后续已成功增量部署 `mcloud` 的 `work_ai_service_live_patch.js`（`40.5 KB`）和 `index.js`（`450 B`）。
+- 部署后 `mcloud` info 检查返回 `Active`，超时 `20`，运行时 `Nodejs16.13`。
 
-### Remaining Risk
+### 剩余风险
 
-- The frontend fallback restores basic order recording, but plain MiMo chat/API success must still be verified separately with a real `work/ai_chat` marker response before calling the upstream API fully healthy.
+- 前端兜底已恢复基础录单，但纯 MiMo 聊天/API 健康状态仍需用真实 `work/ai_chat` 标记响应单独验证后才能称为完全健康。
 
 ## v2.54 - 2026-07-05
 
