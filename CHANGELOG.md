@@ -1,3 +1,30 @@
+## v2.55 - 2026-07-05
+
+Restore the work pet order/schedule creation path when AI returns `create_order` / `create_orders` JSON as visible text instead of an already-executed backend action.
+
+### Fixes
+
+- Parse AI action JSON embedded in a normal reply, including prefixed text and fenced JSON blocks.
+- Execute parsed `create_order` and `create_orders` actions through the existing `work/order_save` route so the current account permission, field whitelist, duplicate checks, and backend validation still apply.
+- Add a shared front-end save fallback for direct text requests such as "record/add/order/schedule", so basic schedule entry does not depend on a successful upstream chat reply.
+- Write a team note audit trail after front-end fallback order creation.
+- Keep deposit handling conservative: unconfirmed deposit values are written into notes as a reference, not marked as paid deposit.
+
+### Verification
+
+- `node --check miniprogram/cmpts/work_pet/work_pet.js` passed.
+- Component-level Node simulation passed: `_tryHandleAgentActionReply()` parsed a `create_order` JSON reply, called `work/order_save`, resolved the order type, preserved the customer/date/amount, and did not mark an unconfirmed deposit as paid.
+- DevTools automator could not complete a fresh end-to-end component write because this local DevTools/automator version exposes HTTP on `--port` but does not provide a compatible websocket for the installed SDK. This is recorded as a remaining verification gap, not counted as API success.
+
+### Deployment
+
+- WeChat development version `2.55` uploaded successfully; package size `1.6 MB` / `1,681,448 Byte`.
+- Cloud function incremental deploy for `work_ai_service_live_patch.js` and `index.js` was attempted twice but failed with WeChat Cloud API signing error `getCloudAPISignedHeader ret=41002 system error`; cloud deployment needs a later retry from DevTools/CloudBase.
+
+### Remaining Risk
+
+- The frontend fallback restores basic order recording, but plain MiMo chat/API success must still be verified separately with a real `work/ai_chat` marker response before calling the upstream API fully healthy.
+
 ## v2.54 - 2026-07-05
 
 Design the first-principles one-shot migration plan from WeChat CloudBase to a self-hosted backend without changing the current runtime path.

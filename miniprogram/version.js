@@ -1,15 +1,28 @@
 module.exports = {
-	current: '2.54',
-	previous: '2.53',
+	current: '2.55',
+	previous: '2.54',
 	date: '2026-07-05',
-	time: '13:17 CST',
+	time: '15:30 CST',
 	level: 'patch',
-	levelText: '一次性迁移方案设计',
-	name: '一次性迁移方案设计',
-	summary: '从第一性原则补齐云开发到自有服务器的一次性完整迁移方案，覆盖兼容网关、身份、数据库、对象存储、影子校验、冻结切换、验收和回滚。',
+	levelText: 'Work pet order action restore',
+	name: 'Work pet order action restore',
+	summary: 'Restore the work pet schedule/order creation path when AI returns create_order/create_orders JSON as text, and keep order writes behind the existing account-permission save route.',
 	changeLog: '/docs/version-change-diary.md',
 	history: [
+
 	{
+		version: '2.55',
+		date: '2026-07-05',
+		name: 'Work pet order action restore',
+		summary: 'Restore basic work pet schedule/order recording by executing parsed create_order/create_orders actions through work/order_save instead of only displaying raw JSON.',
+		items: [
+			'Added front-end parsing for AI action JSON embedded in normal replies, including fenced or prefixed JSON text.',
+			'Added a shared front-end save path that resolves order type, builds the order payload, calls work/order_save, refreshes the calendar, and writes a team note audit trail.',
+			'Added direct text order fallback for record/add/order/schedule phrases so simple schedule entry does not depend on the upstream chat API.',
+			'Kept deposit values conservative: an unconfirmed deposit hint is written into order notes, not marked as paid deposit.',
+		],
+	},
+{
 		version: '2.54',
 		date: '2026-07-05',
 		name: '一次性迁移方案设计',

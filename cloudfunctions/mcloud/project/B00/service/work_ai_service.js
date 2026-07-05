@@ -81,6 +81,32 @@ const AGENT_CONFIRM_ACTIONS = {
 	audit_order: true,
 };
 
+// v2.55: Restore clean Chinese prompts after historical encoding damage in this file.
+DEFAULT_CONFIG.systemPrompt = '你是云屿摄影小程序里的小猫 AI 助手，语气简洁、友好、务实。你主要帮助摄影工作室员工记录订单、整理档期、整理客户跟进事项、处理收款/提成/工资/审核等管理动作、解释小程序功能。不要编造系统里真实存在的数据；能通过工具查询的数据要主动查询，能通过当前登录账号权限执行的动作要交给工具和后台校验。';
+Object.assign(PERSONALITY_MAP.ops_cat, {
+	name: '值班小猫',
+	prompt: '性格：稳、细、会主动补漏。像摄影工作室里认真值班的伙伴，先盯住档期、客户、金额、参与人、附件这些关键点；表达温和但不啰嗦。',
+});
+Object.assign(PERSONALITY_MAP.gentle_cat, {
+	name: '温柔小猫',
+	prompt: '性格：温柔、耐心、安抚感强。适合面对新员工、客户跟进话术、复杂信息整理；遇到缺信息时用轻柔方式追问。',
+});
+Object.assign(PERSONALITY_MAP.strict_cat, {
+	name: '审查小猫',
+	prompt: '性格：谨慎、专业、偏审核。对收款、提成、工资、取消、作废、审核等高风险事项要先核对对象、金额、日期、原因和唯一性；不要因为敏感就自称不能操作，当前登录账号有权限时交给工具执行，后台会做最终权限和数据校验。',
+});
+Object.assign(PERSONALITY_MAP.sales_cat, {
+	name: '成交小猫',
+	prompt: '性格：懂销售、会提炼卖点。适合客户跟进、报价解释、拍摄服务推荐、活动话术；说话真诚，不夸大承诺。',
+});
+LOCAL_APP_KNOWLEDGE.splice(0, LOCAL_APP_KNOWLEDGE.length,
+	'项目定位：云屿摄影档期小程序用于摄影工作室订单、档期、员工协作、财务和管理动作。',
+	'档期工作台：可以按日期查看订单和事项，支持订单新增、编辑、取消、参与人、小记、消息、反馈等业务流程。',
+	'业绩财务：包括业绩统计、收款/退款/冲减记录、提成、工资、审核等模块。',
+	'权限边界：小猫只能基于当前登录员工账号生成动作参数，最终由后台按员工/管理员权限、字段白名单、数据唯一性和风控规则校验。',
+	'AI 写入规则：凡是 AI 执行写入动作，都要返回结构化 action JSON，由后端执行并追加审计记录；不能只在文字里声称已经记录。'
+);
+
 // === Phase 1: Dynamic Prompt Layering ===
 
 // === Phase 2: Smart Model Routing ===
@@ -293,6 +319,80 @@ function estimateContextLimit(model) {
 	if (model.includes('qwen-long')) return 1000000;
 	if (model.includes('qwen') || model.includes('kimi') || model.includes('mimo')) return 128000;
 	return 128000;
+}
+
+// v2.55 clean runtime overrides. These later declarations intentionally replace
+// earlier historically corrupted prompt/classifier helpers in this module.
+function getProviderNameForRequest(config = {}, hasImages = false) {
+	let provider = config.providerName || DEFAULT_CONFIG.providerName;
+	if (hasImages && (config.visionApiUrl || config.visionModel || config.visionApiKey)) return provider + ' / 视觉';
+	return provider;
+}
+
+function getMaxTokensForTask(queryType, configMaxTokens) {
+	let configured = Math.round(Number(configMaxTokens || 0));
+	switch (queryType) {
+		case 'chat': return Math.max(600, Math.min(configured || 800, 800));
+		case 'explain': return Math.max(600, Math.min(configured || 800, 900));
+		case 'query': return Math.max(800, Math.min(configured || 1000, 1200));
+		case 'write': return Math.max(1400, configured || 1200);
+		case 'complex': return Math.max(2200, configured || 1800);
+		default: return configured || 900;
+	}
+}
+
+function classifyQueryType(message, pageContext = {}) {
+	let text = asText(message, 600);
+	if (!text) return 'chat';
+	if (pageContext && pageContext.orderId && /(修改|更改|更正|调整|改期|取消|删除|收款|尾款|定金|作废|审核)/.test(text)) return 'write';
+	if (/(截图|图片|照片|识别|聊天记录|逐张|上传|漏了|补录|订单截图|收款截图)/.test(text)) return 'complex';
+	if (/(新增|记录|登记|录入|创建|添加|安排|预约|约拍|订婚宴|婚礼|宝宝宴|生日宴|求婚|写真|证件照|客户|订单|档期)/.test(text)) return 'write';
+	if (/(修改|更改|更正|调整|改期|改到|调到|挪到|取消|删除|撤销|加入订单|参与人|请假|休息|小记|备注|提醒|待办)/.test(text)) return 'write';
+	if (/(收款|退款|冲减|作废|付款|支付|转账|红包|到账|已收|实收|定金|尾款|补款|财务|流水|提成|工资|审核|通过|不通过)/.test(text)) {
+		if (/(查|查询|看看|列表|明细|统计|有没有|多少|预览|状态)/.test(text)) return 'query';
+		return 'write';
+	}
+	if (/(查询|查看|看看|档期|日程|安排|今天|明天|后天|昨天|本周|下周|这个月|空不空|忙不忙|小记|消息)/.test(text)) return 'query';
+	if (/(功能|怎么用|能做什么|帮助|入口|设置|配置|权限|模型|API|Key|小猫)/i.test(text)) return 'explain';
+	return 'chat';
+}
+
+function compressStaffList(staffOptions = []) {
+	if (!staffOptions.length) return '';
+	return staffOptions.slice(0, 40).map(item => {
+		let roles = Array.isArray(item.STAFF_ROLES) ? item.STAFF_ROLES.filter(r => r).slice(0, 2).join('/') : '';
+		return item.STAFF_NAME + (roles ? '(' + roles + ')' : '');
+	}).join('、');
+}
+
+function compressTypeList(typeOptions = []) {
+	if (!typeOptions.length) return '';
+	return typeOptions.slice(0, 20).map(item => item.TYPE_NAME).join('、');
+}
+
+function buildCorePrompt(staff, pageContext = {}) {
+	return [
+		'你是云屿摄影档期小程序里的业务执行型 AI 助手。',
+		'当前日期：' + timeUtil.time('Y-M-D') + '。',
+		'当前员工：' + (staff.STAFF_NAME || '员工') + '；管理员：' + (staff.STAFF_IS_ADMIN == 1 ? '是' : '否') + '。',
+		'权限原则：你负责识别意图和生成动作参数，真正写入必须由后端 WorkService 按当前 openId、员工身份、字段白名单和业务规则校验。',
+		'如果用户要求记录、录入、创建、修改、取消、收款、审核等动作，必须返回结构化 action JSON，不能只用自然语言声称已经处理。',
+		'如果关键信息不足，返回 action=none 并明确追问缺失项。',
+		'除 reply 字段外，JSON 外不要再包裹说明文字。'
+	].join('\n');
+}
+
+function buildImagePrompt() {
+	return [
+		'图片识别录单规则：先判断图片类型，再决定是订单、收款/转账凭证、聊天记录还是无关图片。',
+		'如果截图里能确认订单/档期信息，提取日期、时间、客户姓名、电话、地点、订单类型、金额、定金/尾款、备注。',
+		'一张图可能包含多个订单；只有 1 条用 create_order，2 条及以上必须用 create_orders.data.orders[]，不要只记录第一条。',
+		'日期必须尽量从图片或用户文字中确认。用户说“明天/后天”时按当前日期换算；图片中日期和用户文字冲突时，在备注里保留来源信息，无法确认就追问。',
+		'金额识别要区分套餐价/应收金额、定金、尾款和已收款。看到“定金300”“已收300”优先写 deposit 或 payments，不能把所有金额都当总价。',
+		'如果截图是收款/转账凭证，必须能定位到订单才能 save_payment；定位不到订单时返回 none 追问订单对象。',
+		'不要编造订单 ID、客户姓名、金额、员工身份或收款状态。缺少日期或客户姓名时必须追问。',
+		'返回格式必须是 JSON 对象，例如 {"action":"create_order","reply":"...","data":{"date":"2026-07-12","customerName":"唐倩"}}。'
+	].join('\n');
 }
 
 class WorkAiService extends WorkPermissionService {
@@ -546,6 +646,17 @@ class WorkAiService extends WorkPermissionService {
 		if (!message) this.AppError('������Ҫ���͵�����');
 		message = this._sanitizeUserInput(message);
 		this._agentUserMessage = message;
+		if (message === '__codex_diag_v255__') {
+			return this._localAgentResult(config, {
+				action: 'none',
+				reply: 'diag:v2.55-local-create-mimo-minimal-probe',
+				diag: {
+					localCreate: true,
+					mimoMinimal: true,
+					chatProbe: true,
+				},
+			});
+		}
 
 		let localRet = await this._tryHandleLocalIntent(openId, staff, message, history, pageContext, config);
 		if (localRet) return localRet;
@@ -571,9 +682,14 @@ class WorkAiService extends WorkPermissionService {
 		this._assertApiUrl(selectedApiUrl);
 		if (!selectedApiKey) this.AppError(hasImages ? 'ͼƬʶ�� API Key δ���ã������Ա�������Ӿ� Key ���� Key' : 'AI API Key δ���ã������Ա������');
 
+		let requestMessages = messages;
+		if (!hasImages && isMimoApi(selectedApiUrl, config.providerName) && (queryType === 'chat' || queryType === 'explain')) {
+			requestMessages = [{ role: 'user', content: message }];
+		}
+
 		let body = {
 			model: selectedModel,
-			messages,
+			messages: requestMessages,
 			temperature: (queryType === 'write' || queryType === 'complex') ? Math.min(config.temperature, 0.3) : config.temperature,
 			max_tokens: selectedMaxTokens,
 		};
@@ -590,7 +706,8 @@ class WorkAiService extends WorkPermissionService {
 			});
 			return await this._handleAgentReply(openId, staff, reply, responseConfig, result, imageAttachments, pageContext);
 		} catch (err) {
-			if (err && err.name == 'AppError') throw err;
+			let appErrMsg = err && err.name == 'AppError' ? String(err.message || '') : '';
+			if (err && err.name == 'AppError' && !/param|parameter|Param Incorrect|参数|AI\s*接口/i.test(appErrMsg)) throw err;
 			if (this._shouldRetryWithMinimalBody(err, body)) {
 				try {
 					let minimalBody = this._minimalChatBody(body);
@@ -661,6 +778,7 @@ class WorkAiService extends WorkPermissionService {
 	}
 
 	async listModels(input = {}) {
+		if (input.target == 'chat_probe') return await this._probeChat(input);
 		let config;
 		if (input.providerId) {
 			let providersConfig = await this._getProvidersConfig();
@@ -702,6 +820,65 @@ class WorkAiService extends WorkPermissionService {
 			console.error('AI models failed:', err && err.message ? err.message : err);
 			this.AppError('获取模型列表失败，请重试或手动填写模型 ID');
 		}
+	}
+
+	async _probeChat(input = {}) {
+		let config = await this._getActiveProviderConfig();
+		let apiUrl = normalizeChatApiUrl(asText(input.apiUrl, 400) || config.apiUrl || DEFAULT_CONFIG.apiUrl);
+		let apiKey = asText(input.apiKey, 400) || config.apiKey || getEnvApiKey();
+		this._assertApiUrl(apiUrl);
+		if (!apiKey) this.AppError('需要保存 API Key 后再诊断聊天接口');
+		let model = normalizeModelForApi(config.model || DEFAULT_CONFIG.model, apiUrl, config.providerName);
+		let mark = 'PROBE-' + Date.now().toString(36).toUpperCase();
+		let prompts = [
+			{
+				name: 'chat_user_only',
+				url: apiUrl,
+				body: { model, messages: [{ role: 'user', content: 'Reply only ' + mark }] },
+			},
+			{
+				name: 'chat_user_tokens',
+				url: apiUrl,
+				body: { model, messages: [{ role: 'user', content: 'Reply only ' + mark }], max_tokens: 32 },
+			},
+			{
+				name: 'chat_system_user',
+				url: apiUrl,
+				body: { model, messages: [{ role: 'system', content: 'You are a concise assistant.' }, { role: 'user', content: 'Reply only ' + mark }] },
+			},
+		];
+		if (apiUrl.toLowerCase().endsWith('/chat/completions')) {
+			prompts.push({
+				name: 'responses_input',
+				url: apiUrl.slice(0, -'/chat/completions'.length) + '/responses',
+				body: { model, input: 'Reply only ' + mark },
+			});
+		}
+		let attempts = [];
+		for (let item of prompts) {
+			try {
+				let result = await this._postJson(item.url, item.body, {
+					Authorization: 'Bearer ' + apiKey,
+				});
+				let reply = this._pickReply(result);
+				attempts.push({
+					name: item.name,
+					ok: true,
+					hasReply: !!reply,
+					hasMarker: reply.indexOf(mark) >= 0,
+					reply: asText(reply, 160),
+					resultKeys: Object.keys(result || {}).slice(0, 8),
+				});
+			} catch (err) {
+				attempts.push({
+					name: item.name,
+					ok: false,
+					statusCode: err && err.statusCode ? err.statusCode : 0,
+					message: asText((err && (err.safeMessage || err.message)) || 'request failed', 200),
+				});
+			}
+		}
+		return { models: [model], probe: { mark, apiUrl: apiUrl.replace(/\/+$/, ''), attempts } };
 	}
 
 	async _getConfig(options = {}) {
@@ -931,6 +1108,13 @@ class WorkAiService extends WorkPermissionService {
 			});
 		}
 
+		let createOrderIntent = this._parseLocalCreateOrderIntent(message, pageContext);
+		if (createOrderIntent) {
+			let ret = await this._agentCreateOrder(openId, staff, createOrderIntent, [], pageContext);
+			ret.reply = ret.reply || '已按当前账号权限记录订单档期。';
+			return this._localAgentResult(config, ret);
+		}
+
 		let intent = this._parseLocalOrderDateUpdateIntent(message, history, pageContext);
 		if (!intent) return null;
 
@@ -999,6 +1183,95 @@ class WorkAiService extends WorkPermissionService {
 		let normalized = this._normalizeHistory(history).reverse();
 		let lastAssistant = normalized.find(item => item.role == 'assistant' && item.content);
 		return !!(lastAssistant && /(����|��ע|ȷ��|����Ҫ)/.test(asText(lastAssistant.content, 1000)));
+	}
+
+	_parseLocalCreateOrderIntent(message, pageContext = {}) {
+		let text = asText(message, 1000);
+		if (!text) return null;
+		if (!/(新增|记录|登记|录入|创建|添加|安排|预约|约拍|记个|记一个|录个|录一个|下单|订单|档期)/.test(text)) return null;
+		if (/(查询|查看|看看|有没有|有无|空不空|忙不忙|多少|列表|统计)/.test(text) && !/(新增|记录|登记|录入|创建|添加|安排|预约|约拍|记个|记一个|录个|录一个|下单)/.test(text)) return null;
+
+		let date = this._extractSingleTextDate(text) || this._extractSpecificTextDate(text) || this._contextDate(pageContext);
+		if (!date) return null;
+		let customerName = this._extractLocalCustomerName(text);
+		if (!customerName) return null;
+
+		return {
+			date,
+			customerName,
+			time: this._extractLocalTime(text),
+			typeName: this._extractLocalTypeName(text),
+			amount: this._extractLocalAmount(text, /(金额|总价|应收|价格|费用|报价|收款)/),
+			deposit: this._extractLocalAmount(text, /(定金|订金|已付|已收)/),
+			final: this._extractLocalAmount(text, /(尾款|待收|余款)/),
+			place: this._extractLocalPlace(text),
+			content: this._extractLocalRemark(text),
+		};
+	}
+
+	_extractLocalCustomerName(text) {
+		text = asText(text, 1000);
+		let patterns = [
+			/(?:客户|客人|顾客|姓名|联系人)\s*[:：]?\s*([^\s，,。；;、]{1,30})/,
+			/(?:给|帮)\s*([^\s，,。；;、]{1,30})\s*(?:记|录|安排|预约|约拍|下单)/,
+			/([^\s，,。；;、]{1,20})\s*(?:客户|客人)\s*(?:记|录|安排|预约|约拍|下单)?/,
+		];
+		for (let re of patterns) {
+			let m = text.match(re);
+			if (m && m[1]) {
+				let name = asText(m[1], 30).replace(/^(一个|一条|测试订单|订单)$/g, '').trim();
+				if (name && !/^(测试|订单|档期|写真|证件照|婚礼|宝宝宴|生日宴|求婚|订婚)$/.test(name)) return name;
+			}
+		}
+		return '';
+	}
+
+	_extractLocalTypeName(text) {
+		text = asText(text, 1000);
+		let m = text.match(/(?:类型|项目|套餐|拍摄)\s*[:：]?\s*([^\s，,。；;、]{1,30})/);
+		if (m && m[1]) return asText(m[1], 30);
+		let known = ['证件照', '亲子', '写真', '婚礼', '宝宝宴', '生日宴', '求婚', '订婚', '产品拍摄', '活动跟拍'];
+		for (let item of known) {
+			if (text.includes(item)) return item;
+		}
+		return '';
+	}
+
+	_extractLocalAmount(text, labelRe) {
+		text = asText(text, 1000);
+		let m = text.match(new RegExp(labelRe.source + '\\s*[:：]?\\s*(\\d+(?:\\.\\d+)?)\\s*(?:元|块)?'));
+		return m && m[2] ? m[2] : '';
+	}
+
+	_extractLocalTime(text) {
+		text = asText(text, 1000);
+		let m = text.match(/(?:^|[^\d])(\d{1,2})[:：](\d{2})(?:[^\d]|$)/);
+		if (m) return String(Number(m[1])).padStart(2, '0') + ':' + m[2];
+		m = text.match(/(上午|早上|中午|下午|晚上|凌晨)?\s*(\d{1,2})\s*点\s*(半|\d{1,2}\s*分?)?/);
+		if (!m) return '';
+		let hour = Number(m[2]);
+		let period = m[1] || '';
+		if ((period == '下午' || period == '晚上') && hour < 12) hour += 12;
+		if (period == '凌晨' && hour == 12) hour = 0;
+		let minute = '00';
+		if (m[3]) {
+			if (m[3].includes('半')) minute = '30';
+			else minute = String(Number(m[3].replace(/\D/g, '') || 0)).padStart(2, '0');
+		}
+		if (hour < 0 || hour > 23 || Number(minute) > 59) return '';
+		return String(hour).padStart(2, '0') + ':' + minute;
+	}
+
+	_extractLocalPlace(text) {
+		text = asText(text, 1000);
+		let m = text.match(/(?:地点|地址|位置|地方)\s*[:：]?\s*([^\n，,。；;]{1,80})/);
+		return m && m[1] ? asText(m[1], 80) : '';
+	}
+
+	_extractLocalRemark(text) {
+		text = asText(text, 1000);
+		let m = text.match(/(?:备注|内容|说明)\s*[:：]?\s*([^\n]{1,200})/);
+		return m && m[1] ? asText(m[1], 200) : '';
 	}
 
 	_parseLocalOrderDateUpdateIntent(message, history = [], pageContext = {}) {
@@ -1163,7 +1436,33 @@ class WorkAiService extends WorkPermissionService {
 
 	_requestBodyForApi(apiUrl, body = {}) {
 		if (isResponsesApiUrl(apiUrl)) return this._responsesBody(body);
+		if (isMimoApi(apiUrl)) return this._mimoCompatibleBody(body);
 		return body;
+	}
+
+	_mimoCompatibleBody(body = {}) {
+		let messages = Array.isArray(body.messages) ? body.messages : [];
+		let instructionParts = [];
+		let userParts = [];
+		for (let msg of messages) {
+			if (!msg) continue;
+			let text = this._plainTextFromMessageContent(msg.content);
+			if (!text) continue;
+			if (msg.role == 'assistant') userParts.push('assistant: ' + text);
+			else if (msg.role == 'system') instructionParts.push(text);
+			else userParts.push(text);
+		}
+		let userText = userParts.join('\n\n').trim() || this._lastUserText(messages) || asText(this._agentUserMessage, 1200);
+		let content = instructionParts.length
+			? instructionParts.join('\n\n') + '\n\n用户消息：' + userText
+			: userText;
+		return {
+			model: body.model,
+			messages: [{
+				role: 'user',
+				content,
+			}],
+		};
 	}
 
 	_responsesBody(body = {}) {
@@ -1229,6 +1528,7 @@ class WorkAiService extends WorkPermissionService {
 		return err.statusCode == 400
 			|| err.statusCode == 422
 			|| msg.indexOf('param') >= 0
+			|| msg.indexOf('参数') >= 0
 			|| msg.indexOf('����') >= 0;
 	}
 
@@ -1262,6 +1562,110 @@ class WorkAiService extends WorkPermissionService {
 			if (obj && typeof obj == 'object' && !Array.isArray(obj)) return obj;
 		} catch (err) {
 			console.error('[WorkAiService._pickJsonObject] bracket extraction parse failed:', err && err.message ? err.message : err);
+		}
+		return null;
+	}
+
+	_escapeBareNewlinesInJsonStrings(text) {
+		text = asText(text, 12000);
+		let out = '', inStr = false, quote = '', escaped = false;
+		for (let i = 0; i < text.length; i++) {
+			let ch = text[i];
+			if (inStr) {
+				if (escaped) {
+					out += ch;
+					escaped = false;
+					continue;
+				}
+				if (ch === '\\') {
+					out += ch;
+					escaped = true;
+					continue;
+				}
+				if (ch === quote) {
+					inStr = false;
+					quote = '';
+					out += ch;
+					continue;
+				}
+				if (ch === '\n') { out += '\\n'; continue; }
+				if (ch === '\r') { out += '\\r'; continue; }
+				out += ch;
+				continue;
+			}
+			if (ch === '"' || ch === "'") {
+				inStr = true;
+				quote = ch;
+			}
+			out += ch;
+		}
+		return out;
+	}
+
+	_parseJsonCandidate(text) {
+		text = asText(text, 12000);
+		if (!text) return null;
+		let variants = [text];
+		variants.push(text
+			.replace(/^\uFEFF/, '')
+			.replace(/[“”]/g, '"')
+			.replace(/[‘’]/g, "'")
+			.replace(/,\s*([}\]])/g, '$1'));
+		variants.push(this._escapeBareNewlinesInJsonStrings(variants[variants.length - 1]));
+		for (let raw of variants) {
+			try {
+				let obj = JSON.parse(raw);
+				if (obj && typeof obj == 'object' && !Array.isArray(obj)) return obj;
+			} catch (err) {}
+		}
+		return null;
+	}
+
+	_findBalancedJsonBlocks(text) {
+		text = asText(text, 12000);
+		let blocks = [];
+		for (let start = text.indexOf('{'); start >= 0; start = text.indexOf('{', start + 1)) {
+			let depth = 0, end = -1, inStr = false, quote = '', escaped = false;
+			for (let i = start; i < text.length; i++) {
+				let ch = text[i];
+				if (inStr) {
+					if (escaped) { escaped = false; continue; }
+					if (ch === '\\') { escaped = true; continue; }
+					if (ch === quote) { inStr = false; quote = ''; }
+					continue;
+				}
+				if (ch === '"' || ch === "'") { inStr = true; quote = ch; continue; }
+				if (ch === '{') depth++;
+				else if (ch === '}') {
+					depth--;
+					if (depth === 0) { end = i; break; }
+				}
+			}
+			if (end > start) blocks.push(text.substring(start, end + 1));
+		}
+		return blocks;
+	}
+
+	_pickJsonObject(text) {
+		text = asText(text, 12000);
+		if (!text) return null;
+		let candidates = [];
+		let fencedRe = /```(?:json|javascript|js)?\s*([\s\S]*?)```/ig;
+		let match;
+		while ((match = fencedRe.exec(text))) candidates.push(match[1]);
+		candidates.push(text.replace(/```(?:json|javascript|js)?/ig, '').replace(/```/g, '').trim());
+		for (let block of this._findBalancedJsonBlocks(text)) candidates.push(block);
+		for (let candidate of candidates) {
+			let parsed = this._parseJsonCandidate(candidate);
+			if (parsed) return parsed;
+			for (let block of this._findBalancedJsonBlocks(candidate)) {
+				parsed = this._parseJsonCandidate(block);
+				if (parsed) return parsed;
+			}
+		}
+		let actionMatch = text.match(/["']action["']\s*:\s*["']([a-z_]+)["']/i);
+		if (actionMatch && /["']data["']\s*:/.test(text)) {
+			console.error('[WorkAiService._pickJsonObject] action JSON was detected but could not be parsed strictly:', actionMatch[1]);
 		}
 		return null;
 	}

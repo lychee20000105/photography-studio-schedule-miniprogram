@@ -2,10 +2,26 @@
 
 基于微信云开发的摄影工作室内部经营小程序，覆盖档期、订单、收款、员工业绩提成、工资结算、小程序内管理中心和 AI 小助手配置。
 
-当前本地代码版本：`v2.54`
+当前本地代码版本：`v2.55`
 
-当前开源稳定基线：`v2.54.0`
+当前开源稳定基线：`v2.55.0`
 最近本地修改时间：`2026-07-05`
+
+## v2.55.0 Release Notes
+
+Restore the work pet order/schedule creation path when recognized AI actions were displayed as raw `create_order` JSON instead of being executed.
+
+Key changes:
+- Parse AI action JSON embedded in normal assistant replies.
+- Execute `create_order` and `create_orders` through the existing `work/order_save` route, preserving the current account-permission and backend validation boundary.
+- Add a shared text fallback for direct order/schedule entry requests.
+- Write a team-note audit trail for fallback-created orders.
+- Keep unconfirmed deposit hints in notes instead of marking them as paid.
+
+Verification:
+- `node --check miniprogram/cmpts/work_pet/work_pet.js` passed.
+- Component-level Node simulation passed for parsed `create_order` execution and conservative deposit handling.
+- Fresh DevTools automator end-to-end write/query is still a local-tool compatibility gap, not counted as upstream API success.
 
 ## v2.54.0 Release Notes
 

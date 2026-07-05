@@ -1,3 +1,49 @@
+## v2.55 - 2026-07-05
+
+### Change Level
+
+Patch runtime fix, v2.54 -> v2.55, +0.01.
+
+### Goal
+
+Restore the work pet's basic ability to record schedules/orders when the AI recognizes order information but returns `create_order` JSON as visible text instead of executing the business action.
+
+### Key Changes
+
+- Added front-end parsing for AI action JSON embedded in assistant replies.
+- Added front-end execution for `create_order` and `create_orders` through the existing `work/order_save` route.
+- Reused the same save fallback for direct text order/schedule requests.
+- Added team-note audit recording for fallback-created orders.
+- Kept unconfirmed deposit values as note references instead of marking them as paid.
+
+### Files
+
+- miniprogram/cmpts/work_pet/work_pet.js
+- cloudfunctions/mcloud/project/B00/service/work_ai_service.js
+- cloudfunctions/mcloud/work_ai_service_live_patch.js
+- cloudfunctions/mcloud/index.js
+- miniprogram/version.js
+- miniprogram/setting/setting.js
+- CHANGELOG.md
+- README.md
+- docs/version-change-diary.md
+
+### Verification
+
+- `node --check miniprogram/cmpts/work_pet/work_pet.js` passed.
+- Component-level Node simulation passed for `_tryHandleAgentActionReply()` with `create_order`: the save path called `work/order_save`, built a valid order payload, resolved the type, and left unconfirmed deposit out of `ORDER_DEPOSIT`.
+- DevTools automator websocket compatibility is currently blocked in this local environment, so a fresh end-to-end simulator click/write/query test remains unverified in this closeout.
+
+### Deployment Status
+
+- WeChat development version `2.55` uploaded successfully; package size `1.6 MB` / `1,681,448 Byte`.
+- Cloud function incremental deploy for `work_ai_service_live_patch.js` and `index.js` was attempted twice but failed with WeChat Cloud API signing error `getCloudAPISignedHeader ret=41002 system error`; cloud deployment needs a later retry from DevTools/CloudBase.
+
+### Remaining Risk
+
+- Plain upstream MiMo chat health is not declared fixed unless a real `work/ai_chat` marker response returns successfully after deployment.
+- Historical Chinese encoding debt remains in older files and logs; this patch avoids broad encoding rewrites.
+
 ## v2.54 - 2026-07-05
 
 ### Change Level

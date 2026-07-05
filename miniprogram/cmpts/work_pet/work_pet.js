@@ -268,6 +268,162 @@ function normalizeQuickDate(text, baseDate = '') {
 	return '';
 }
 
+function extractQuickCreateOrderIntent(text, pageContext = {}) {
+	text = String(text || '').trim();
+	if (!text) return null;
+	if (!/(新增|记录|登记|录入|创建|添加|安排|预约|约拍|记个|记一个|录个|录一个|下单|订单|档期)/.test(text)) return null;
+	if (/(查询|查看|看看|有没有|有无|空不空|忙不忙|多少|列表|统计)/.test(text) && !/(新增|记录|登记|录入|创建|添加|安排|预约|约拍|记个|记一个|录个|录一个|下单)/.test(text)) return null;
+	let dateMatch = text.match(/(\d{4}[-/.]\d{1,2}[-/.]\d{1,2}|\d{1,2}[/.月-]\d{1,2}(?:日|号)?)/);
+	let date = dateMatch ? normalizeQuickDate(dateMatch[1]) : (pageContext.day || '');
+	if (!date) return null;
+	let customer = '';
+	let customerPatterns = [
+		/(?:客户|客人|顾客|姓名|联系人)\s*[:：]?\s*([^\s，,。；;、]{1,30})/,
+		/(?:给|帮)\s*([^\s，,。；;、]{1,30})\s*(?:记|录|安排|预约|约拍|下单)/,
+	];
+	for (let re of customerPatterns) {
+		let m = text.match(re);
+		if (m && m[1]) {
+			customer = String(m[1]).trim();
+			break;
+		}
+	}
+	if (!customer || /^(一个|一条|订单|档期|测试)$/.test(customer)) return null;
+	let time = '';
+	let tm = text.match(/(?:^|[^\d])(\d{1,2})[:：](\d{2})(?:[^\d]|$)/);
+	if (tm) time = `${pad2(Number(tm[1]))}:${tm[2]}`;
+	else {
+		tm = text.match(/(上午|早上|中午|下午|晚上|凌晨)?\s*(\d{1,2})\s*点\s*(半|\d{1,2}\s*分?)?/);
+		if (tm) {
+			let hour = Number(tm[2]);
+			let period = tm[1] || '';
+			if ((period == '下午' || period == '晚上') && hour < 12) hour += 12;
+			if (period == '凌晨' && hour == 12) hour = 0;
+			let minute = '00';
+			if (tm[3]) minute = tm[3].includes('半') ? '30' : pad2(Number(tm[3].replace(/\D/g, '') || 0));
+			if (hour >= 0 && hour <= 23 && Number(minute) <= 59) time = `${pad2(hour)}:${minute}`;
+		}
+	}
+	let typeName = '';
+	let typeMatch = text.match(/(?:类型|项目|套餐|拍摄)\s*[:：]?\s*([^\s，,。；;、]{1,30})/);
+	if (typeMatch && typeMatch[1]) typeName = String(typeMatch[1]).trim();
+	else {
+		let known = ['证件照', '亲子', '写真', '婚礼', '宝宝宴', '生日宴', '求婚', '订婚', '产品拍摄', '活动跟拍'];
+		typeName = known.find(item => text.includes(item)) || '';
+	}
+	let amount = '';
+	let amountMatch = text.match(/(?:金额|总价|应收|价格|费用|报价)\s*[:：]?\s*(\d+(?:\.\d+)?)\s*(?:元|块)?/);
+	if (amountMatch) amount = amountMatch[1];
+	let place = '';
+	let placeMatch = text.match(/(?:地点|地址|位置|地方)\s*[:：]?\s*([^\n，,。；;]{1,80})/);
+	if (placeMatch) place = String(placeMatch[1]).trim();
+	let content = '';
+	let noteMatch = text.match(/(?:备注|内容|说明)\s*[:：]?\s*([^\n]{1,200})/);
+	if (noteMatch) content = String(noteMatch[1]).trim();
+	return { date, customer, time, typeName, amount, place, content };
+}
+
+function pickAgentJsonObject(text) {
+	text = String(text || '');
+	for (let start = text.indexOf('{'); start >= 0; start = text.indexOf('{', start + 1)) {
+		let depth = 0;
+		let inString = false;
+		let quote = '';
+		let escaped = false;
+		for (let i = start; i < text.length; i++) {
+			let ch = text[i];
+			if (inString) {
+				if (escaped) {
+					escaped = false;
+				} else if (ch == '\\') {
+					escaped = true;
+				} else if (ch == quote) {
+					inString = false;
+				}
+				continue;
+			}
+			if (ch == '"' || ch == "'") {
+				inString = true;
+				quote = ch;
+				continue;
+			}
+			if (ch == '{') depth++;
+			if (ch == '}') {
+				depth--;
+				if (depth === 0) {
+					let raw = text.slice(start, i + 1);
+					try {
+						return JSON.parse(raw);
+					} catch (e) {
+						break;
+					}
+				}
+			}
+		}
+	}
+	return null;
+}
+
+function parseAgentActionPayload(raw) {
+	if (!raw) return null;
+	if (typeof raw == 'object') return raw;
+	let text = String(raw || '').trim();
+	if (!text) return null;
+	try {
+		let parsed = JSON.parse(text);
+		if (parsed && typeof parsed == 'object') return parsed;
+	} catch (e) {}
+	return pickAgentJsonObject(text);
+}
+
+function cleanAgentText(value, max = 120) {
+	value = String(value === undefined || value === null ? '' : value).trim();
+	if (!value) return '';
+	value = value.replace(/^["'`]+|["'`]+$/g, '').trim();
+	return value.length > max ? value.slice(0, max).trim() : value;
+}
+
+function cleanAgentAmount(value) {
+	if (value === undefined || value === null) return '';
+	let text = String(value).replace(/[,，]/g, '').trim();
+	let match = text.match(/\d+(?:\.\d+)?/);
+	return match ? match[0] : '';
+}
+
+function normalizeAgentOrderData(data = {}, pageContext = {}) {
+	data = data || {};
+	let date = normalizeQuickDate(data.date || data.ORDER_DATE || '', pageContext.day || '') || (pageContext.day || '');
+	let customer = cleanAgentText(data.customerName || data.customer || data.name || data.ORDER_CUSTOMER_NAME, 80);
+	let time = cleanAgentText(data.time || data.ORDER_TIME, 20);
+	let endTime = cleanAgentText(data.endTime || data.ORDER_END_TIME, 20);
+	let typeName = cleanAgentText(data.typeName || data.type || data.project || data.ORDER_TYPE_NAME, 60);
+	let amount = cleanAgentAmount(data.amount || data.totalAmount || data.price || data.ORDER_AMOUNT);
+	let paidDeposit = cleanAgentAmount(data.paidDeposit || data.depositPaid || data.depositPaidAmount || data.ORDER_PAID_DEPOSIT);
+	let depositHint = cleanAgentAmount(data.deposit || data.ORDER_DEPOSIT);
+	let content = cleanAgentText(data.content || data.note || data.remark || data.ORDER_CONTENT, 800);
+	if (depositHint && !paidDeposit) {
+		let hint = '\u5b9a\u91d1\u53c2\u8003\uff1a' + depositHint + '\u5143\uff08\u672a\u786e\u8ba4\u5df2\u6536\uff09';
+		content = content ? (content + '；' + hint) : hint;
+	}
+	return {
+		date,
+		customer,
+		time,
+		endTime,
+		typeName,
+		typeId: cleanAgentText(data.typeId || data.ORDER_TYPE_ID, 80),
+		typeColor: cleanAgentText(data.typeColor || data.ORDER_TYPE_COLOR, 30),
+		customerMobile: cleanAgentText(data.customerMobile || data.mobile || data.phone || data.ORDER_CUSTOMER_MOBILE, 30),
+		source: cleanAgentText(data.source || data.ORDER_SOURCE, 60),
+		place: cleanAgentText(data.place || data.address || data.location || data.ORDER_PLACE, 120),
+		content,
+		amount,
+		deposit: paidDeposit,
+		final: cleanAgentAmount(data.final || data.paidFinal || data.ORDER_FINAL),
+		extra: cleanAgentAmount(data.extra || data.paidExtra || data.ORDER_EXTRA),
+	};
+}
+
 function extractQuickOrderKeyword(text) {
 	text = String(text || '').slice(0, 120);
 	if (!text) return '';
@@ -986,7 +1142,8 @@ Component({
 					let history = trimMessages(messages.slice(0, -1));
 
 					// B19: Try streaming first for normal AI chat (no quick/missedImage shortcuts)
-					let quickRet = shouldQuickAckNoSupplement(text, history)
+					let quickRet = await this._tryHandleQuickCreateOrder(text);
+					if (!quickRet) quickRet = shouldQuickAckNoSupplement(text, history)
 						? { action: 'none', reply: '收到，不补充。本次对话不再继续调用 AI。' }
 						: await this._tryHandleQuickDateUpdate(text, history);
 					let missedImage = findMissedImageFollowup(text, history);
@@ -1089,6 +1246,123 @@ Component({
 				day: page.data && page.data.day ? page.data.day : '',
 				scope: page.data && page.data.scope ? page.data.scope : '',
 			};
+		},
+		async _resolveWorkOrderType(typeName = '', typeId = '') {
+			let options = await cloudHelper.callCloudData('work/options', {}, { hint: false });
+			let types = options && Array.isArray(options.types) ? options.types : [];
+			let type = null;
+			if (typeId) type = types.find(item => item && item._id == typeId);
+			if (!type && typeName) {
+				let wanted = String(typeName || '').replace(/\s+/g, '');
+				type = types.find(item => {
+					let name = String(item.TYPE_NAME || '').replace(/\s+/g, '');
+					return name && (name.includes(wanted) || wanted.includes(name));
+				});
+			}
+			return type
+				|| types.find(item => item.TYPE_IS_OTHER == 1)
+				|| types.find(item => String(item.TYPE_NAME || '').includes('\u5176\u4ed6'))
+				|| types[0]
+				|| {};
+		},
+		async _saveAgentOrderData(rawData = {}, attachments = [], source = '') {
+			let pageContext = this._getPageContext();
+			let intent = rawData.customer || rawData.customerName || rawData.ORDER_CUSTOMER_NAME
+				? normalizeAgentOrderData(rawData, pageContext)
+				: rawData;
+			if (!intent || !intent.date || !intent.customer) {
+				return {
+					action: 'none',
+					reply: '\u5df2\u8bc6\u522b\u5230\u5f55\u5355\u610f\u56fe\uff0c\u4f46\u7f3a\u5c11\u65e5\u671f\u6216\u5ba2\u6237\u540d\uff0c\u6240\u4ee5\u6ca1\u6709\u5199\u5165\u7cfb\u7edf\u3002\u8bf7\u8865\u4e00\u53e5\uff1a\u65e5\u671f+\u5ba2\u6237+\u9879\u76ee\u3002',
+				};
+			}
+			let type = await this._resolveWorkOrderType(intent.typeName, intent.typeId);
+			let attachIds = (attachments || []).map(item => {
+				if (!item) return '';
+				if (typeof item == 'string') return item;
+				return item.fileID || item.cloudID || item.id || '';
+			}).filter(Boolean);
+			let order = {
+				ORDER_DATE: intent.date,
+				ORDER_TIME: intent.time || '',
+				ORDER_END_TIME: intent.endTime || '',
+				ORDER_TYPE_ID: type._id || '',
+				ORDER_TYPE_NAME: type.TYPE_NAME || intent.typeName || '\u5176\u4ed6',
+				ORDER_TYPE_COLOR: type.TYPE_COLOR || intent.typeColor || '#49cdbf',
+				ORDER_PROGRESS: 10,
+				ORDER_CUSTOMER_NAME: intent.customer,
+				ORDER_CUSTOMER_MOBILE: intent.customerMobile || '',
+				ORDER_SOURCE: intent.source || source || '\u5c0f\u732b\u524d\u7aef\u515c\u5e95',
+				ORDER_CONTENT: intent.content || '',
+				ORDER_PLACE: intent.place || '',
+				ORDER_IS_OLD_CUSTOMER: 0,
+				ORDER_AMOUNT: intent.amount || '',
+				ORDER_DEPOSIT: intent.deposit || '',
+				ORDER_FINAL: intent.final || '',
+				ORDER_EXTRA: intent.extra || '',
+				ORDER_PAYMENTS: [],
+				ORDER_PARTICIPANTS: [],
+				ORDER_ATTACHMENTS: attachIds,
+			};
+			let res = await cloudHelper.callCloudSumbit('work/order_save', { order }, { title: '\u8bb0\u5f55\u4e2d' });
+			let id = res && res.data ? res.data.id : '';
+			try {
+				await cloudHelper.callCloud('work/note_save', {
+					note: {
+						NOTE_TYPE: 'team',
+						NOTE_TITLE: 'AI\u64cd\u4f5c\u8bb0\u5f55\uff1a\u65b0\u589e\u8ba2\u5355',
+						NOTE_CONTENT: `\u5c0f\u732b\u524d\u7aef\u515c\u5e95\u65b0\u589e\u8ba2\u5355\uff1a${intent.date} ${intent.time || ''} ${order.ORDER_TYPE_NAME}\uff0c\u5ba2\u6237${intent.customer}\u3002\u8bb0\u5f55ID\uff1a${id || ''}`,
+						NOTE_DATE: todayYmd(),
+					},
+				}, { hint: false });
+			} catch (noteErr) {
+				console.error(noteErr);
+			}
+			return {
+				action: 'create_order',
+				id,
+				data: { date: intent.date, order },
+				reply: `\u5df2\u65b0\u589e\u8ba2\u5355\u6863\u671f\uff1a${intent.date} ${intent.time || ''}\uff0c${order.ORDER_TYPE_NAME}\uff0c\u5ba2\u6237${intent.customer}\u3002\u5df2\u8d70\u5f53\u524d\u8d26\u53f7\u6743\u9650\u4fdd\u5b58\uff0c\u5e76\u5199\u5165\u56e2\u961f\u5c0f\u8bb0\u5ba1\u67e5\u6d41\u6c34\u3002`,
+			};
+		},
+		async _tryHandleQuickCreateOrder(text) {
+			let pageContext = this._getPageContext();
+			let intent = extractQuickCreateOrderIntent(text, pageContext);
+			if (!intent) return null;
+			return await this._saveAgentOrderData(intent, [], '\u5c0f\u732b\u6587\u5b57\u5f55\u5355');
+		},
+		async _tryHandleAgentActionReply(reply, attachments = []) {
+			let payload = parseAgentActionPayload(reply);
+			if (!payload || !payload.action) return null;
+			let action = String(payload.action || '');
+			if (action == 'create_order') {
+				let data = payload.data || payload.order || payload;
+				let ret = await this._saveAgentOrderData(data, attachments, '\u5c0f\u732b\u622a\u56fe\u8bc6\u522b');
+				if (payload.reply && ret && ret.action != 'none') ret.reply = cleanAgentText(payload.reply, 600) + '\n\n' + ret.reply;
+				return ret;
+			}
+			if (action == 'create_orders') {
+				let data = payload.data || {};
+				let list = Array.isArray(data.orders) ? data.orders : (Array.isArray(payload.orders) ? payload.orders : []);
+				if (!list.length) return null;
+				let saved = [];
+				for (let item of list) {
+					let ret = await this._saveAgentOrderData(item, attachments, '\u5c0f\u732b\u622a\u56fe\u8bc6\u522b');
+					if (ret && ret.action == 'create_order') saved.push(ret);
+				}
+				if (!saved.length) return null;
+				let dates = saved.map(item => item.data && item.data.date).filter(Boolean);
+				let lines = saved.map((item, idx) => {
+					let order = item.data && item.data.order ? item.data.order : {};
+					return `${idx + 1}. ${order.ORDER_DATE || ''} ${order.ORDER_TIME || ''} ${order.ORDER_TYPE_NAME || ''}\uff0c\u5ba2\u6237${order.ORDER_CUSTOMER_NAME || ''}`;
+				}).join('\n');
+				return {
+					action: 'create_orders',
+					data: { dates },
+					reply: `\u5df2\u65b0\u589e ${saved.length} \u6761\u8ba2\u5355\u6863\u671f\uff0c\u5df2\u8d70\u5f53\u524d\u8d26\u53f7\u6743\u9650\u4fdd\u5b58\uff1a\n${lines}`,
+				};
+			}
+			return null;
 		},
 		async _tryHandleQuickDateUpdate(text, history) {
 			let pageContext = this._getPageContext();
@@ -1597,7 +1871,8 @@ Component({
 		async _sendChatLegacy(text, history, attachments) {
 			let reply = '';
 			let missedImage = findMissedImageFollowup(text, history);
-			let quickRet = shouldQuickAckNoSupplement(text, history)
+			let quickRet = await this._tryHandleQuickCreateOrder(text);
+			if (!quickRet) quickRet = shouldQuickAckNoSupplement(text, history)
 				? { action: 'none', reply: '收到，不补充。本次对话不再继续调用 AI。' }
 				: await this._tryHandleQuickDateUpdate(text, history);
 			if (!quickRet && missedImage && missedImage.reply) {
@@ -1617,6 +1892,13 @@ Component({
 				reply = data.reply || '我收到啦，但 AI 没有返回文字。';
 				if (data.aiUnavailable || /AI\s*(服务|小助手)?\s*暂时不可用|AI\s*服务暂时不可用|外部\s*AI\s*接口.*(没有正常返回|未测通)|unavailable/i.test(reply)) {
 					reply = AI_UNAVAILABLE_NOTICE;
+				}
+				if (!data.action) {
+					let actionRet = await this._tryHandleAgentActionReply(reply, attachments);
+					if (actionRet) {
+						this._refreshPageAfterAgentAction(actionRet);
+						reply = actionRet.reply || reply;
+					}
 				}
 				this._applyContextMeta(data);
 				this._refreshPageAfterAgentAction(data);
