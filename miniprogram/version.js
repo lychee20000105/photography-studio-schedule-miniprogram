@@ -1,14 +1,26 @@
 module.exports = {
-	current: '2.52',
-	previous: '2.51',
+	current: '2.53',
+	previous: '2.52',
 	date: '2026-07-05',
-	time: '11:07 CST',
+	time: '12:48 CST',
 	level: 'patch',
-	levelText: '小猫首轮回复修复与架构审查',
-	name: '小猫首轮回复修复与架构审查',
-	summary: '修复小猫首次会话中 AI 回复已保存但不显示的问题，并补齐阶段性架构说明和多 agent 对抗式审查记录。',
+	levelText: '自有服务器迁移准备',
+	name: '自有服务器迁移准备',
+	summary: '补齐云开发迁移到自有服务器的准备文档，明确兼容网关、AI 小猫优先迁移、数据集合、对象存储、回滚和上线检查。',
 	changeLog: '/docs/version-change-diary.md',
 	history: [
+	{
+		version: '2.53',
+		date: '2026-07-05',
+		name: '自有服务器迁移准备',
+		summary: '新增自有服务器迁移准备文档，只做迁移方案和清单，不改变当前云开发运行链路。',
+		items: [
+			'新增 docs/migration/server-migration-prep-v2.53.md，盘点 mcloud、wx.cloud.callFunction、云数据库、云存储、openid、定时任务和 live patch 绑定点。',
+			'明确目标架构：小程序先通过 cloudHelper 兼容网关切换到 HTTPS API，后端保留 route/controller/service/model 分层。',
+			'确定分阶段迁移顺序：先服务器空壳和 AI 小猫，再迁文件、工作台读接口、低风险写接口，最后迁财务/工资/审核和传统后台。',
+			'列出服务器准备清单、数据集合优先级、前端 transport 开关、回滚方案和当前不建议执行的高风险事项。',
+		],
+	},
 	{
 		version: '2.52',
 		date: '2026-07-05',

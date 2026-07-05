@@ -2,10 +2,20 @@
 
 基于微信云开发的摄影工作室内部经营小程序，覆盖档期、订单、收款、员工业绩提成、工资结算、小程序内管理中心和 AI 小助手配置。
 
-当前本地代码版本：`v2.52`
+当前本地代码版本：`v2.53`
 
-当前开源稳定基线：`v2.52.0`
+当前开源稳定基线：`v2.53.0`
 最近本地修改时间：`2026-07-05`
+
+## v2.53.0 Release Notes
+
+Prepare the migration path from WeChat CloudBase to a self-hosted backend without changing the current runtime path.
+
+Key changes:
+- Added `docs/migration/server-migration-prep-v2.53.md`.
+- Documented CloudBase binding points: `wx.cloud.callFunction`, `mcloud`, cloud database, cloud storage, `getWXContext`, scheduled job, and live patch.
+- Proposed a compatible HTTPS gateway so `cloud_helper.js` can switch transport before individual pages are rewritten.
+- Set the staged migration order: server shell, work pet AI, file storage, workbench read APIs, low-risk writes, finance/payroll/audit, then legacy admin and content modules.
 
 ## v2.52.0 Release Notes
 

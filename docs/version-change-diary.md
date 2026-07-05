@@ -1,3 +1,45 @@
+## v2.53 - 2026-07-05
+
+### Change Level
+
+Patch documentation and migration-preparation update, v2.52 -> v2.53, +0.01.
+
+### Goal
+
+Prepare the project to migrate from WeChat CloudBase to a self-hosted backend while keeping the current production runtime unchanged.
+
+### Key Changes
+
+- Added `docs/migration/server-migration-prep-v2.53.md`.
+- Documented current CloudBase dependencies: `wx.cloud.callFunction`, `mcloud`, `wx-server-sdk`, cloud database, cloud storage, `getWXContext`, cloud logger, scheduled job, and live patch.
+- Recorded route migration surface: 173 `mcloud` routes, with 56 `work/*` routes and 88 `admin/*` routes.
+- Proposed a compatible HTTPS gateway that keeps the current `{ route, PID, token, params }` request shape.
+- Recommended the migration order: server shell, work pet AI, file storage, workbench read APIs, low-risk writes, finance/payroll/audit, then legacy admin/content/appointment modules.
+
+### Files
+
+- docs/migration/server-migration-prep-v2.53.md
+- miniprogram/version.js
+- miniprogram/setting/setting.js
+- CHANGELOG.md
+- README.md
+- docs/version-change-diary.md
+
+### Verification
+
+- `mcloud` route table parsed successfully for route-count verification.
+- Documentation-only preparation; no runtime path, cloud function, database, cloud storage, or production configuration was changed.
+
+### Deployment Status
+
+- WeChat development version `2.53` uploaded successfully; package size `1.6 MB` / `1,670,206 Byte`.
+- Local commit, remote push, and finish closeout are handled as part of this v2.53 closeout.
+
+### Remaining Risk
+
+- The actual server skeleton, transport switch, database adapter, object storage adapter, and data export scripts are not implemented in this version.
+- Finance, payroll, audit, and production data migration still require a separate version with backup, reconciliation, and rollback scripts.
+
 ## v2.52 - 2026-07-05
 
 ### Change Level

@@ -1,3 +1,25 @@
+## v2.53 - 2026-07-05
+
+Prepare the self-hosted backend migration path without changing the current WeChat CloudBase runtime.
+
+### Documentation
+
+- Added `docs/migration/server-migration-prep-v2.53.md`.
+- Recorded current backend facts: `cloud_helper.js` -> `wx.cloud.callFunction` -> `mcloud` -> route/controller/service/model.
+- Counted the migration surface: 173 `mcloud` routes, including 56 `work/*` routes and 88 `admin/*` routes.
+- Listed CloudBase dependencies that must be replaced or adapted: `wx-server-sdk`, cloud database, cloud storage, `getWXContext`, cloud logger, scheduled job, and live patch.
+- Defined the staged migration order: server gateway shell, work pet AI, file storage, workbench read APIs, low-risk writes, finance/payroll/audit, then legacy admin/content/appointment modules.
+
+### Verification
+
+- Documentation-only migration preparation; no runtime path, cloud function, database, cloud storage, or production configuration was changed.
+- `mcloud` route table parsed successfully for route-count verification.
+
+### Deployment
+
+- WeChat development version `2.53` uploaded successfully; package size `1.6 MB` / `1,670,206 Byte`.
+- Local commit, remote push, and finish closeout are handled as part of this v2.53 closeout.
+
 ## v2.52 - 2026-07-05
 
 Fix the work pet first-conversation reply display and add a first-principles architecture review/adversarial multi-agent review phase baseline after the v2.51 MiMo fix.

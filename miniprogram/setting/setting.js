@@ -3,10 +3,10 @@ module.exports = {
 	CLOUD_ID: 'yunyukeji-d4g7waei5d5d6cdeb', //云服务id ,本地测试环境
 
 	// #### 版本信息
-	VER: 'v2.52',
-	APP_VERSION: '2.52',
+	VER: 'v2.53',
+	APP_VERSION: '2.53',
 	APP_VERSION_DATE: '2026-07-05',
-	APP_VERSION_NAME: '小猫首轮回复修复与架构审查',
+	APP_VERSION_NAME: '自有服务器迁移准备',
 	COMPANY: '云屿摄影｜技术由云屿科技支持',
 
 	// #### 系统参数
