@@ -19,7 +19,8 @@ Restore the work pet order/schedule creation path when AI returns `create_order`
 ### Deployment
 
 - WeChat development version `2.55` uploaded successfully; package size `1.6 MB` / `1,681,448 Byte`.
-- Cloud function incremental deploy for `work_ai_service_live_patch.js` and `index.js` was attempted twice but failed with WeChat Cloud API signing error `getCloudAPISignedHeader ret=41002 system error`; cloud deployment needs a later retry from DevTools/CloudBase.
+- Cloud function incremental deploy later succeeded for `work_ai_service_live_patch.js` (`40.5 KB`) and `index.js` (`450 B`) on `mcloud`.
+- `mcloud` info check after deployment returned `Active`, timeout `20`, runtime `Nodejs16.13`.
 
 ### Remaining Risk
 
