@@ -1,3 +1,25 @@
+## v2.56 - 2026-07-05
+
+Prevent screenshot order recording from being hijacked by the user instruction text.
+
+### Fixes
+
+- Do not run quick text order creation when the current message has image attachments.
+- Require an explicit date for quick text order creation instead of silently using the current calendar day.
+- Keep parsed `create_order` actions working so screenshot-recognized facts still save through `work/order_save`.
+
+### Verification
+
+- `node --check miniprogram/cmpts/work_pet/work_pet.js` passed.
+- Regression simulation passed: the default screenshot instruction prompt with attachments returned `null` and did not call order save.
+- Regression simulation passed: no-date text such as "help me record this" returned `null` and did not call order save.
+- Regression simulation passed: parsed screenshot `create_order` action preserved date/customer/amount data and saved through the existing order-save path.
+
+### Deployment
+
+- WeChat development version `2.56` uploaded successfully; package size `1.6 MB` / `1,682,366 Byte`.
+- No cloud function code changed in v2.56; the v2.55 `mcloud` live patch remains deployed and active.
+
 ## v2.55 - 2026-07-05
 
 Restore the work pet order/schedule creation path when AI returns `create_order` / `create_orders` JSON as visible text instead of an already-executed backend action.

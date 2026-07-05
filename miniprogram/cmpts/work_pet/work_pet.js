@@ -268,13 +268,13 @@ function normalizeQuickDate(text, baseDate = '') {
 	return '';
 }
 
-function extractQuickCreateOrderIntent(text, pageContext = {}) {
+function extractQuickCreateOrderIntent(text, pageContext = {}, options = {}) {
 	text = String(text || '').trim();
 	if (!text) return null;
 	if (!/(新增|记录|登记|录入|创建|添加|安排|预约|约拍|记个|记一个|录个|录一个|下单|订单|档期)/.test(text)) return null;
 	if (/(查询|查看|看看|有没有|有无|空不空|忙不忙|多少|列表|统计)/.test(text) && !/(新增|记录|登记|录入|创建|添加|安排|预约|约拍|记个|记一个|录个|录一个|下单)/.test(text)) return null;
 	let dateMatch = text.match(/(\d{4}[-/.]\d{1,2}[-/.]\d{1,2}|\d{1,2}[/.月-]\d{1,2}(?:日|号)?)/);
-	let date = dateMatch ? normalizeQuickDate(dateMatch[1]) : (pageContext.day || '');
+	let date = dateMatch ? normalizeQuickDate(dateMatch[1]) : (options.allowPageDate ? (pageContext.day || '') : '');
 	if (!date) return null;
 	let customer = '';
 	let customerPatterns = [
@@ -1142,7 +1142,7 @@ Component({
 					let history = trimMessages(messages.slice(0, -1));
 
 					// B19: Try streaming first for normal AI chat (no quick/missedImage shortcuts)
-					let quickRet = await this._tryHandleQuickCreateOrder(text);
+					let quickRet = await this._tryHandleQuickCreateOrder(text, { hasAttachments: attachments.length > 0 });
 					if (!quickRet) quickRet = shouldQuickAckNoSupplement(text, history)
 						? { action: 'none', reply: '收到，不补充。本次对话不再继续调用 AI。' }
 						: await this._tryHandleQuickDateUpdate(text, history);
@@ -1325,7 +1325,8 @@ Component({
 				reply: `\u5df2\u65b0\u589e\u8ba2\u5355\u6863\u671f\uff1a${intent.date} ${intent.time || ''}\uff0c${order.ORDER_TYPE_NAME}\uff0c\u5ba2\u6237${intent.customer}\u3002\u5df2\u8d70\u5f53\u524d\u8d26\u53f7\u6743\u9650\u4fdd\u5b58\uff0c\u5e76\u5199\u5165\u56e2\u961f\u5c0f\u8bb0\u5ba1\u67e5\u6d41\u6c34\u3002`,
 			};
 		},
-		async _tryHandleQuickCreateOrder(text) {
+		async _tryHandleQuickCreateOrder(text, options = {}) {
+			if (options && options.hasAttachments) return null;
 			let pageContext = this._getPageContext();
 			let intent = extractQuickCreateOrderIntent(text, pageContext);
 			if (!intent) return null;
@@ -1871,7 +1872,7 @@ Component({
 		async _sendChatLegacy(text, history, attachments) {
 			let reply = '';
 			let missedImage = findMissedImageFollowup(text, history);
-			let quickRet = await this._tryHandleQuickCreateOrder(text);
+			let quickRet = await this._tryHandleQuickCreateOrder(text, { hasAttachments: (attachments || []).length > 0 });
 			if (!quickRet) quickRet = shouldQuickAckNoSupplement(text, history)
 				? { action: 'none', reply: '收到，不补充。本次对话不再继续调用 AI。' }
 				: await this._tryHandleQuickDateUpdate(text, history);

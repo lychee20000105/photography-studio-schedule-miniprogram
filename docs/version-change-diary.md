@@ -1,3 +1,51 @@
+## v2.56 - 2026-07-05
+
+### Change Level
+
+Patch runtime guard, v2.55 -> v2.56, +0.01.
+
+### Goal
+
+Stop screenshot order recording from creating fake orders based on the instruction text, such as using the current calendar day and prompt fragments as the order facts.
+
+### First-Principles Diagnosis
+
+- In screenshot mode, the user's text is an instruction about how to process the image.
+- The order facts must come from the image-recognition result or parsed AI action data.
+- A write action is only valid when it has real order facts: date, customer, project/type, and optional amount/place/note.
+- Therefore, quick text fallback must not execute before image recognition when attachments exist.
+
+### Key Changes
+
+- Disabled `_tryHandleQuickCreateOrder()` when the current message has image attachments.
+- Required an explicit date for quick text order creation instead of silently using `pageContext.day`.
+- Kept `_tryHandleAgentActionReply()` intact so parsed `create_order` data from screenshot recognition still saves through `work/order_save`.
+
+### Files
+
+- miniprogram/cmpts/work_pet/work_pet.js
+- miniprogram/version.js
+- miniprogram/setting/setting.js
+- CHANGELOG.md
+- README.md
+- docs/version-change-diary.md
+
+### Verification
+
+- `node --check miniprogram/cmpts/work_pet/work_pet.js` passed.
+- Regression simulation: the default screenshot instruction prompt with attachments returned `null` and did not save an order.
+- Regression simulation: no-date text returned `null` and did not save an order.
+- Regression simulation: parsed screenshot `create_order` action still saved through the order-save path and preserved the supplied date/customer/amount.
+
+### Deployment Status
+
+- WeChat development version `2.56` uploaded successfully; package size `1.6 MB` / `1,682,366 Byte`.
+- No cloud function code changed in v2.56; the v2.55 `mcloud` live patch remains deployed and active.
+
+### Remaining Risk
+
+- A real phone-side screenshot recognition test should confirm that the upstream AI returns the image facts as action data after this guard stops the prompt text from short-circuiting the flow.
+
 ## v2.55 - 2026-07-05
 
 ### Change Level

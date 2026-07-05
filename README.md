@@ -2,10 +2,20 @@
 
 基于微信云开发的摄影工作室内部经营小程序，覆盖档期、订单、收款、员工业绩提成、工资结算、小程序内管理中心和 AI 小助手配置。
 
-当前本地代码版本：`v2.55`
+当前本地代码版本：`v2.56`
 
-当前开源稳定基线：`v2.55.0`
+当前开源稳定基线：`v2.56.0`
 最近本地修改时间：`2026-07-05`
+
+## v2.56.0 Release Notes
+
+Prevent screenshot order recording from being hijacked by the user instruction text. When a message includes images, the prompt is treated as an instruction only; order facts must come from parsed AI action data.
+
+Key changes:
+- Do not run quick text order creation when image attachments are present.
+- Require an explicit date for quick text order creation instead of silently using the current calendar day.
+- Keep parsed `create_order` actions working for screenshot recognition results.
+- Verified that the image instruction prompt does not create a fake current-day order, no-date text does not create an order, and parsed screenshot action data still saves.
 
 ## v2.55.0 Release Notes
 

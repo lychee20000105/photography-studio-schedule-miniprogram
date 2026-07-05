@@ -1,16 +1,29 @@
 module.exports = {
-	current: '2.55',
-	previous: '2.54',
+	current: '2.56',
+	previous: '2.55',
 	date: '2026-07-05',
-	time: '15:30 CST',
+	time: '15:25 CST',
 	level: 'patch',
-	levelText: 'Work pet order action restore',
-	name: 'Work pet order action restore',
-	summary: 'Restore the work pet schedule/order creation path when AI returns create_order/create_orders JSON as text, and keep order writes behind the existing account-permission save route.',
+	levelText: 'Work pet screenshot order guard',
+	name: 'Work pet screenshot order guard',
+	summary: 'Prevent screenshot order recording from being hijacked by the user instruction text; image facts must come from AI action data, not the prompt.',
 	changeLog: '/docs/version-change-diary.md',
 	history: [
 
+
 	{
+		version: '2.56',
+		date: '2026-07-05',
+		name: 'Work pet screenshot order guard',
+		summary: 'Prevent screenshot order recording from being hijacked by the instruction text and creating orders with the current page date or prompt fragments as customer names.',
+		items: [
+			'Disabled quick text order creation when the current message has image attachments.',
+			'Required an explicit date for quick text order creation instead of silently using the current calendar day.',
+			'Kept parsed AI create_order actions working so screenshot facts can still be saved through work/order_save.',
+			'Added regression verification for image-instruction prompts, no-date prompts, and parsed screenshot action saving.',
+		],
+	},
+{
 		version: '2.55',
 		date: '2026-07-05',
 		name: 'Work pet order action restore',
