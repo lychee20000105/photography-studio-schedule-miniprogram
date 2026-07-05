@@ -45,6 +45,25 @@ const DEFAULT_CONFIG = {
 	maxTokens: 600,
 };
 
+const PERSONALITY_MAP = {
+	ops_cat: {
+		name: '值班小猫',
+		prompt: '性格：稳、细、会主动补漏。像摄影工作室里认真值班的伙伴，先把档期、客户、金额、参与人、附件这些关键点盯住；表达温和但不啰嗦。',
+	},
+	gentle_cat: {
+		name: '温柔小猫',
+		prompt: '性格：温柔、耐心、安抚感强。适合面对新员工、客户跟进话术、复杂信息整理；遇到缺信息时用轻柔方式追问。',
+	},
+	strict_cat: {
+		name: '审查小猫',
+		prompt: '性格：谨慎、专业、偏审核。对收款、提成、工资、取消、作废、审核等高风险事项要先核对对象、金额、日期、原因和唯一性；不要因敏感就自称不能操作，当前登录账号有权限时交给工具执行，后台会做最终权限和数据校验。',
+	},
+	sales_cat: {
+		name: '成交小猫',
+		prompt: '性格：懂销售、会提炼卖点。适合客户跟进、报价解释、拍摄服务推荐、活动话术；说话真诚，不夸大承诺。',
+	},
+};
+
 const LOCAL_APP_KNOWLEDGE = [
 	'����Ŀ��λ����Ӱ�����ҿɶ��ο����ĵ��ڡ�������Ա��ҵ������빤�ʽ���С����������Ӱ�ǰ������ú���ʵҵ��������',
 	'���Ĺ���̨ģ�飺����������ÿ�����顢��������/�༭/ȡ��������ڡ�С�ǡ���Ϣ���롢��Ϣ�����ⷴ�����ҵ�ҵ�����ҵĹ��ʡ�',
@@ -332,9 +351,10 @@ class WorkAiService extends WorkPermissionService {
 	async _getProvidersConfig() {
 		let raw = await setupUtil.get(PROVIDERS_STORE_KEY);
 		if (raw && !raw.providers && raw.providerName) {
+			let providerId = isMimoApi(raw.apiUrl, raw.providerName) ? 'mimo' : 'agnes';
 			let migrated = {
 				providers: [{
-					id: 'agnes',
+					id: providerId,
 					providerName: raw.providerName || DEFAULT_CONFIG.providerName,
 					apiUrl: raw.apiUrl || DEFAULT_CONFIG.apiUrl,
 					model: raw.model || DEFAULT_CONFIG.model,
@@ -343,12 +363,31 @@ class WorkAiService extends WorkPermissionService {
 					apiKey: raw.apiKey || DEFAULT_CONFIG.apiKey,
 					visionApiKey: raw.visionApiKey || '',
 				}],
-				activeProviderId: 'agnes',
+				activeProviderId: providerId,
 			};
 			await setupUtil.set(PROVIDERS_STORE_KEY, migrated);
 			return migrated;
 		}
 		if (!raw || !raw.providers || !raw.providers.length) {
+			let legacy = await setupUtil.get(SETUP_KEY);
+			if (legacy && (legacy.apiKey || legacy.apiUrl || legacy.model || legacy.providerName)) {
+				let providerId = isMimoApi(legacy.apiUrl, legacy.providerName) ? 'mimo' : 'agnes';
+				let migrated = {
+					providers: [{
+						id: providerId,
+						providerName: legacy.providerName || DEFAULT_CONFIG.providerName,
+						apiUrl: legacy.apiUrl || DEFAULT_CONFIG.apiUrl,
+						model: normalizeModelForApi(legacy.model || DEFAULT_CONFIG.model, legacy.apiUrl, legacy.providerName),
+						visionApiUrl: legacy.visionApiUrl || '',
+						visionModel: legacy.visionModel ? normalizeModelForApi(legacy.visionModel, legacy.visionApiUrl || legacy.apiUrl, legacy.providerName) : '',
+						apiKey: legacy.apiKey || DEFAULT_CONFIG.apiKey,
+						visionApiKey: legacy.visionApiKey || '',
+					}],
+					activeProviderId: providerId,
+				};
+				await setupUtil.set(PROVIDERS_STORE_KEY, migrated);
+				return migrated;
+			}
 			let defaults = {
 				providers: this._getDefaultProviders(),
 				activeProviderId: 'agnes',

@@ -2,11 +2,38 @@ const Module = require('module');
 const path = require('path');
 const zlib = require('zlib');
 
+const virtualTargets = Object.create(null);
+const originalResolveFilename = Module._resolveFilename;
+
+function normalizeTarget(p) {
+	return path.normalize(p);
+}
+
+function resolveVirtualRequest(request, parent) {
+	if (!parent || !parent.filename || !request || request[0] !== '.') return '';
+	let base = normalizeTarget(path.resolve(path.dirname(parent.filename), request));
+	let candidates = [base];
+	if (!path.extname(base)) candidates.push(base + '.js');
+	for (let i = 0; i < candidates.length; i++) {
+		let candidate = normalizeTarget(candidates[i]);
+		if (virtualTargets[candidate]) return candidate;
+	}
+	return '';
+}
+
+Module._resolveFilename = function patchedResolveFilename(request, parent, isMain, options) {
+	let virtualTarget = resolveVirtualRequest(request, parent);
+	if (virtualTarget) return virtualTarget;
+	return originalResolveFilename.call(this, request, parent, isMain, options);
+};
+
 function inflate(payload) {
 	return zlib.gunzipSync(Buffer.from(payload, 'base64')).toString('utf8');
 }
 
 function compilePatchedModule(target, source) {
+	target = normalizeTarget(target);
+	virtualTargets[target] = true;
 	const patchedModule = new Module(target, module.parent);
 	patchedModule.filename = target;
 	patchedModule.paths = Module._nodeModulePaths(path.dirname(target));

@@ -2,10 +2,28 @@
 
 基于微信云开发的摄影工作室内部经营小程序，覆盖档期、订单、收款、员工业绩提成、工资结算、小程序内管理中心和 AI 小助手配置。
 
-当前本地代码版本：`v2.48`
+当前本地代码版本：`v2.50`
 
-当前开源稳定基线：`v2.48.0`
-最近本地修改时间：`2026-07-04`
+当前开源稳定基线：`v2.50.0`
+最近本地修改时间：`2026-07-05`
+
+## v2.50.0 Release Notes
+
+Restore the work pet admin AI config route and verify the MiMo cloud chat route after the Xiaomi MiMo recharge. The pet now loads the active MiMo provider from cloud setup storage and returns a real model reply through `work/ai_chat`.
+
+Key changes:
+- Restored the missing backend `PERSONALITY_MAP` constant used by the AI config service.
+- Kept MiMo as the migrated active provider with model `mimo-v2.5`.
+- Verified `work/admin_ai_config_get` with code 200 and `work/ai_chat` with `OK0705E`, provider `MiMo`, model `mimo-v2.5`, and real usage tokens.
+
+## v2.49.0 Release Notes
+
+Keep the verified MiMo work pet route stable after cloud-function cold starts. If the new multi-provider config store is empty, the cloud AI service now migrates the legacy saved MiMo config before falling back to blank defaults.
+
+Key changes:
+- Read legacy `WORK_AI_CHAT_CONFIG` when `WORK_AI_PROVIDERS_CONFIG` is empty.
+- Preserve the active provider as `mimo` when the saved Base URL points to `xiaomimimo.com`.
+- Verified direct MiMo connectivity with `OK0704G` and the work pet `work/ai_chat` route with `OK0704F`.
 
 ## v2.48.0 Release Notes
 

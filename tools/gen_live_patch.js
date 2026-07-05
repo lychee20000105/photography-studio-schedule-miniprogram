@@ -61,11 +61,38 @@ const HEADER = `const Module = require('module');
 const path = require('path');
 const zlib = require('zlib');
 
+const virtualTargets = Object.create(null);
+const originalResolveFilename = Module._resolveFilename;
+
+function normalizeTarget(p) {
+\treturn path.normalize(p);
+}
+
+function resolveVirtualRequest(request, parent) {
+\tif (!parent || !parent.filename || !request || request[0] !== '.') return '';
+\tlet base = normalizeTarget(path.resolve(path.dirname(parent.filename), request));
+\tlet candidates = [base];
+\tif (!path.extname(base)) candidates.push(base + '.js');
+\tfor (let i = 0; i < candidates.length; i++) {
+\t\tlet candidate = normalizeTarget(candidates[i]);
+\t\tif (virtualTargets[candidate]) return candidate;
+\t}
+\treturn '';
+}
+
+Module._resolveFilename = function patchedResolveFilename(request, parent, isMain, options) {
+\tlet virtualTarget = resolveVirtualRequest(request, parent);
+\tif (virtualTarget) return virtualTarget;
+\treturn originalResolveFilename.call(this, request, parent, isMain, options);
+};
+
 function inflate(payload) {
 \treturn zlib.gunzipSync(Buffer.from(payload, 'base64')).toString('utf8');
 }
 
 function compilePatchedModule(target, source) {
+\ttarget = normalizeTarget(target);
+\tvirtualTargets[target] = true;
 \tconst patchedModule = new Module(target, module.parent);
 \tpatchedModule.filename = target;
 \tpatchedModule.paths = Module._nodeModulePaths(path.dirname(target));

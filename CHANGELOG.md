@@ -1,3 +1,46 @@
+## v2.50 - 2026-07-05
+
+Restore the work pet admin AI config route and verify the MiMo cloud chat route after the Xiaomi MiMo recharge.
+
+### Fixes
+
+- Restored the missing backend `PERSONALITY_MAP` constant used by `WorkAiService.getAdminConfig()`, fixing the `work/admin_ai_config_get` 500 error.
+- Kept the legacy-to-provider migration from v2.49 so MiMo remains the active provider on cold-started cloud instances.
+- Removed temporary `__codex_*` diagnostic routes after the cloud runtime error was confirmed and fixed.
+
+### Verification
+
+- Direct MiMo API test returned `OK0705C`, model `mimo-v2.5`, and real usage tokens.
+- Formal `work/admin_ai_config_get` cloud route returned code 200 with active provider `mimo`, provider `MiMo`, model `mimo-v2.5`, and `hasApiKey: true`.
+- Formal `work/ai_chat` cloud route returned `OK0705E`, provider `MiMo`, model `mimo-v2.5`, and real usage tokens.
+
+### Deployment
+
+- `work_ai_service_live_patch.js` incrementally deployed to `mcloud`; patch size `46.5 KB`.
+- `index.js` redeployed as the clean production cloud-function entry; patch size `347 B`.
+- WeChat development version `2.50` uploaded successfully; package size `1.6 MB` / `1,667,883 Byte`.
+- Git checkpoint and remote push are handled as part of this v2.50 closeout.
+
+## v2.49 - 2026-07-04
+
+Keep the verified MiMo work pet route stable after cloud-function cold starts by migrating the legacy AI config into the newer providers store.
+
+### Fixes
+
+- When `WORK_AI_PROVIDERS_CONFIG` is empty, read the legacy `WORK_AI_CHAT_CONFIG` before creating blank default providers.
+- Preserve the active provider id as `mimo` when the saved legacy Base URL or provider name points to Xiaomi MiMo.
+- Keep saved API keys inside cloud setup storage only; no keys are written to source, docs, logs, or commits.
+
+### Verification
+
+- Direct MiMo API test returned `OK0704G` with model `mimo-v2.5`.
+- Work pet `work/ai_chat` cloud route returned `OK0704F`, provider `MiMo`, model `mimo-v2.5`, and real usage tokens.
+- Superseded by v2.50 after the missing backend personality map was found and fixed.
+
+### Deployment
+
+- Superseded by v2.50 before final development upload.
+
 ## v2.48 - 2026-07-04
 
 Make the work pet distinguish a cloud-function fallback from a real upstream model reply.

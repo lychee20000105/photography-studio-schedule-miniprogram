@@ -1,14 +1,36 @@
 module.exports = {
-	current: '2.48',
-	previous: '2.47',
-	date: '2026-07-04',
-	time: '20:45 CST',
+	current: '2.50',
+	previous: '2.49',
+	date: '2026-07-05',
+	time: '10:42 CST',
 	level: 'patch',
-	levelText: 'Work pet AI unavailable state handling',
-	name: 'Work pet AI unavailable state handling',
-	summary: 'Make the work pet treat cloud aiUnavailable responses as real upstream API failures instead of normal assistant replies.',
+	levelText: 'Work pet MiMo route stabilization',
+	name: 'Work pet MiMo route stabilization',
+	summary: 'Restore the work pet admin config route and verify the MiMo cloud chat route with a real model reply after recharge.',
 	changeLog: '/docs/version-change-diary.md',
 	history: [
+	{
+		version: '2.50',
+		date: '2026-07-05',
+		name: 'Work pet MiMo route stabilization',
+		summary: 'Restore the work pet admin config route and verify the MiMo cloud chat route with a real model reply after recharge.',
+		items: [
+			'Restored the missing PERSONALITY_MAP backend constant so work/admin_ai_config_get no longer returns 500.',
+			'Kept the migrated MiMo provider active with model mimo-v2.5 and an existing cloud-stored API key.',
+			'Regenerated and deployed the live patch, removed temporary diagnostic routes, and verified work/ai_chat returned OK0705E with real usage tokens.',
+		],
+	},
+	{
+		version: '2.49',
+		date: '2026-07-04',
+		name: 'Work pet MiMo provider migration',
+		summary: 'Migrate legacy AI provider config into the providers store so cold-started cloud instances keep using the verified MiMo configuration.',
+		items: [
+			'When WORK_AI_PROVIDERS_CONFIG is empty, read the legacy WORK_AI_CHAT_CONFIG before falling back to blank defaults.',
+			'Preserve MiMo or Agnes provider identity during migration and keep the active provider aligned with the saved Base URL.',
+			'Verified direct MiMo connectivity and the work/ai_chat pet route with real OK markers after recharge.',
+		],
+	},
 	{
 		version: '2.48',
 		date: '2026-07-04',

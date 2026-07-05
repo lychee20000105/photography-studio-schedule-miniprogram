@@ -1,3 +1,79 @@
+## v2.50 - 2026-07-05
+
+### Change Level
+
+Patch fix, v2.49 -> v2.50, +0.01.
+
+### Goal
+
+Make the work pet agent usable end to end after the Xiaomi MiMo recharge: admin config must load, MiMo must remain active, and the pet chat route must return a real model reply.
+
+### Key Changes
+
+- Restored the missing `PERSONALITY_MAP` constant in `WorkAiService`, fixing `work/admin_ai_config_get` returning 500.
+- Preserved the v2.49 legacy MiMo provider migration and active provider id selection.
+- Removed temporary diagnostic `__codex_*` routes after confirming the runtime error.
+
+### Files
+
+- cloudfunctions/mcloud/project/B00/service/work_ai_service.js
+- cloudfunctions/mcloud/work_ai_service_live_patch.js
+- cloudfunctions/mcloud/index.js
+- miniprogram/version.js
+- miniprogram/setting/setting.js
+- CHANGELOG.md
+- README.md
+- docs/version-change-diary.md
+
+### Verification
+
+- Direct MiMo API test returned `OK0705C`, model `mimo-v2.5`, total tokens `295`.
+- Formal `work/admin_ai_config_get` cloud route returned code 200, active provider `mimo`, provider `MiMo`, model `mimo-v2.5`, and `hasApiKey: true`.
+- Formal `work/ai_chat` cloud route returned `OK0705E`, provider `MiMo`, model `mimo-v2.5`, total tokens `489`.
+
+### Deployment Status
+
+- `work_ai_service_live_patch.js` incrementally deployed to `mcloud`; patch size `46.5 KB`.
+- `index.js` redeployed without temporary diagnostic routes; patch size `347 B`.
+- WeChat development version `2.50` uploaded successfully; package size `1.6 MB` / `1,667,883 Byte`.
+- Git checkpoint and remote push are handled as part of this v2.50 closeout.
+
+## v2.49 - 2026-07-04
+
+### Change Level
+
+Patch fix, v2.48 -> v2.49, +0.01.
+
+### Goal
+
+Keep the verified MiMo work pet route stable after cloud-function cold starts and after the admin AI config page moves between legacy and multi-provider storage.
+
+### Key Changes
+
+- `WorkAiService._getProvidersConfig` now reads legacy `WORK_AI_CHAT_CONFIG` when `WORK_AI_PROVIDERS_CONFIG` is empty.
+- Legacy MiMo configs are migrated with active provider id `mimo`; non-MiMo compatible configs keep the Agnes/default path.
+- API keys remain in cloud setup storage only and are not written to source, docs, logs, screenshots, or commits.
+
+### Files
+
+- cloudfunctions/mcloud/project/B00/service/work_ai_service.js
+- cloudfunctions/mcloud/work_ai_service_live_patch.js
+- miniprogram/version.js
+- miniprogram/setting/setting.js
+- CHANGELOG.md
+- README.md
+- docs/version-change-diary.md
+
+### Verification
+
+- Direct MiMo API test returned `OK0704G`, model `mimo-v2.5`, total tokens `57`.
+- Work pet `work/ai_chat` cloud route returned `OK0704F`, provider `MiMo`, model `mimo-v2.5`, with real usage tokens.
+- Superseded by v2.50 after the missing backend personality map was found and fixed.
+
+### Deployment Status
+
+- Superseded by v2.50 before final development upload.
+
 ## v2.48 - 2026-07-04
 
 ### Change Level
