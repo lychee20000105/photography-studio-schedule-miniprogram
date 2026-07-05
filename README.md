@@ -2,10 +2,21 @@
 
 基于微信云开发的摄影工作室内部经营小程序，覆盖档期、订单、收款、员工业绩提成、工资结算、小程序内管理中心和 AI 小助手配置。
 
-当前本地代码版本：`v2.51`
+当前本地代码版本：`v2.52`
 
-当前开源稳定基线：`v2.51.0`
+当前开源稳定基线：`v2.52.0`
 最近本地修改时间：`2026-07-05`
+
+## v2.52.0 Release Notes
+
+Fix the work pet first-conversation reply display and add a first-principles architecture/adversarial review phase baseline after the MiMo repair. This version documents the real module boundaries, data facts, AI safety boundary, finance/payroll/audit risk surface, live patch rule, and release workflow.
+
+Key changes:
+- Added `docs/architecture/v2.52-first-principles-adversarial-review.md`.
+- Fixed the first new work pet conversation so the newly created `activeChatId` is reused before rendering the AI reply; the reply no longer gets saved silently outside the visible chat window.
+- Confirmed the v2.51 visible fixes: recent records are Chinese, the send button uses `发送`, and MiMo `work/ai_chat` returned a real post-deploy model reply.
+- Scoped v2.52 as a phase baseline for the workbench, work pet Agent, finance/payroll/audit, live patch, and release boundary; full appointment/CMS/gallery/service/user/traditional-admin architecture remains follow-up work.
+- Recorded non-blocking risks for later versions: historical encoding debt, oversized AI service responsibilities, dual admin-route permissions, and high-risk finance/payroll/audit coupling.
 
 ## v2.51.0 Release Notes
 

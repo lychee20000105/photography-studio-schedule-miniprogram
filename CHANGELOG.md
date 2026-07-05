@@ -1,3 +1,29 @@
+## v2.52 - 2026-07-05
+
+Fix the work pet first-conversation reply display and add a first-principles architecture review/adversarial multi-agent review phase baseline after the v2.51 MiMo fix.
+
+### Documentation
+
+- Added `docs/architecture/v2.52-first-principles-adversarial-review.md`.
+- Fixed first-conversation work pet rendering: when `_saveChat()` creates a new `activeChatId`, the current send flow now reuses it before rendering the AI reply.
+- Documented the core invariants: schedule facts, business/finance facts, permission facts, and release facts.
+- Mapped the current frontend -> `cloudHelper` -> `mcloud` -> route -> controller -> service -> model flow.
+- Recorded small-cat Agent boundaries, high-risk action confirmation, and why fallback replies do not count as real API success.
+- Scoped v2.52 as a phase baseline for the workbench, work pet Agent, finance/payroll/audit, live patch, and release boundary; full appointment/CMS/gallery/service/user/traditional-admin architecture remains follow-up work.
+- Captured non-blocking risks for later versions: historical encoding debt, oversized `work_ai_service.js`, live patch governance, dual admin-route permissions, and finance/payroll/audit coupling.
+
+### Verification
+
+- Current v2.51 evidence rechecked: recent version records are Chinese, the send button uses `发送`, and post-deploy MiMo `work/ai_chat` returned `OK0705-YYX8PK` with provider `MiMo`, model `mimo-v2.5`, and real usage tokens.
+- Fresh cloud API retest passed through DevTools automator: `work/ai_chat` returned `OK0705-3YJ9WE`, provider `MiMo`, model `mimo-v2.5`, and `usage.total_tokens=534`.
+- Frontend work pet component flow retested through DevTools automator after the first-conversation reply display fix.
+- First-conversation frontend retest passed after clearing local chat storage: assistant reply displayed `OK0705-6VU21B` in the current work pet chat window.
+
+### Deployment
+
+- WeChat development version `2.52` uploaded successfully; package size `1.6 MB` / `1,669,397 Byte`.
+- Local commit, remote push, and finish closeout are handled as part of this v2.52 closeout.
+
 ## v2.51 - 2026-07-05
 
 Fix the work pet chat UI after the Xiaomi MiMo recharge follow-up: the send button no longer renders as an entity/garbled string, recent update records are Chinese, the MiMo minimal fallback prompt is readable again, and the cloud chat route was retested with a real MiMo response.
@@ -20,7 +46,7 @@ Fix the work pet chat UI after the Xiaomi MiMo recharge follow-up: the send butt
 
 ### Deployment
 
-- `work_ai_service_live_patch.js` incrementally deployed to `mcloud`; patch size `46.6 KB`. WeChat development version `2.51` uploaded successfully; package size `1.6 MB` / `1,668,362 Byte`. Commit, push, and finish closeout are handled after verification.
+- `work_ai_service_live_patch.js` incrementally deployed to `mcloud`; patch size `46.6 KB`. WeChat development version `2.51` uploaded successfully; latest package size `1.6 MB` / `1,668,495 Byte`. Commit, push, and finish closeout were completed in commit `6782703`.
 - No audit submission and no production release.
 
 ## v2.50 - 2026-07-05

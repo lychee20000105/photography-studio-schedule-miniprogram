@@ -1,14 +1,26 @@
 module.exports = {
-	current: '2.51',
-	previous: '2.50',
+	current: '2.52',
+	previous: '2.51',
 	date: '2026-07-05',
-	time: '11:35 CST',
+	time: '11:07 CST',
 	level: 'patch',
-	levelText: '小猫 MiMo 连通性与按钮修复',
-	name: '小猫 MiMo 连通性与按钮修复',
-	summary: '修复小猫聊天发送按钮乱码，最近版本记录改为中文，并修正 MiMo 最小兜底请求提示词。',
+	levelText: '小猫首轮回复修复与架构审查',
+	name: '小猫首轮回复修复与架构审查',
+	summary: '修复小猫首次会话中 AI 回复已保存但不显示的问题，并补齐阶段性架构说明和多 agent 对抗式审查记录。',
 	changeLog: '/docs/version-change-diary.md',
 	history: [
+	{
+		version: '2.52',
+		date: '2026-07-05',
+		name: '小猫首轮回复修复与架构审查',
+		summary: '修复小猫首次会话中 AI 回复已保存但不显示的问题，并补齐工作台、小猫 Agent、财务/工资/审核和发布边界的阶段性架构审查。',
+		items: [
+			'修复小猫首次会话创建 activeChatId 后，AI 回复因旧 threadId 对比失败而不显示在当前聊天窗的问题。',
+			'新增 v2.52 架构审查文档，覆盖前端、云函数、数据层、小猫 Agent、财务/工资/审核、live patch 和发布链路。',
+			'确认 v2.51 已解决截图中的最近记录英文问题、发送按钮 x21 乱码问题，并真实测通 MiMo work/ai_chat。',
+			'记录非阻塞风险：历史编码债务、work_ai_service 职责过重、双后台权限和高风险财务动作改造需独立版本处理。',
+		],
+	},
 	{
 		version: '2.51',
 		date: '2026-07-05',

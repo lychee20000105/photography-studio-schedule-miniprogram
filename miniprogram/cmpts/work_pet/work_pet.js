@@ -966,6 +966,7 @@ Component({
 				let enrichedMsgs = enrichMessagesWithBlocks(messages);
 				this.setData({ chatMessages: enrichedMsgs, chatInput: '', chatAttachments: [], chatLoading: true, chatSending: true });
 				this._saveChat(messages, _sendThreadId);
+				if (!_sendThreadId && this.data.activeChatId) _sendThreadId = this.data.activeChatId;
 				this._scrollChatToBottom();
 
 				try {

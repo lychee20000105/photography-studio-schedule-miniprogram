@@ -215,7 +215,7 @@
 				<view class="pet-chat-input {{chatSending ? 'is-sending' : ''}}">
 					<button class="attach-btn {{uploadingAttachment?'is-disabled':''}}" loading="{{uploadingAttachment}}" disabled="{{uploadingAttachment || chatLoading}}" bindtap="bindAttachTap">+</button>
 					<input class="chat-text-input" value="{{chatInput}}" bindinput="bindChatInput" bindconfirm="bindChatSend" confirm-type="send" maxlength="800" placeholder="问问这只小猫..." adjust-position="{{true}}" bindfocus="bindInputFocus" />
-					<!-- B11: Send button with arrow icon, loading indicator when sending -->
+					<!-- B11: Send button with text label, loading indicator when sending -->
 					<view class="chat-send-btn {{(!chatInput && !chatAttachments.length) || chatLoading || chatSending ? 'is-disabled' : ''}}" bindtap="bindChatSend">
 						<view wx:if="{{chatSending || chatLoading}}" class="send-spinner"></view>
 						<text wx:else class="send-arrow">发送</text>

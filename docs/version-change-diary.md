@@ -1,3 +1,49 @@
+## v2.52 - 2026-07-05
+
+### Change Level
+
+Patch work pet frontend fix plus documentation and governance update, v2.51 -> v2.52, +0.01.
+
+### Goal
+
+After fixing the visible work pet issues, make the work pet first new conversation visibly show its AI reply, then document a phase architecture baseline from first principles and preserve a multi-agent adversarial review record before finish closeout.
+
+### Key Changes
+
+- Added `docs/architecture/v2.52-first-principles-adversarial-review.md`.
+- Fixed `work_pet.js` first-conversation reply display by reusing the newly created `activeChatId` after `_saveChat()`.
+- Defined the facts the system must protect: schedule, business/finance, permission, and release facts.
+- Mapped the current program flow from miniapp UI to cloud function route, controller, service, model, AI provider, and audit records.
+- Recorded small-cat Agent safety boundaries and high-risk confirmation rules.
+- Scoped the architecture result as a phase baseline for workbench, work pet Agent, finance/payroll/audit, live patch, and release boundaries rather than a complete final-program baseline.
+- Added review findings for dual admin routes (`admin/*` versus `work/admin_*`), live patch governance, and later full-module coverage work.
+- Preserved non-blocking architecture risks for later versions instead of mixing broad refactors into this patch.
+
+### Files
+
+- docs/architecture/v2.52-first-principles-adversarial-review.md
+- miniprogram/version.js
+- miniprogram/setting/setting.js
+- CHANGELOG.md
+- README.md
+- docs/version-change-diary.md
+
+### Verification
+
+- Rechecked current v2.51 evidence: recent version records are Chinese, the send button is `发送`, and post-deploy MiMo `work/ai_chat` returned `OK0705-YYX8PK` with provider `MiMo`, model `mimo-v2.5`, and `usage.total_tokens=774`.
+- Fresh cloud API retest through DevTools automator passed: `work/ai_chat` returned `OK0705-3YJ9WE`, provider `MiMo`, model `mimo-v2.5`, and `usage.total_tokens=534`.
+- Multi-agent adversarial review requested and incorporated into the v2.52 architecture record.
+- Frontend work pet first-conversation retest passed after clearing local chat storage: assistant reply displayed `OK0705-6VU21B` in the current chat window, and `chatLoading/chatSending` returned to false.
+
+### Deployment Status
+
+- WeChat development version `2.52` uploaded successfully; package size `1.6 MB` / `1,669,397 Byte`.
+- Local commit, remote push, and finish closeout are handled as part of this v2.52 closeout.
+
+### Remaining Risk
+
+- Historical encoding debt remains in older files and documents. This version documents the debt and does not attempt a broad restoration.
+
 ## v2.51 - 2026-07-05
 
 ### Change Level
@@ -45,7 +91,7 @@ After the Xiaomi MiMo recharge follow-up, make the work pet user-facing chat rel
 
 - `work_ai_service_live_patch.js` incrementally deployed to `mcloud`; patch size `46.6 KB`.
 - WeChat development version `2.51` uploaded successfully; latest package size `1.6 MB` / `1,668,495 Byte`.
-- Pending: commit, push, and finish closeout.
+- Commit, push, and finish closeout were completed in commit `6782703`.
 
 ### Remaining Risk
 
