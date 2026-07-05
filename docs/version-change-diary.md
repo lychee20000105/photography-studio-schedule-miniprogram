@@ -1,3 +1,45 @@
+## v2.54 - 2026-07-05
+
+### Change Level
+
+Patch documentation and migration-design update, v2.53 -> v2.54, +0.01.
+
+### Goal
+
+Design a complete first-principles migration plan that can support one controlled formal cutover from WeChat CloudBase to a self-hosted backend.
+
+### Key Changes
+
+- Added `docs/migration/one-shot-server-migration-plan-v2.54.md`.
+- Defined the one-shot migration principle: the official switch should be one action, but only after full import rehearsal, incremental catch-up, shadow verification, freeze-window validation, smoke tests, and rollback rehearsal.
+- Proposed the target architecture: miniapp transport adapter, HTTPS `mcloud` compatible gateway, session-based identity, database adapter, object storage adapter, cron replacement, structured logs, and rollback switch.
+- Listed all migration surfaces: main `mcloud` route, side-channel cloud calls, `OPENID`, cloud database, fileID/object storage, export files, `autoSendDaily`, cloud logger, and live patch.
+- Added cutover procedure, rollback triggers, acceptance gates, risk controls, and recommended execution schedule.
+
+### Files
+
+- docs/migration/one-shot-server-migration-plan-v2.54.md
+- miniprogram/version.js
+- miniprogram/setting/setting.js
+- CHANGELOG.md
+- README.md
+- docs/version-change-diary.md
+
+### Verification
+
+- Documentation-only design; no runtime path, cloud function, database, cloud storage, or production configuration was changed.
+- The migration plan includes data, file, identity, AI, finance/payroll/audit, side-channel, cutover, smoke-test, and rollback gates.
+
+### Deployment Status
+
+- WeChat development version `2.54` uploaded successfully; package size `1.6 MB` / `1,671,003 Byte`.
+- Local commit, remote push, and finish closeout are handled as part of this v2.54 closeout.
+
+### Remaining Risk
+
+- The server skeleton, transport switch, database adapter, object storage adapter, export/import scripts, shadow verifier, and rollback scripts still need implementation in separate versions.
+- A real one-shot production cutover cannot be attempted until rehearsal reports prove data, file, finance, identity, and rollback gates.
+
 ## v2.53 - 2026-07-05
 
 ### Change Level

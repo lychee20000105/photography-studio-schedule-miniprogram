@@ -2,10 +2,20 @@
 
 基于微信云开发的摄影工作室内部经营小程序，覆盖档期、订单、收款、员工业绩提成、工资结算、小程序内管理中心和 AI 小助手配置。
 
-当前本地代码版本：`v2.53`
+当前本地代码版本：`v2.54`
 
-当前开源稳定基线：`v2.53.0`
+当前开源稳定基线：`v2.54.0`
 最近本地修改时间：`2026-07-05`
+
+## v2.54.0 Release Notes
+
+Design the one-shot migration plan from WeChat CloudBase to a self-hosted backend. This version is documentation-only and does not change the current runtime path.
+
+Key changes:
+- Added `docs/migration/one-shot-server-migration-plan-v2.54.md`.
+- Defined the first-principles success condition: formal cutover should be a single controlled switch after full import, incremental catch-up, shadow verification, freeze window, smoke tests, and rollback rehearsal.
+- Proposed the target architecture: miniapp transport adapter, HTTPS `mcloud` compatible gateway, session identity, database adapter, object-storage adapter, cron replacement, structured logs, and rollback switch.
+- Listed migration gates for data, files, finance/payroll/audit, work pet AI, side-channel cloud calls, and official cutover.
 
 ## v2.53.0 Release Notes
 

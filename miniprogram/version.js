@@ -1,14 +1,26 @@
 module.exports = {
-	current: '2.53',
-	previous: '2.52',
+	current: '2.54',
+	previous: '2.53',
 	date: '2026-07-05',
-	time: '12:48 CST',
+	time: '13:17 CST',
 	level: 'patch',
-	levelText: '自有服务器迁移准备',
-	name: '自有服务器迁移准备',
-	summary: '补齐云开发迁移到自有服务器的准备文档，明确兼容网关、AI 小猫优先迁移、数据集合、对象存储、回滚和上线检查。',
+	levelText: '一次性迁移方案设计',
+	name: '一次性迁移方案设计',
+	summary: '从第一性原则补齐云开发到自有服务器的一次性完整迁移方案，覆盖兼容网关、身份、数据库、对象存储、影子校验、冻结切换、验收和回滚。',
 	changeLog: '/docs/version-change-diary.md',
 	history: [
+	{
+		version: '2.54',
+		date: '2026-07-05',
+		name: '一次性迁移方案设计',
+		summary: '新增自有服务器一次性完整迁移方案文档，只设计迁移执行手册，不改变当前云开发运行链路。',
+		items: [
+			'新增 docs/migration/one-shot-server-migration-plan-v2.54.md，用第一性原则定义一次性迁移成功的真实条件。',
+			'明确目标架构：小程序 transport adapter、HTTPS mcloud 兼容网关、身份 session、数据库适配层、对象存储适配层和定时任务替换。',
+			'补齐正式切换前的必需演练：全量导入、增量追平、影子校验、文件映射、财务工资对账和回滚演练。',
+			'给出冻结窗口内一次切换流程、smoke test 清单、回滚触发条件、风险控制和推荐排期。',
+		],
+	},
 	{
 		version: '2.53',
 		date: '2026-07-05',

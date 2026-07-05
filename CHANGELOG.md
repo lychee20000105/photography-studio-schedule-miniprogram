@@ -1,3 +1,25 @@
+## v2.54 - 2026-07-05
+
+Design the first-principles one-shot migration plan from WeChat CloudBase to a self-hosted backend without changing the current runtime path.
+
+### Documentation
+
+- Added `docs/migration/one-shot-server-migration-plan-v2.54.md`.
+- Defined the real condition for a successful one-shot migration: the formal cutover is one switch, but all risk must be exposed through rehearsals before that switch.
+- Covered target architecture, server compatibility gateway, session identity, PostgreSQL adapter, object storage adapter, cron replacement, structured logs, and rollback switch.
+- Added full migration phases: compatible shell, full import rehearsal, business shadow verification, incremental catch-up, freeze-window cutover, smoke tests, monitoring, and rollback.
+- Listed required gates for side-channel cloud calls, fileID mapping, finance/payroll/audit reconciliation, work pet AI verification, legal request domain, HTTPS, backup, and rollback.
+
+### Verification
+
+- Documentation-only migration design; no runtime path, cloud function, database, cloud storage, or production configuration was changed.
+- The plan explicitly keeps current CloudBase rollback available until the new backend is stable.
+
+### Deployment
+
+- WeChat development version `2.54` uploaded successfully; package size `1.6 MB` / `1,671,003 Byte`.
+- Local commit, remote push, and finish closeout are handled as part of this v2.54 closeout.
+
 ## v2.53 - 2026-07-05
 
 Prepare the self-hosted backend migration path without changing the current WeChat CloudBase runtime.
