@@ -8,6 +8,21 @@
 当前稳定基线：`v2.59.0`
 最近本地修改日期：`2026-07-08`
 
+## v2.60.0 Release Notes
+
+小猫截图识别乱码已修复。云函数小猫 AI 服务里的截图识别提示、工具 action 说明和录单结果文案已恢复为正常中文，并重新生成 `mcloud` AI live patch。
+
+关键变化：
+- 修复截图识别时进入模型上下文的核心 prompt、图片识别规则和页面上下文乱码。
+- 修复订单新增、批量新增、重复订单、缺客户名等录单返回文案乱码。
+- 本次只修云函数小猫 AI 链路，不改数据库结构、账号权限、档期页面和小游戏逻辑。
+
+验证：
+- `node --check cloudfunctions/mcloud/project/B00/service/work_ai_service.js` 通过。
+- `node --check cloudfunctions/mcloud/work_ai_service_live_patch.js` 通过。
+- live patch 解包验证：`work_ai_service.js` 与本地源码一致。
+- `mcloud` 增量部署成功，微信开发版 `2.60` 上传成功。
+
 ## v2.59.0 Release Notes
 
 小猫小游戏模块已改为两类：小猫店长养成、小猫守店塔防。旧的快拍、翻牌、2048 小游戏入口和逻辑已移除。

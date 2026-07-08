@@ -1,3 +1,50 @@
+## v2.60 - 2026-07-08
+
+### 改动级别
+
+小修复，v2.59 -> v2.60，+0.01。
+
+### 修改原因
+
+小猫助手在手机端识别截图时出现大量乱码，表现为聊天气泡里显示 `���`、`�` 等坏字符。第一性原则判断：前端气泡只是展示返回内容，真正污染点在云函数小猫 AI 服务里，截图识别和工具 action 的系统提示、页面上下文、图片识别规则、录单结果文案已经被历史编码问题写坏。简单 API 标记测试能通过，但真实“截图录单”链路会把坏提示送进模型或把坏文案返回给前端。
+
+### 关键变更
+
+- 修复 `work_ai_service.js` 中截图识别必经的 query type 分类、核心 prompt、工具 prompt、写入 action prompt 和图片识别 prompt。
+- 修复 `_buildAgentMessages()` 进入模型上下文的页面信息、员工列表、订单类型列表、长期记忆说明、应用摘要和图片识别补充说明。
+- 修复订单新增、批量新增、重复订单、缺客户名、缺订单列表、跳过订单等小猫录单结果文案。
+- 修复部分 AI 配置错误提示、接口地址校验提示和用户输入清洗中的乱码。
+- 重新生成 `work_ai_service_live_patch.js`，确保增量部署时云端使用修复后的小猫 AI 服务源码。
+
+### 涉及文件
+
+- `cloudfunctions/mcloud/project/B00/service/work_ai_service.js`
+- `cloudfunctions/mcloud/work_ai_service_live_patch.js`
+- `miniprogram/version.js`
+- `miniprogram/setting/setting.js`
+- `CHANGELOG.md`
+- `README.md`
+- `docs/version-change-diary.md`
+
+### 验证
+
+- `node --check cloudfunctions/mcloud/project/B00/service/work_ai_service.js` 通过。
+- `node --check cloudfunctions/mcloud/work_ai_service_live_patch.js` 通过。
+- live patch 解包验证通过：patch 内 `project/B00/service/work_ai_service.js` 与本地源码一致。
+- 截图识别关键链路区段扫描通过：核心 prompt、图片 prompt、消息构建、订单新增/批量新增返回文案均不再含 `U+FFFD`。
+- 云端 `work/ai_chat` 带附件结构回归通过：返回 `code=200`，provider `MiMo`，model `mimo-v2.5`，回复为正常中文，未再出现 `�/���`。
+- 本地日期/时间解析回归通过：`6月20日 -> 2026-06-20`，`下午3点半 -> 15:30`。
+
+### 部署状态
+
+- `mcloud` 已增量部署 `work_ai_service_live_patch.js`，包体 `56.4 KB`。
+- 微信开发版 `2.60` 已上传成功，包体 `1.6 MB` / `1,650,164 Byte`。
+- 本次未修改数据库结构、账号权限、档期页面和小游戏逻辑。
+
+### 剩余风险
+
+- `work_ai_service.js` 仍有历史全文件编码债，当前版本优先修复截图录单必经链路；如果后续要完全清零，需要单独做一次全文件中文恢复、云函数全量回归和业务动作回归。
+
 ## v2.59 - 2026-07-08
 
 ### 改动级别

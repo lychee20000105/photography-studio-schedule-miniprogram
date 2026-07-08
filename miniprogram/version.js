@@ -1,14 +1,26 @@
 module.exports = {
-  current: '2.59',
-  previous: '2.58',
+  current: '2.60',
+  previous: '2.59',
   date: '2026-07-08',
   time: 'CST',
-  level: 'minor',
-  levelText: '小游戏替换',
-  name: '小猫小游戏重做',
-  summary: '删除旧的快拍、翻牌、2048 小游戏入口与逻辑，改为小程序原生可运行的小猫店长养成和小猫守店塔防。',
+  level: 'patch',
+  levelText: '小猫乱码修复',
+  name: '小猫截图识别乱码修复',
+  summary: '修复云函数小猫 AI 截图识别链路中历史编码污染导致的乱码回复，恢复关键提示词、图片识别规则和订单录入结果文案。',
   changeLog: '/docs/version-change-diary.md',
   history: [
+    {
+      version: '2.60',
+      date: '2026-07-08',
+      name: '小猫截图识别乱码修复',
+      summary: '恢复小猫截图识别、工具 action 提示、页面上下文、历史图片提示和订单录入结果文案的中文内容，并重新生成 mcloud AI live patch。',
+      items: [
+        '修复小猫识别截图时进入模型的系统提示、工具提示和图片识别规则乱码。',
+        '修复订单新增、批量新增、重复订单提示、缺客户名等关键录单返回文案乱码。',
+        '重新生成 work_ai_service_live_patch.js，确保线上云函数增量部署使用修复后的源码。',
+        '保留历史全文件编码债，当前版本先修复截图录单必经链路，避免扩大业务逻辑风险。',
+      ],
+    },
     {
       version: '2.59',
       date: '2026-07-08',

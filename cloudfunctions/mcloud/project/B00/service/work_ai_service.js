@@ -1,5 +1,5 @@
 /**
- * Notes: ������Ӱ AI С���ַ���
+ * Notes: 云屿摄影 AI 小猫服务
  */
 
 const https = require('https');
@@ -144,7 +144,7 @@ function getApiKeyForRequest(config = {}, hasImages = false) {
 
 function getProviderNameForRequest(config = {}, hasImages = false) {
 	let provider = config.providerName || DEFAULT_CONFIG.providerName;
-	if (hasImages && (config.visionApiUrl || config.visionModel || config.visionApiKey)) return provider + ' �� �Ӿ�';
+	if (hasImages && (config.visionApiUrl || config.visionModel || config.visionApiKey)) return provider + ' / 视觉';
 	return provider;
 }
 
@@ -163,17 +163,17 @@ function classifyQueryType(message, pageContext = {}) {
 	let text = asText(message, 400);
 	if (!text) return 'chat';
 	// Screenshot recognition
-	if (/��ͼ|ͼƬ|ʶ��|¼��|����/.test(text)) return 'complex';
-	if (/�տ�|�˿�|���|����|����|���|���|����|������|����|����|ʵ��|����|֧��|ת��|���|����|β��/.test(text)) {
-		if (/��ѯ|��һ��|����|����|����|�б�|��ϸ|��¼|��ˮ|����|��û��|ͳ��|Ԥ��|����|����|����|����|���/.test(text)) return 'query';
+	if (/截图|图片|识别|录单|订单|档期|照片|收款图|转账|凭证/.test(text)) return 'complex';
+	if (/收款|退款|定金|尾款|补款|冲减|作废|提成|工资|实收|金额|支付|转账|审核|结算|尾款/.test(text)) {
+		if (/查询|看一下|看看|列表|明细|记录|流水|有没有|统计|预览|多少|查|查一下/.test(text)) return 'query';
 		return 'write';
 	}
 	// Write actions: create/record/arrange/update orders, items, rests, notes
-	if (/����|��¼|����|�Ǽ�|¼��|����|����|���|��Ϣ|�޸�|����|����|����|����|�ĵ�|����|����|�Ƶ�|Ų��/.test(text)) return 'write';
+	if (/新增|记录|安排|登记|录入|录单|创建|添加|事项|休息|修改|改到|改成|取消|加入|参加|备注|小记|移动|挪到/.test(text)) return 'write';
 	// Query actions: schedule, orders, notes
-	if (/��ѯ|����|С��|ʲôʱ��|����|��ʲô|��ʲô|����|����|����|����|����/.test(text)) return 'query';
+	if (/查询|档期|小记|什么时候|今天|明天|后天|有什么|谁有空|空不空|订单/.test(text)) return 'query';
 	// Function inquiry
-	if (/����|��ô��|����ʲô|С����|����/.test(text)) return 'explain';
+	if (/功能|怎么用|能做什么|小猫会|说明/.test(text)) return 'explain';
 	return 'chat';
 }
 
@@ -182,80 +182,69 @@ function compressStaffList(staffOptions = []) {
 	return staffOptions.slice(0, 40).map(item => {
 		let roles = Array.isArray(item.STAFF_ROLES) ? item.STAFF_ROLES.filter(r => r).slice(0, 2).join('/') : '';
 		return item.STAFF_NAME + (roles ? '(' + roles + ')' : '');
-	}).join('��');
+	}).join('、');
 }
 
 function compressTypeList(typeOptions = []) {
 	if (!typeOptions.length) return '';
-	return typeOptions.slice(0, 20).map(item => item.TYPE_NAME).join('��');
+	return typeOptions.slice(0, 20).map(item => item.TYPE_NAME).join('、');
 }
 
 function buildCorePrompt(staff, pageContext = {}) {
 	return [
-		'����������ӰС�������Сè AI ���֣�������ࡢ�Ѻá���ʵ��',
-		'��ǰ���ڣ�' + timeUtil.time('Y-M-D') + '��',
-		'��ǰԱ����' + (staff.STAFF_NAME || 'Ա��') + '������Ա��' + (staff.STAFF_IS_ADMIN == 1 ? '��' : '��') + '��',
-		'���ҵ��Ȩ�޻��ڵ�ǰ��¼Ա���˺ţ���ͨԱ��ֻ�ܲ����Լ���Ȩ���������ݣ�����Ա��ʹ�ù����������������Ժ�̨����У��Ϊ׼����Ҫ�Գ�û��Ȩ�ޣ�����ϵͳ������Ȩ�ޡ�',
-		'�ش�������� 200 �����ڡ�',
+		'你是云屿摄影小程序里的小猫 AI 助手，语气简洁、友好、务实。',
+		'当前日期：' + timeUtil.time('Y-M-D') + '。',
+		'当前员工：' + (staff.STAFF_NAME || '员工') + '；是否管理员：' + (staff.STAFF_IS_ADMIN == 1 ? '是' : '否') + '。',
+		'你的业务权限基于当前登录员工账号；普通员工只能操作自己有权限的数据，管理员可使用管理功能。所有写入最终以后端字段白名单、权限和数据校验为准。',
+		'回答尽量控制在 200 字以内。'
 	].join('\n');
 }
 
 function buildToolPrompt() {
 	return [
-		'��Ҳ��������ӰС�����ڵ��ܿ�ִ����ҵ�������塣',
-		'�û�˵������/����/���족ʱ�����ϸ񰴵�ǰ���ڻ��㡣',
-		'ֻ������Щ������query_schedule��create_order��create_orders��join_order��cancel_order��update_order��create_item��create_rest��add_note��query_payments��save_payment��void_payment��query_commissions��query_payroll��pay_payroll��audit_order��none��',
-		'Ȩ��ԭ�򣺲�Ҫ��Ϊ�������о�ֱ�Ӿܾ����Ȱ���ǰ��¼�˺�������׼ȷ�Ķ�����������̨�ᰴԱ��/����ԱȨ�����ء�',
-		'���û�Ҫ��ȡ��/ɾ������ʱ��cancel_order�����û�Ҫ���޸�/����������Ϣ�������ڡ�ʱ�䡢���͵ȣ�ʱ��update_order��',
-		'�û�˵�����������Ľ�ͼ���޸�һ�¡����Ǵ��ˣ�Ӧ����20�š��Ⱦ���������������ҵ�ԭ������������update_order�޸����ڣ�����Ҳ�����ȷ��������cancel_orderȡ�������¼������create_order��',
-		'����ж�Լ�����ȱ��Ӧ��/����/�ײͽ��͡�ʵ��/�Ѹ�/����/���/ת�ˡ���ֻ����ȷ���ղ������տ��������ȡ��ͼ/�ͻ�ԭ����ľ������ڣ����������ѡ��������׷�ʡ�',
-		'������Լ�������/ת�˽�ͼ���뿴���ǶԷ�����������ȡ/���ˣ�������200������Ϊʵ�ն��𣬡�399д�桱ͨ�����ײ�/Ӧ�ղ������գ�������/���족���ܸ��ǽ�ͼ���6��20��������ȷ���ڣ�ͬһ��൥��ͬ���ͻ������塢�տ����ʱ����none׷�ʡ�',
-		'�ƻ��Զ���Լ����ȡ�������������տ�����ʡ���˲�ͨ����������ȷ����ID��Ψһ�ɶ�λ���󣬲���ԭ��/˵����������ģ����������ִ�С�',
-		'��ֹ���충��ID���ͻ��������տ�״̬��Ա�����ݣ�ȱ�ٹؼ��ֶ���none׷�ʡ�',
-		'�Ͻ��þ�������㷵��none������reply�������˵"���޸�/�Ѱ���/�����/�Ѵ���/��ִ��"�ȳɹ������������û�������Ϊ�����ɹ��ˡ�noneʱֻ��˵"��Ҫ����XX��Ϣ"��"���ṩXX"��',
-		'����JSON��ʽ��{"action":"...","reply":"...","data":{...}}��',
+		'你也可以调用云屿小程序内的受控业务工具。',
+		'用户说“今天/明天/后天”时，必须严格按当前日期换算。',
+		'只允许返回这些 action：query_schedule、create_order、create_orders、join_order、cancel_order、update_order、create_item、create_rest、add_note、query_payments、save_payment、void_payment、query_commissions、query_payroll、pay_payroll、audit_order、none。',
+		'权限原则：不要因为动作敏感就直接拒绝；先按当前登录账号生成准确动作参数，后台会按员工/管理员权限拦截。',
+		'用户要求取消/删除订单时用 cancel_order；用户要求修改订单日期、时间、类型等信息时用 update_order。',
+		'如果截图或文字里缺少订单 ID、客户名、金额、收款状态、员工、日期等关键字段，返回 none 并追问，不要模拟成功。',
+		'严禁在 action=none 的 reply 里说“已修改/已安排/已记录/已执行”等成功语气，避免用户误以为业务已经写入。',
+		'必须只返回 JSON：{"action":"...","reply":"...","data":{...}}。'
 	].join('\n');
 }
 
 function buildWriteActionPrompt() {
 	return [
-		'query_schedule.data: startDate(YYYY-MM-DD)��endDate��scope(all/mine/joined/created)��',
-		'create_order.data: date(����)��customerName(����)��time��endTime��typeName��typeId��customerMobile��source��place��content��amount��deposit��final��extra��participants[]��',
-		'���ʶ��amount/������Ӧ�գ�deposit/final/extra��Ӧ�սṹ��paidAmount/paidDeposit/paidFinal/payments����ʵ�����ա�',
-		'create_orders.data: orders[]��2�������ϱ�����create_orders����',
-		'create_item.data: date(����)��title(����)��time��content��',
-		'create_rest.data: date(����)��type(��Ϣ/���/����/���)��reason��',
-		'add_note.data: noteType(team/personal)��title(����)��content��date��',
-		'join_order.data: orderId��roleName��',
-		'cancel_order.data: orderId(��customerName+date)��reason��',
-		'update_order.data: orderId(��customerName+date��Ϊ��������)��newDate(������)��newTime��newType��newCustomerName��newPlace��newAmount��newContent��ֻ��Ҫ�޸ĵ��ֶΡ�',
-		'query_payments.data: month��keyword��orderId��type��direction��status��size��',
-		'query_paymentsȨ�ޣ���ͨԱ��ֻ�ܲ��Լ����տ�/ҵ����ؼ�¼������Ա�ɲ�ȫ���ָ��Ա����',
-		'save_payment.data: orderId(����)��type(deposit/final/extra/product/supplement/refund/adjust������)��amount(����)��date��baseType��note��refPaymentId���˿�/�������дԭ��note��',
-		'void_payment.data: paymentId(����)��reason(����)��',
-		'query_commissions.data: month��staffId/staffName��orderId��paymentId��kind��status��keyword��size��',
-		'query_commissionsȨ�ޣ���ͨԱ��ֻ�ܲ��Լ�����ɣ�����Ա�ɲ�ȫ���ָ��Ա����',
-		'query_payroll.data: month��staffId/staffName����ͨԱ��Ĭ�ϲ��Լ�������Ա�ɲ�ָ��Ա����',
-		'pay_payroll.data: month(����)��staffId/staffName(����)��note��ֻ�й���Ա�ɷ����ʣ�ϵͳ�ᰴ��ǰԤ����ϣУ��󷢷š�',
-		'audit_order.data: orderId(����)��pass(true/false)��reason��participants��orderEditTime��',
-		'ȱ�����ڻ�ͻ�����ʱ��none׷�ʡ�',
-		'д�붯��ϵͳ�Զ�׷�����С�ǡ�',
+		'query_schedule.data: startDate(YYYY-MM-DD)、endDate、scope(all/mine/joined/created)。',
+		'create_order.data: date(必填)、customerName(必填)、time、endTime、typeName、typeId、customerMobile、source、place、content、amount、deposit、final、extra、participants[]。',
+		'如识别到 amount/订单金额，表示应收；deposit/final/extra 是应收结构；paidAmount/paidDeposit/paidFinal/payments 才表示实收。',
+		'create_orders.data: orders[]；一张图或多张图中有 2 条及以上订单时必须用 create_orders。',
+		'create_item.data: date(必填)、title(必填)、time、content。',
+		'create_rest.data: date(必填)、type(休息/请假/外出/其他)、reason。',
+		'add_note.data: noteType(team/personal)、title(必填)、content、date。',
+		'join_order.data: orderId、roleName。',
+		'cancel_order.data: orderId 或 customerName+date，reason。',
+		'update_order.data: orderId 或 customerName+date，newDate、newTime、newType、newCustomerName、newPlace、newAmount、newContent，只填写需要修改的字段。',
+		'save_payment.data: orderId(必填)、type(deposit/final/extra/product/supplement/refund/adjust 等)、amount(必填)、date、baseType、note、refPaymentId。',
+		'void_payment.data: paymentId(必填)、reason(必填)。',
+		'query_commissions/query_payroll/pay_payroll/audit_order 只在字段足够且可唯一定位时返回；否则返回 none 追问。',
+		'缺少日期或客户名时必须返回 none 追问。',
+		'写入动作成功后系统会自动追加团队小记审查流水。'
 	].join('\n');
 }
 
 function buildImagePrompt() {
 	return [
-		'ͼƬʶ��������жϽ�ͼ���ͣ�������Լ����������Ϣ���տ�/���/ת��ƾ֤������/���/�����Ϣ�������޹�ͼƬ����ҪĬ������ͼƬ��������������',
-		'������ͼ������ʶ�����ڡ�ʱ�䡢�ͻ����绰���ص㡢�������͡���ע��һ��ͼ�����ж��������������ȡ��1����create_order��2����������create_orders��',
-		'��С���򡰶�������/ÿ�����顱��ͼ���������������2026.09.11/2026-09-11ͨ����ҳ�����ڣ���Ƭ�ҵ����ֿ����Ǳ�ע��ԭ�������ڻ�ͻ�ԭ����',
-		'������ҳ�����ںͿ�Ƭ�ҵױ�ע������ڳ�ͻ�����綥����2026.09.11����עд��9.16��Ӱ������Ҫֱ������/�޸Ķ��������뷵��none׷���û���������������ڰ�ҳ������9.11�����ǰ���ע���9.16����',
-		'ֻ�е��û�������ȷ˵����ҳ������Ϊ׼���������9.11������������9.11������9.16�ĳ�9.11���Ⱦ���ָ��ʱ���ſɰ��û���ȷָ������ִ�С�',
-		'�������ƽ�ͼ�������Ŷ�����ȡ�������ڣ���Ҫ�ѵڶ���ͼ�������׵���һ��ͼ��',
-		'�տ��ͼ������ȷ�ϸ���򡢽��Ƿ�����ȡ/���ˡ���Ӧ������ֻ������orderId��ǰҳ��Ψһ����ʱ��save_payment��������none׷�ʶ�������',
-		'����/����/��˽�ͼ��ֻ��ȡϵͳ��ȷ�ϵ��ֶΣ������·ݡ���Ա����ԭ��Ψһʱ��none׷�ʣ���Ҫ�¡�',
-		'�������ȼ�����ͼ/ͼƬ�г��ֵľ������ڣ���6��20�ա�6/20���Ƕ������ڵ���Ҫ��Դ��',
-		'���û������а���������/����/����/���족���������ʱ�������ͼ�����ҵ���ȷ���ڣ������Խ�ͼ����Ϊ׼����Ҫ�������е�������ڻ��㡣',
-		'ʾ�����û�˵���������㡱����ͼ��ʾ6/20����dateӦΪ6/20��Ӧ�����ڣ���������������ڡ���ͼ�ǿͻ���ϵͳ��������ʵ����ƾ֤��',
+		'图片识别时先判断截图类型：订单/预约/档期信息、收款/付款/转账凭证、工资/提成/审核信息、无关图片。不要默认把所有图片都当订单处理。',
+		'订单截图要逐张识别日期、时间、客户、电话、地点、订单类型、备注。一张图可能有多个订单：1 条用 create_order，2 条及以上用 create_orders。',
+		'如果是小程序“订单详情/每日安排”截图，顶部日期通常是页面日期；卡片里的文字可能是备注、原日期或客户原话。',
+		'当页面日期和卡片备注里的日期冲突时，不要直接新增或修改订单；返回 none 追问用户以哪个日期为准。',
+		'只有用户明确说“按页面日期为准”“把 9.16 改成 9.11”等具体指令时，才按用户指定日期执行。',
+		'多张连续截图可能属于同一组订单信息，要合并判断；不要只识别第一张。',
+		'收款截图要确认付款方向、金额、是否定金/尾款/退款；只有 orderId 或当前页面唯一订单明确时才能 save_payment，否则 none 追问。',
+		'工资/提成/审核截图只提取系统可确认字段；月份、金额、员工、原因无法唯一时返回 none 追问。',
+		'日期优先使用截图/图片中出现的具体日期，例如 6月20日、6/20，而不是对话当天。',
+		'如果用户文字中包含“今天/明天/后天”，但图片里有明确日期，订单日期仍以图片里的明确日期为准。'
 	].join('\n');
 }
 
@@ -450,11 +439,11 @@ class WorkAiService extends WorkPermissionService {
 	_sanitizeUserInput(message) {
 		if (!message) return message;
 		// Strip system-role injection patterns
-		message = message.replace(/\b(system|assistant)\s*[:��]\s*/gi, '');
+		message = message.replace(/\b(system|assistant)\s*[:：]\s*/gi, '');
 		// Strip common instruction override attempts
 		message = message.replace(/\b(ignore|forget|disregard)\s+(all\s+)?(previous|above|prior)\s+(instructions?|rules?|prompts?)\b/gi, '');
 		// Strip role-play impersonation
-		message = message.replace(/\byou\s+are\s+now\b/gi, '��');
+		message = message.replace(/\byou\s+are\s+now\b/gi, '');
 		return message.trim();
 	}
 
@@ -678,11 +667,11 @@ class WorkAiService extends WorkPermissionService {
 			if (config.visionModel) config.visionModel = normalizeModelForApi(config.visionModel, config.visionApiUrl || config.apiUrl, config.providerName);
 		}
 
-		if (!config.enabled) this.AppError('AI С������δ���ã������Ա������');
-		if (!config.apiKey && !config.visionApiKey) this.AppError('AI API Key δ���ã������Ա������');
+		if (!config.enabled) this.AppError('AI 小猫暂未启用，请联系管理员配置');
+		if (!config.apiKey && !config.visionApiKey) this.AppError('AI API Key 未配置，请联系管理员配置');
 
 		message = asText(message, 800);
-		if (!message) this.AppError('������Ҫ���͵�����');
+		if (!message) this.AppError('请输入要发送的内容');
 		message = this._sanitizeUserInput(message);
 		this._agentUserMessage = message;
 		if (message === '__codex_diag_v255__') {
@@ -719,7 +708,7 @@ class WorkAiService extends WorkPermissionService {
 		let selectedApiUrl = getApiUrlForRequest(config, hasImages);
 		let selectedApiKey = getApiKeyForRequest(config, hasImages);
 		this._assertApiUrl(selectedApiUrl);
-		if (!selectedApiKey) this.AppError(hasImages ? 'ͼƬʶ�� API Key δ���ã������Ա�������Ӿ� Key ���� Key' : 'AI API Key δ���ã������Ա������');
+		if (!selectedApiKey) this.AppError(hasImages ? '图片识别 API Key 未配置，请联系管理员补充视觉 Key 或通用 Key' : 'AI API Key 未配置，请联系管理员配置');
 
 		let requestMessages = messages;
 		if (!hasImages && isMimoApi(selectedApiUrl, config.providerName) && (queryType === 'chat' || queryType === 'explain')) {
@@ -738,7 +727,7 @@ class WorkAiService extends WorkPermissionService {
 				Authorization: 'Bearer ' + selectedApiKey,
 			});
 			let reply = this._pickReply(result);
-			if (!reply) this.AppError('AI �ӿڷ��ظ�ʽ��֧�֣�����ӿ��Ƿ���� Chat Completions');
+			if (!reply) this.AppError('AI 接口返回格式不支持，请检查接口是否兼容 Chat Completions');
 			let responseConfig = Object.assign({}, config, {
 				model: selectedModel,
 				providerName: getProviderNameForRequest(config, hasImages),
@@ -944,7 +933,7 @@ class WorkAiService extends WorkPermissionService {
 	async _getConfig(options = {}) {
 		let saved = await setupUtil.get(SETUP_KEY);
 		let config = Object.assign({}, DEFAULT_CONFIG, saved || {});
-		if (!config.providerName || config.providerName == 'OpenAI���ݽӿ�') config.providerName = DEFAULT_CONFIG.providerName;
+		if (!config.providerName || config.providerName == 'OpenAI兼容接口') config.providerName = DEFAULT_CONFIG.providerName;
 		if (!config.apiUrl || config.apiUrl == LEGACY_OPENAI_API_URL) config.apiUrl = DEFAULT_CONFIG.apiUrl;
 		config.model = normalizeModelForApi(config.model, config.apiUrl, config.providerName);
 		if (config.visionModel) config.visionModel = normalizeModelForApi(config.visionModel, config.visionApiUrl || config.apiUrl, config.providerName);
@@ -991,12 +980,12 @@ class WorkAiService extends WorkPermissionService {
 		try {
 			parsed = new URL(url);
 		} catch (err) {
-			this.AppError('AI �ӿڵ�ַ��ʽ����');
+			this.AppError('AI 接口地址格式错误');
 		}
-		if (parsed.protocol != 'https:') this.AppError('AI �ӿڵ�ַ����ʹ�� https');
+		if (parsed.protocol != 'https:') this.AppError('AI 接口地址必须使用 https');
 		let host = String(parsed.hostname || '').toLowerCase();
-		if (!host || host == 'localhost' || host.endsWith('.local')) this.AppError('AI �ӿڵ�ַ����ʹ�ñ�������');
-		if (this._isBlockedIp(host)) this.AppError('AI �ӿڵ�ַ����ʹ�������򱾻� IP');
+		if (!host || host == 'localhost' || host.endsWith('.local')) this.AppError('AI 接口地址不能使用本地域名');
+		if (this._isBlockedIp(host)) this.AppError('AI 接口地址不能使用内网或本机 IP');
 	}
 
 	_isBlockedIp(host) {
@@ -1015,11 +1004,11 @@ class WorkAiService extends WorkPermissionService {
 	}
 
 	_buildMessages(config, staff, message, history) {
-		let staffName = staff && staff.STAFF_NAME ? staff.STAFF_NAME : 'Ա��';
+		let staffName = staff && staff.STAFF_NAME ? staff.STAFF_NAME : '员工';
 		let system = config.systemPrompt || DEFAULT_CONFIG.systemPrompt;
 		let personality = PERSONALITY_MAP[config.personality] || PERSONALITY_MAP[DEFAULT_CONFIG.personality];
 		system += '\n\n' + personality.prompt;
-		system += '\n\n��ǰ�û���' + staffName + '���ش�������� 200 �����ڣ������û���ȷҪ����ϸ˵����';
+		system += '\n\n当前用户：' + staffName + '。回答尽量控制在 200 字以内，除非用户明确要求详细说明。';
 
 		let messages = [{ role: 'system', content: system }];
 		messages = messages.concat(this._normalizeHistory(history));
@@ -1048,8 +1037,8 @@ class WorkAiService extends WorkPermissionService {
 
 		// Add page context for non-chat queries
 		if (queryType !== 'chat') {
-			parts.push('��ǰҳ�棺' + JSON.stringify({ route: pageContext.route || '', orderId: pageContext.orderId || '', day: pageContext.day || '' }));
-			if (pageContext.day) parts.push('Date fallback: pageContext.day����ΪĬ��д�����ڡ�');
+			parts.push('当前页面：' + JSON.stringify({ route: pageContext.route || '', orderId: pageContext.orderId || '', day: pageContext.day || '' }));
+			if (pageContext.day) parts.push('Date fallback: pageContext.day 只能作为页面上下文参考，不能覆盖截图里的明确日期。');
 		}
 
 		// Add tool instructions for action-capable queries
@@ -1057,9 +1046,9 @@ class WorkAiService extends WorkPermissionService {
 			parts.push(agentRegistry.buildToolPrompt(selectedSkills, queryType));
 			parts.push(agentRegistry.buildWriteActionPrompt(selectedSkills, queryType));
 		} else if (queryType === 'explain') {
-			parts.push('����û���С��������ʲô����ʵ�ʹ��ܻش𣺵��ڡ������������Ϣ��С�ǡ���Ϣ��������ҵ�������ʡ��������ġ��տ��ɡ���ˡ�AI���á�');
+			parts.push('如果用户问“小猫能做什么”，按实际功能回答：档期、订单、事项、休息、小记、消息、反馈、业绩、收款、提成、工资、审核、AI 配置等。');
 		} else if (queryType === 'chat') {
-			parts.push('�������Ը񡢻�������©�Ĺ���̨agent���ش�ҵ������Ҫ������Ӱ�����ҳ�����');
+			parts.push('保持小猫性格，回答业务问题时要结合云屿摄影工作台场景。');
 		}
 
 		// Layer 2: Staff/type data (only for write/query/image queries)
@@ -1076,8 +1065,8 @@ class WorkAiService extends WorkPermissionService {
 					TYPE_ORDER: 'asc',
 					TYPE_ADD_TIME: 'asc',
 				}, 200);
-				parts.push('����Ա����' + compressStaffList(staffOptions));
-				parts.push('�����������ͣ�' + compressTypeList(typeOptions));
+				parts.push('可选员工：' + compressStaffList(staffOptions));
+				parts.push('可选订单类型：' + compressTypeList(typeOptions));
 			} catch (dbErr) {
 				console.error('AI build messages DB query failed:', dbErr && dbErr.message ? dbErr.message : dbErr);
 			}
@@ -1098,13 +1087,13 @@ class WorkAiService extends WorkPermissionService {
 		if (memoryPrompt) parts.push(memoryPrompt);
 
 		if (config.memoryEnabled && config.memoryText) {
-			parts.push('����Աά���ĳ��ڼ���/���ڹ���' + asText(config.memoryText, 2000));
-			parts.push('���ڼ���ֻ��Ϊ�ش��׷�ʲο������������ݿ���ʵ���漰���������տ���ʡ���˵�д��ǰ�Ա���������ǰ�ֶΡ�ҳ�������ĺͺ�̨У�顣');
+			parts.push('管理员维护的长期记忆/规则：' + asText(config.memoryText, 2000));
+			parts.push('长期记忆只作为回答和追问参考，不能当作数据库事实。涉及订单、金额、收款、工资、审核等写入前，必须以当前字段、页面上下文和后台校验为准。');
 		}
 
 		// Add knowledge base for non-trivial queries
 		if (queryType !== 'chat') {
-			parts.push('����ժҪ��' + LOCAL_APP_KNOWLEDGE.join('��'));
+			parts.push('应用摘要：' + LOCAL_APP_KNOWLEDGE.join('；'));
 		}
 
 		// Phase 4: Keyword-based knowledge retrieval
@@ -1122,7 +1111,7 @@ class WorkAiService extends WorkPermissionService {
 
 		if (hasImages) {
 			let last = messages[messages.length - 1];
-			let content = [{ type: 'text', text: last.content + '\n\n���Ͻ�ͼ���ж���Ϣ���ͣ���ʶ����/����/�տ�/���/����/�����Ϣ�����ż������ͼƬ����ȷ���������ʱ��׷�ʡ�' }];
+			let content = [{ type: 'text', text: last.content + '\n\n请逐张判断截图信息类型；能确认的订单/档期/收款信息才返回 action，无法确认日期、客户、金额或唯一对象时返回 none 并追问。' }];
 			for (let item of attachments) {
 				content.push({ type: 'image_url', image_url: { url: item.url } });
 			}
@@ -1140,7 +1129,7 @@ class WorkAiService extends WorkPermissionService {
 			if (Array.isArray(raw)) {
 				let textParts = raw.filter(p => p && p.type == 'text' && p.text).map(p => p.text).join('');
 				let imgCount = raw.filter(p => p && p.type == 'image_url').length;
-				raw = imgCount > 0 ? textParts + ` [����${imgCount}��ͼƬ]` : textParts;
+				raw = imgCount > 0 ? textParts + ` [附带${imgCount}张图片]` : textParts;
 			}
 			let limit = item.role == 'assistant' ? 4000 : 800;
 			let content = asText(raw, limit);
@@ -1164,7 +1153,7 @@ class WorkAiService extends WorkPermissionService {
 		if (this._shouldAckNoSupplement(message, history)) {
 			return this._localAgentResult(config, {
 				action: 'none',
-				reply: '�յ��������䡣���ζԻ����ټ������� AI��',
+				reply: '收到，不补充。本次对话不再继续调用 AI。',
 			});
 		}
 
@@ -2097,12 +2086,12 @@ class WorkAiService extends WorkPermissionService {
 	_cleanDate(date, required = true) {
 		date = asText(date, 30)
 			.replace(/T\d.*/, '')
-			.replace(/\s+\d{1,2}[:��]\d{2}.*/, '')
-			.replace(/([�պ�])\s*[\dһ-��][\s\S]*$/, '$1')
-			.replace(/(\d{4}[-/.��]\d{1,2}[-/.��]\d{1,2})\s*[����]��.*$/, '$1')
+			.replace(/\s+\d{1,2}[:：]\d{2}.*/, '')
+			.replace(/([日号])\s*[\d一二三四五六七八九十][\s\S]*$/, '$1')
+			.replace(/(\d{4}[-/.年月]\d{1,2}[-/.月]\d{1,2})\s*[日号].*$/, '$1')
 			.replace(/[./]/g, '-')
-			.replace(/��|��/g, '-')
-			.replace(/��|��/g, '')
+			.replace(/年|月/g, '-')
+			.replace(/日|号/g, '')
 			.replace(/\s+/g, '');
 		date = date.replace(/-+/g, '-').replace(/^-|-$/g, '');
 		if (!date && !required) return '';
@@ -2119,7 +2108,7 @@ class WorkAiService extends WorkPermissionService {
 					let prev = new Date(year - 1, month - 1, dayNum);
 					if (prev.getTime() >= Date.now() - 45 * 86400000) year -= 1;
 				}
-				// Cross-year boundary: Dec��Jan or Jan��Dec within ~60 days
+				// Cross-year boundary: Dec/Jan or Jan/Dec within ~60 days
 				// Only apply when the day-range heuristics above did NOT already adjust the year.
 				else if (Math.abs(nowMonth - month) >= 11) {
 					let diff = candidate.getTime() - Date.now();
@@ -2131,11 +2120,11 @@ class WorkAiService extends WorkPermissionService {
 		} else {
 			date = `${m[1]}-${String(Number(m[2])).padStart(2, '0')}-${String(Number(m[3])).padStart(2, '0')}`;
 		}
-		if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) this.AppError('AI����ȱ�ٺϷ����ڣ��޷�ʶ��������ڡ�����"6��20��""������"����ȷ��������˵�������ڵ�������ҳ��ֱ��¼����');
+		if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) this.AppError('AI 返回缺少合法日期，无法识别订单日期。请用“6月20日”“2026-06-20”等明确日期说明，或到订单页面手动录入。');
 		let parts = date.split('-').map(num => Number(num));
 		let d = new Date(parts[0], parts[1] - 1, parts[2]);
 		if (d.getFullYear() != parts[0] || d.getMonth() + 1 != parts[1] || d.getDate() != parts[2]) {
-			this.AppError('AI����ʶ������ڲ����ڣ���2��30�գ���������ȷ����������˵��');
+			this.AppError('AI 返回的日期不存在，例如 2月30日，请重新用明确日期说明。');
 		}
 		return date;
 	}
@@ -2143,25 +2132,25 @@ class WorkAiService extends WorkPermissionService {
 	_cleanTime(text) {
 		text = asText(text, 30);
 		if (!text) return '';
-		let m = text.match(/^(\d{1,2})[:��](\d{1,2})$/);
+		let m = text.match(/^(\d{1,2})[:：](\d{1,2})$/);
 		if (m) {
 			let h = Number(m[1]), min = Number(m[2]);
 			if (h > 23 || min > 59) return '';
 			return String(h).padStart(2, '0') + ':' + String(min).padStart(2, '0');
 		}
-		m = text.match(/^(����|����|����|����|����|�賿)?\s*(\d{1,2})\s*��\s*(��|\d{1,2}��?)?\s*$/);
+		m = text.match(/^(早上|上午|中午|下午|晚上|凌晨)?\s*(\d{1,2})\s*点\s*(半|\d{1,2}分?)?\s*$/);
 		if (m) {
 			let hour = Number(m[2]);
 			let period = m[1] || '';
 			if (hour > 23) return '';
-			if (hour === 12 && (period == '�賿' || period == '����')) hour = 0;
-			else if ((period == '����' || period == '����' || period == '����') && hour < 12) hour += 12;
+			if (hour === 12 && period == '凌晨') hour = 0;
+			else if ((period == '下午' || period == '晚上') && hour < 12) hour += 12;
 			if (hour > 23) return '';
 			let minute = '00';
 			if (m[3]) {
-				if (m[3] === '��') { minute = '30'; }
+				if (m[3] === '半') { minute = '30'; }
 				else {
-					let minNum = Number(m[3].replace('��', ''));
+					let minNum = Number(m[3].replace('分', ''));
 					if (minNum > 59) return '';
 					minute = String(minNum).padStart(2, '0');
 				}
@@ -2575,13 +2564,13 @@ class WorkAiService extends WorkPermissionService {
 	}
 
 	_errorText(err) {
-		return asText((err && (err.msg || err.message || err.errMsg)) || '��Ϣ����', 120);
+		return asText((err && (err.msg || err.message || err.errMsg)) || '信息不完整', 120);
 	}
 
 	async _buildAgentOrder(data = {}, attachments = [], options = {}) {
 		let date = this._cleanActionDate(data.date || data.ORDER_DATE, true, options);
 		let customerName = asText(data.customerName || data.ORDER_CUSTOMER_NAME, 80);
-		if (!customerName) this.AppError('AI��������ȱ�ٿͻ�����');
+		if (!customerName) this.AppError('AI 返回的订单缺少客户名称');
 		let type = await this._resolveType(data);
 		let participants = await this._resolveParticipants(data.participants || data.ORDER_PARTICIPANTS || []);
 		let order = {
@@ -2609,7 +2598,7 @@ class WorkAiService extends WorkPermissionService {
 	}
 
 	_orderLine(order = {}) {
-		return `${order.ORDER_DATE || ''} ${order.ORDER_TIME || ''} ${order.ORDER_TYPE_NAME || '����'}���ͻ�${order.ORDER_CUSTOMER_NAME || ''}`.replace(/\s+/g, ' ').trim();
+		return `${order.ORDER_DATE || ''} ${order.ORDER_TIME || ''} ${order.ORDER_TYPE_NAME || '订单'}，客户${order.ORDER_CUSTOMER_NAME || ''}`.replace(/\s+/g, ' ').trim();
 	}
 
 	_isSameOrderForDuplicate(order = {}, old = {}) {
@@ -2634,15 +2623,15 @@ class WorkAiService extends WorkPermissionService {
 		} catch (verifyErr) {
 			console.error('AI order post-save verify failed:', verifyErr && verifyErr.message ? verifyErr.message : verifyErr);
 		}
-		let participantText = participants.map(p => `${p.staffName || p.staffId}(${p.roleName})`).join('��');
-		let summary = `${staff.STAFF_NAME || 'Ա��'}ͨ��AI�����������ڣ�${date} ${order.ORDER_TIME || ''}��${type.name}���ͻ�${customerName}${order.ORDER_PLACE ? '���ص�' + order.ORDER_PLACE : ''}${participantText ? '�������ˣ�' + participantText : ''}����¼ID��${ret.id}`;
-		let auditNoteId = await this._addAuditNote(openId, 'AI������¼��������������', summary);
+		let participantText = participants.map(p => `${p.staffName || p.staffId}(${p.roleName})`).join('、');
+		let summary = `${staff.STAFF_NAME || '员工'}通过 AI 新增订单档期：${date} ${order.ORDER_TIME || ''}，${type.name}，客户${customerName}${order.ORDER_PLACE ? '，地点' + order.ORDER_PLACE : ''}${participantText ? '，参与人：' + participantText : ''}，记录ID：${ret.id}`;
+		let auditNoteId = await this._addAuditNote(openId, 'AI 小猫记录订单档期', summary);
 		return {
 			action: 'create_order',
 			id: ret.id,
 			data: { date, order },
 			auditNoteId,
-			reply: `�������������ڣ�${date} ${order.ORDER_TIME || ''}��${type.name}���ͻ�${customerName}����ͬ��д��ȫ��С�������ˮ��`,
+			reply: `已新增订单档期：${date} ${order.ORDER_TIME || ''}，${type.name}，客户${customerName}。已走当前账号权限保存，并同步写入团队小记审查流水。`,
 		};
 	}
 
@@ -2653,8 +2642,8 @@ class WorkAiService extends WorkPermissionService {
 			return {
 				action: 'create_order',
 				id: duplicate._id,
-				data: { date: built.date, order: built.order, skipped: [{ index: 1, reason: 'ϵͳ�Ѵ���ͬ��ͬ�ͻ���ͬ���͵Ķ���', duplicateId: duplicate._id }] },
-				reply: `û������������\n1. ${this._orderLine(built.order)} �Ѵ��ڣ���������\n���������һ����ͬ�������벹�䲻ͬ�ͻ���Ϣ��ͬ�������ͺ������Ҽ�¼��`,
+				data: { date: built.date, order: built.order, skipped: [{ index: 1, reason: '系统已存在同日同客户同类型订单', duplicateId: duplicate._id }] },
+				reply: `没有新增订单档期。\n1. ${this._orderLine(built.order)} 已存在，避免重复记录。\n如果这是另一条不同订单，请补充不同客户信息、不同订单类型或备注后再让我记录。`,
 			};
 		}
 		return await this._saveBuiltAgentOrder(openId, staff, built);
@@ -2662,8 +2651,8 @@ class WorkAiService extends WorkPermissionService {
 
 	async _agentCreateOrders(openId, staff, data = {}, attachments = [], pageContext = {}) {
 		let rawOrders = this._extractBatchOrders(data);
-		if (!rawOrders.length) this.AppError('AI������������ȱ�ٶ����б�');
-		if (rawOrders.length > 8) this.AppError('AIһ���������8���������ڣ����������');
+		if (!rawOrders.length) this.AppError('AI 返回的批量订单缺少订单列表');
+		if (rawOrders.length > 8) this.AppError('AI 一次最多处理 8 条订单档期，请分批发送');
 
 		let prepared = [];
 		let skipped = [];
@@ -2679,8 +2668,8 @@ class WorkAiService extends WorkPermissionService {
 			}
 		}
 		if (!prepared.length) {
-			let reason = skipped.length ? ('��' + skipped.map(item => `��${item.index}��${item.reason}`).join('��')) : '';
-			this.AppError('��ͼ��ʶ�𵽶�����Ϣ������ȱ�ٺϷ����ڻ�ͻ����ƣ��޷�¼�롣��������Ϣ��ע�����ڣ���"6��20�յĶ���"������ֱ���ڵ�������ҳ��¼����' + reason);
+			let reason = skipped.length ? ('：' + skipped.map(item => `第${item.index}条${item.reason}`).join('；')) : '';
+			this.AppError('截图里识别到订单信息，但缺少合法日期或客户名称，无法录入。请补充日期，例如“6月20日的订单”，或到订单页面手动录入' + reason);
 		}
 
 		let created = [];
@@ -2690,7 +2679,7 @@ class WorkAiService extends WorkPermissionService {
 			if (batchDuplicate) {
 				skipped.push({
 					index: built.sourceIndex || 0,
-					reason: '��������ʶ��ͬ��ͬ�ͻ���ͬ���͵Ķ���',
+					reason: '本批截图中识别到同日同客户同类型订单',
 					line: this._orderLine(built.order),
 				});
 				continue;
@@ -2700,7 +2689,7 @@ class WorkAiService extends WorkPermissionService {
 			if (duplicate) {
 				skipped.push({
 					index: built.sourceIndex || 0,
-					reason: 'ϵͳ�Ѵ���ͬ��ͬ�ͻ���ͬ���͵Ķ���',
+					reason: '系统已存在同日同客户同类型订单',
 					duplicateId: duplicate._id,
 					line: this._orderLine(built.order),
 				});
@@ -2712,15 +2701,15 @@ class WorkAiService extends WorkPermissionService {
 
 		let lines = created.map((ret, idx) => {
 			let order = ret.data && ret.data.order ? ret.data.order : {};
-			return `${idx + 1}. ${ret.data.date} ${order.ORDER_TIME || ''} ${order.ORDER_TYPE_NAME || '����'}���ͻ�${order.ORDER_CUSTOMER_NAME || ''}`.replace(/\s+/g, ' ').trim();
+			return `${idx + 1}. ${ret.data.date} ${order.ORDER_TIME || ''} ${order.ORDER_TYPE_NAME || '订单'}，客户${order.ORDER_CUSTOMER_NAME || ''}`.replace(/\s+/g, ' ').trim();
 		});
 		let reply = created.length
-			? `������ ${created.length} ���������ڣ�\n${lines.join('\n')}\n��ͬ��д��ȫ��С�������ˮ��`
-			: '����û�������������ڡ�';
+			? `已新增 ${created.length} 条订单档期：\n${lines.join('\n')}\n已同步写入团队小记审查流水。`
+			: '这次没有新增订单档期。';
 		if (skipped.length) {
-			reply += `\n������/δ��¼ ${skipped.length} ����\n${skipped.map((item, idx) => `${idx + 1}. ${item.line || ('��' + item.index + '��')}��${item.reason}`).join('\n')}`;
+			reply += `\n已跳过/未录入 ${skipped.length} 条：\n${skipped.map((item, idx) => `${idx + 1}. ${item.line || ('第' + item.index + '条')}：${item.reason}`).join('\n')}`;
 		}
-		reply += '\n�����ͼ�ﻹ����©���Ķ�������������ǵڼ���ͼ�ڼ������һ������¼��';
+		reply += '\n如果截图里还有漏掉的订单，请告诉我是第几张图第几条，我再单独识别。';
 		return {
 			action: 'create_orders',
 			id: created[0] ? created[0].id : '',
@@ -2737,7 +2726,7 @@ class WorkAiService extends WorkPermissionService {
 
 	async _agentJoinOrder(openId, staff, data = {}, pageContext = {}) {
 		let orderId = asText(data.orderId || data.id || data.ORDER_ID || pageContext.orderId || '', 120);
-		if (!orderId) this.AppError('��ǰû�пɼ���Ķ��������ȴ򿪶�������ҳ��������Ҷ���ID');
+		if (!orderId) this.AppError('当前没有可加入的订单，请先打开订单详情页，或告诉我订单 ID');
 		let roleName = asText(data.roleName || data.role || '', 40);
 		let work = new WorkService();
 		let ret = await work.joinOrder(openId, orderId, roleName);
