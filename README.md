@@ -23,6 +23,7 @@
 - `node --check miniprogram/projects/B00/pages/work/cat_game_play/work_cat_game_play.js` 通过。
 - `miniprogram/app.json` 和小游戏页面 JSON 解析通过。
 - `app.json` 注册页面文件完整性检查通过。
+- 微信开发版 `2.59` 已上传成功，包体 `1.6 MB` / `1,649,423 Byte`。
 
 ## 版本档案
 
