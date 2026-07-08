@@ -1,3 +1,27 @@
+## v2.58 - 2026-07-08
+
+修复小猫确认录单时沿用 gpt-4o-mini 导致 Xiaomi/MiMo 接口返回 Unsupported model 的问题；后台旧配置会自动归一到 MiMo 默认模型，并在模型不支持时自动换模型重试。
+
+### 修复
+
+- 修复小猫截图识别后确认录单时，文本确认轮使用不受支持的 `gpt-4o-mini` 导致 `Unsupported model` 的问题。
+- Xiaomi/MiMo 供应商识别补充 `xiaomi`、`mi.com` 和中文“小米”。
+- MiMo 接口遇到错误模型名时自动回退到 `mimo-v2.5`。
+- 模型不支持时会自动换成当前供应商默认模型重试一次。
+- 多文件 live patch 同步打入 AI service 依赖，避免线上旧云函数包缺少新增 agent 文件时静默退回旧逻辑。
+
+### 验证
+
+- `node --check cloudfunctions/mcloud/project/B00/service/work_ai_service.js` 通过。
+- `node --check cloudfunctions/mcloud/work_ai_service_live_patch.js` 通过。
+- 旧线上包本地模拟加载多文件 `work_ai_service_live_patch.js` 通过。
+- DevTools automator 真实调用 `work/ai_chat` 通过：返回 `OK0708G-MODEL-CHECK`，provider `MiMo`，model `mimo-v2.5`，`usage.total_tokens=415`。
+
+### 部署
+
+- `mcloud` 已增量部署多文件 `work_ai_service_live_patch.js`，packSize `56.2 KB`。
+- 微信开发版 `2.58` 已上传成功，包体 `1.6 MB` / `1,691,112 Byte`。
+
 ## v2.57 - 2026-07-05
 
 小猫争议订单校验修复：录单前先做同客户历史订单判断，低频事件类先问再写，高频写真类保存后提醒历史档期。

@@ -3,10 +3,10 @@ module.exports = {
 	CLOUD_ID: 'yunyukeji-d4g7waei5d5d6cdeb', //云服务id ,本地测试环境
 
 	// #### 版本信息
-	VER: 'v2.57',
-	APP_VERSION: '2.57',
-	APP_VERSION_DATE: '2026-07-05',
-	APP_VERSION_NAME: '小猫争议订单校验',
+	VER: 'v2.58',
+	APP_VERSION: '2.58',
+	APP_VERSION_DATE: '2026-07-08',
+	APP_VERSION_NAME: '小猫模型兼容修复',
 	COMPANY: '云屿摄影｜技术由云屿科技支持',
 
 	// #### 系统参数

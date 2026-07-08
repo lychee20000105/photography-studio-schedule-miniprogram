@@ -1,14 +1,28 @@
 module.exports = {
-	current: '2.57',
-	previous: '2.56',
-	date: '2026-07-05',
-	time: '16:40 CST',
+	current: '2.58',
+	previous: '2.57',
+	date: '2026-07-08',
+	time: '13:06 CST',
 	level: 'patch',
-	levelText: '小猫争议订单校验',
-	name: '小猫争议订单校验',
-	summary: '小猫截图和文字录单前会先做同客户历史订单校验：婚礼、订婚、宝宝宴等事件类订单遇到全库同客户历史事件单会先询问，写真等高频订单保存后会提醒该客户其他档期。',
+	levelText: '小猫模型兼容修复',
+	name: '小猫模型兼容修复',
+	summary: '修复小猫确认录单时沿用 gpt-4o-mini 导致 Xiaomi/MiMo 接口返回 Unsupported model 的问题；后台旧配置会自动归一到 MiMo 默认模型，并在模型不支持时自动换模型重试。',
 	changeLog: '/docs/version-change-diary.md',
 	history: [
+
+	{
+		version: '2.58',
+		date: '2026-07-08',
+		name: '小猫模型兼容修复',
+		summary: '修复小猫截图识别后确认录单时，文本确认轮使用不受支持的 gpt-4o-mini 模型导致 AI 接口报错的问题。',
+		items: [
+			'Xiaomi/MiMo 供应商识别补充 xiaomi、mi.com 和中文“小米”，避免后台名称变化后绕过 MiMo 兼容逻辑。',
+			'MiMo 接口遇到空模型、gpt-4o-mini、deepseek-chat 或非 MiMo 模型名时，自动回退到 mimo-v2.5。',
+			'AI 返回 Unsupported model、model_not_found 等模型错误时，自动使用当前供应商默认模型重试一次。',
+			'修正 MiMo 文本兜底请求的模型归一化，避免错误使用 Agnes 默认模型。',
+			'多文件 live patch 已同步 AI agent 依赖并实测 work/ai_chat 返回 MiMo/mimo-v2.5。',
+		],
+	},
 
 
 	{

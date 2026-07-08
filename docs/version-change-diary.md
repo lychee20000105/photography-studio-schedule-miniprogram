@@ -1,3 +1,43 @@
+## v2.58 - 2026-07-08
+
+### 改动级别
+
+小修复，v2.57 -> v2.58，+0.01。
+
+### 修改原因
+
+小猫截图识别首轮能返回信息，但用户回复确认录单时，文本确认轮仍可能使用后台旧配置里的 `gpt-4o-mini`。Xiaomi/MiMo 接口不支持这个模型时，小猫会直接回“Unsupported model”，导致订单记不进去。
+
+### 关键变更
+
+- 补充 Xiaomi/MiMo 供应商识别：`xiaomimimo.com`、`mimo`、`xiaomi`、`mi.com`、“小米”。
+- 将 MiMo 默认模型固定为 `mimo-v2.5`，不再误回退到 Agnes 默认模型。
+- 对 `Unsupported model`、`model_not_found`、`model does not exist` 加入专项检测和自动换模型重试。
+- 修正 MiMo 文本兜底请求的模型归一化参照。
+- 将新增的 AI agent 依赖文件一起打进 `work_ai_service_live_patch.js`，解决线上旧云函数包缺依赖导致 live patch 加载失败的问题。
+
+### 涉及文件
+
+- `cloudfunctions/mcloud/project/B00/service/work_ai_service.js`
+- `cloudfunctions/mcloud/work_ai_service_live_patch.js`
+- `miniprogram/version.js`
+- `miniprogram/setting/setting.js`
+- `CHANGELOG.md`
+- `docs/version-change-diary.md`
+- `README.md`
+
+### 验证
+
+- `node --check cloudfunctions/mcloud/project/B00/service/work_ai_service.js` 通过。
+- `node --check cloudfunctions/mcloud/work_ai_service_live_patch.js` 通过。
+- 下载旧线上包后本地模拟加载多文件 live patch 通过，确认缺失依赖已由虚拟模块补齐。
+- 真实云端调用通过：DevTools automator 调用 `work/ai_chat` 返回 `OK0708G-MODEL-CHECK`，provider `MiMo`，model `mimo-v2.5`，`usage.total_tokens=415`。
+
+### 部署状态
+
+- `mcloud` 已增量部署多文件 `work_ai_service_live_patch.js`，packSize `56.2 KB`。
+- 微信开发版 `2.58` 已上传成功，包体 `1.6 MB` / `1,691,112 Byte`。
+
 ## v2.57 - 2026-07-05
 
 ### 改动级别

@@ -45,6 +45,8 @@ const DEFAULT_CONFIG = {
 	maxTokens: 600,
 };
 
+const MIMO_DEFAULT_MODEL = 'mimo-v2.5';
+
 const PERSONALITY_MAP = {
 	ops_cat: {
 		name: '值班小猫',
@@ -303,6 +305,39 @@ function normalizeModelForApi(model, apiUrl, providerName = '') {
 	if (compact == 'mimov2.5-pro' || compact == 'mimo-v2.5-pro') return 'mimo-v2.5-pro';
 	if (!compact || compact == 'gpt-4o-mini' || compact == 'deepseek-chat' || compact.indexOf('mimo') < 0) return DEFAULT_CONFIG.model;
 	return model;
+}
+
+function isMimoApi(apiUrl, providerName = '') {
+	let text = (asText(apiUrl, 400) + ' ' + asText(providerName, 80)).toLowerCase();
+	return text.indexOf('xiaomimimo.com') >= 0
+		|| text.indexOf('mimo') >= 0
+		|| text.indexOf('xiaomi') >= 0
+		|| text.indexOf('mi.com') >= 0
+		|| text.indexOf('\u5c0f\u7c73') >= 0;
+}
+
+function defaultModelForApi(apiUrl, providerName = '') {
+	if (isMimoApi(apiUrl, providerName)) return MIMO_DEFAULT_MODEL;
+	return DEFAULT_CONFIG.model;
+}
+
+function normalizeModelForApi(model, apiUrl, providerName = '') {
+	model = asText(model, 120);
+	let compact = model.toLowerCase().replace(/[\s_]+/g, '-');
+	if (compact == 'agnes-20-flash' || compact == 'agnes2.0-flash' || compact == 'agnes-2-0-flash') return 'agnes-2.0-flash';
+	if (!isMimoApi(apiUrl, providerName)) return model || defaultModelForApi(apiUrl, providerName);
+	if (compact == 'mimov2.5' || compact == 'mimo-v2.5') return MIMO_DEFAULT_MODEL;
+	if (compact == 'mimov2.5-pro' || compact == 'mimo-v2.5-pro') return 'mimo-v2.5-pro';
+	if (!compact || compact == 'gpt-4o-mini' || compact == 'deepseek-chat' || compact.indexOf('mimo') < 0) return defaultModelForApi(apiUrl, providerName);
+	return model;
+}
+
+function isUnsupportedModelError(err) {
+	let msg = String((err && (err.safeMessage || err.message)) || '').toLowerCase();
+	return msg.indexOf('unsupported model') >= 0
+		|| msg.indexOf('model not found') >= 0
+		|| msg.indexOf('model_not_found') >= 0
+		|| msg.indexOf('model does not exist') >= 0;
 }
 
 function getEnvApiKey() {
@@ -638,6 +673,10 @@ class WorkAiService extends WorkPermissionService {
 		let staff = await this.assertStaff(openId);
 		this._rateLimitCheck(openId);
 		let config = await this._getActiveProviderConfig();
+		if (isMimoApi(config.apiUrl, config.providerName)) {
+			config.model = normalizeModelForApi(config.model, config.apiUrl, config.providerName);
+			if (config.visionModel) config.visionModel = normalizeModelForApi(config.visionModel, config.visionApiUrl || config.apiUrl, config.providerName);
+		}
 
 		if (!config.enabled) this.AppError('AI С������δ���ã������Ա������');
 		if (!config.apiKey && !config.visionApiKey) this.AppError('AI API Key δ���ã������Ա������');
@@ -649,7 +688,7 @@ class WorkAiService extends WorkPermissionService {
 		if (message === '__codex_diag_v255__') {
 			return this._localAgentResult(config, {
 				action: 'none',
-				reply: 'diag:v2.55-local-create-mimo-minimal-probe',
+				reply: 'diag:v2.58-model-compat-live-patch',
 				diag: {
 					localCreate: true,
 					mimoMinimal: true,
@@ -707,7 +746,28 @@ class WorkAiService extends WorkPermissionService {
 			return await this._handleAgentReply(openId, staff, reply, responseConfig, result, imageAttachments, pageContext);
 		} catch (err) {
 			let appErrMsg = err && err.name == 'AppError' ? String(err.message || '') : '';
+			if (isUnsupportedModelError(err)) appErrMsg = 'param unsupported model ' + appErrMsg;
 			if (err && err.name == 'AppError' && !/param|parameter|Param Incorrect|参数|AI\s*接口/i.test(appErrMsg)) throw err;
+			let providerFallbackModel = normalizeModelForApi('', selectedApiUrl, config.providerName);
+			if (isUnsupportedModelError(err) && providerFallbackModel && providerFallbackModel != body.model) {
+				try {
+					let modelBody = Object.assign({}, body, { model: providerFallbackModel });
+					let modelResult = await this._postJson(selectedApiUrl, this._requestBodyForApi(selectedApiUrl, modelBody), {
+						Authorization: 'Bearer ' + selectedApiKey,
+					});
+					let modelReply = this._pickReply(modelResult);
+					if (modelReply) {
+						let modelConfig = Object.assign({}, config, {
+							model: providerFallbackModel,
+							providerName: getProviderNameForRequest(config, hasImages),
+						});
+						return await this._handleAgentReply(openId, staff, modelReply, modelConfig, modelResult, imageAttachments, pageContext);
+					}
+				} catch (modelErr) {
+					console.error('AI model fallback failed:', modelErr && modelErr.message ? modelErr.message : modelErr);
+					err = modelErr;
+				}
+			}
 			if (this._shouldRetryWithMinimalBody(err, body)) {
 				try {
 					let minimalBody = this._minimalChatBody(body);
@@ -1436,11 +1496,11 @@ class WorkAiService extends WorkPermissionService {
 
 	_requestBodyForApi(apiUrl, body = {}) {
 		if (isResponsesApiUrl(apiUrl)) return this._responsesBody(body);
-		if (isMimoApi(apiUrl)) return this._mimoCompatibleBody(body);
+		if (isMimoApi(apiUrl)) return this._mimoCompatibleBody(body, apiUrl);
 		return body;
 	}
 
-	_mimoCompatibleBody(body = {}) {
+	_mimoCompatibleBody(body = {}, apiUrl = '') {
 		let messages = Array.isArray(body.messages) ? body.messages : [];
 		let instructionParts = [];
 		let userParts = [];
@@ -1457,7 +1517,7 @@ class WorkAiService extends WorkPermissionService {
 			? instructionParts.join('\n\n') + '\n\n用户消息：' + userText
 			: userText;
 		return {
-			model: body.model,
+			model: normalizeModelForApi(body.model, apiUrl || 'https://api.xiaomimimo.com/v1', 'MiMo'),
 			messages: [{
 				role: 'user',
 				content,
@@ -1514,7 +1574,7 @@ class WorkAiService extends WorkPermissionService {
 	_mimoTextFallbackBody(body = {}) {
 		let userText = this._lastUserText(body.messages) || asText(this._agentUserMessage, 1200);
 		return {
-			model: normalizeModelForApi(body.model, DEFAULT_CONFIG.apiUrl, DEFAULT_CONFIG.providerName),
+			model: normalizeModelForApi(body.model, 'https://api.xiaomimimo.com/v1', 'MiMo'),
 			messages: [{
 				role: 'user',
 				content: '你是云屿摄影小程序里的小猫 AI 助手。请直接回答用户问题，不要编造系统数据。用户消息：' + userText,
@@ -1527,6 +1587,7 @@ class WorkAiService extends WorkPermissionService {
 		let msg = String(err.safeMessage || err.message || '').toLowerCase();
 		return err.statusCode == 400
 			|| err.statusCode == 422
+			|| isUnsupportedModelError(err)
 			|| msg.indexOf('param') >= 0
 			|| msg.indexOf('参数') >= 0
 			|| msg.indexOf('����') >= 0;
