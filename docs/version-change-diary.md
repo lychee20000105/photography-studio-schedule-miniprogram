@@ -1,3 +1,44 @@
+## v2.59 - 2026-07-08
+
+### 改动级别
+
+功能替换，v2.58 -> v2.59，+0.01。
+
+### 修改原因
+
+小程序原有小游戏不符合当前方向，需要删除旧小游戏，改成适合云屿小程序内运行的两类：小猫店长养成和小猫守店塔防。实现必须使用小程序原生页面和视图，不依赖 HTML DOM、外部网页游戏引擎或第三方小游戏平台。
+
+### 关键变更
+
+- `game_helper.js` 重做为小猫小游戏数据层：等级、经验、金币、四项养成状态、每日任务、游戏日志。
+- `work_cat_game` 改为小游戏首页和养成状态面板，只展示养成与塔防两个入口。
+- `work_cat_game_play` 删除旧的快拍、翻牌、2048 分支，改为养成动作页和小猫守店塔防页。
+- 小猫守店塔防包含员工塔选择、塔位放置、敌人波次、生命值、金币、得分和胜负结算。
+- 版本源、设置和更新日志更新到 v2.59，并保持最新记录为中文。
+
+### 涉及文件
+
+- `miniprogram/helper/game_helper.js`
+- `miniprogram/projects/B00/pages/work/cat_game/`
+- `miniprogram/projects/B00/pages/work/cat_game_play/`
+- `miniprogram/version.js`
+- `miniprogram/setting/setting.js`
+- `CHANGELOG.md`
+- `docs/version-change-diary.md`
+- `README.md`
+
+### 验证
+
+- `node --check miniprogram/helper/game_helper.js` 通过。
+- `node --check miniprogram/projects/B00/pages/work/cat_game/work_cat_game.js` 通过。
+- `node --check miniprogram/projects/B00/pages/work/cat_game_play/work_cat_game_play.js` 通过。
+- 小游戏相关页面未再检出旧三款小游戏关键字：快拍、翻牌、2048、打地鼠、记忆翻牌、旧 Canvas 游戏入口。
+
+### 部署状态
+
+- 本次未修改云函数，未触碰订单、档期、权限和生产数据。
+- 尚未上传微信开发版；需要开发者工具编译后再上传。
+
 ## v2.58 - 2026-07-08
 
 ### 改动级别

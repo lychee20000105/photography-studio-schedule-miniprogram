@@ -1,73 +1,96 @@
 /**
- * Notes: 小猫助手游戏数据管理
- * Ver : 1.0.0
- * Date: 2026-06-24
+ * Notes: 小猫小游戏数据管理
+ * Ver : 2.59.0
+ * Date: 2026-07-08
  */
 
 const GAME_STATE_KEY = 'WORK_CAT_GAME_STATE';
 const GAME_PLAY_LOG_KEY = 'WORK_CAT_GAME_PLAY_LOG';
-const GAME_GUIDE_KEY = 'WORK_CAT_GAME_GUIDE';
 const PET_KEY = 'WORK_PET_STATE';
 
+const MAX_LEVEL = 20;
+const MAX_RESOURCE = 9999999;
+
 const PHASES = {
-  intern:   { label: '实习生', levelRange: [1, 5],  desc: '学拍照、整理道具' },
-  junior:   { label: '初级员工', levelRange: [6, 10], desc: '独立接单、修图出片' },
-  senior:   { label: '资深员工', levelRange: [11, 15], desc: '带新人、管排期' },
-  manager:  { label: '工作室主管', levelRange: [16, 20], desc: '统筹全局、策划活动' },
+  intern: { label: '见习店长', levelRange: [1, 5], desc: '学习接待、照顾店铺和整理档期' },
+  junior: { label: '独立店长', levelRange: [6, 10], desc: '能稳定完成接单和客户跟进' },
+  senior: { label: '资深店长', levelRange: [11, 15], desc: '能统筹订单、员工和拍摄节奏' },
+  manager: { label: '云屿主理猫', levelRange: [16, 20], desc: '守住店铺秩序，也守住客户体验' },
 };
 
 const GAME_TYPES = [
-  { id: 'photo',   name: '猫咪快抓', desc: '打地鼠！快速点击冒出来的角色', reward: 'coins', icon: 'camera' },
-  { id: 'retouch', name: '记忆翻牌', desc: '翻牌配对！找出相同的装备', reward: 'materials', icon: 'edit' },
-  { id: 'post',    name: '合成2048', desc: '滑动合成！合并相同摄影装备', reward: 'inspiration', icon: 'star' },
+  {
+    id: 'care',
+    name: '小猫店长养成',
+    desc: '喂食、玩耍、休息、清洁，让小猫保持好状态。',
+    reward: 'exp',
+    icon: 'cat',
+  },
+  {
+    id: 'tower',
+    name: '小猫守店塔防',
+    desc: '布置员工塔，拦住混乱订单和临时改期。',
+    reward: 'coins',
+    icon: 'shield',
+  },
 ];
 
-// 2048 颜色配置
-const TILE_COLORS = {
-  0:    { bg: '#cdc1b4', text: '#776e65' },
-  2:    { bg: '#eee4da', text: '#776e65' },
-  4:    { bg: '#ede0c8', text: '#776e65' },
-  8:    { bg: '#f2b179', text: '#f9f6f2' },
-  16:   { bg: '#f59563', text: '#f9f6f2' },
-  32:   { bg: '#f67c5f', text: '#f9f6f2' },
-  64:   { bg: '#f65e3b', text: '#f9f6f2' },
-  128:  { bg: '#edcf72', text: '#f9f6f2' },
-  256:  { bg: '#edcc61', text: '#f9f6f2' },
-  512:  { bg: '#edc850', text: '#f9f6f2' },
-  1024: { bg: '#edc53f', text: '#f9f6f2' },
-  2048: { bg: '#edc22e', text: '#f9f6f2' },
-};
+function clamp(num, min, max) {
+  num = Number(num);
+  if (Number.isNaN(num)) num = min;
+  return Math.max(min, Math.min(max, num));
+}
+
+function todayKey() {
+  return new Date().toISOString().slice(0, 10);
+}
 
 function defaultState() {
   return {
     phase: 'intern',
     level: 1,
     exp: 0,
-    coins: 100,
-    materials: 0,
-    inspiration: 0,
+    coins: 120,
+    care: {
+      hunger: 72,
+      mood: 70,
+      energy: 68,
+      clean: 76,
+    },
     dailyCheckin: false,
     dailyCheckinDate: '',
+    dailyTaskDate: '',
     dailyTasks: [],
-    furniture: [],
-    decor: [],
-    collection: [],
+    dailyPlayCount: 0,
+    dailyCareCount: 0,
+    dailyTowerWin: 0,
+    dailyBestScore: 0,
     lastActiveTime: Date.now(),
   };
 }
 
+function normalizeState(state) {
+  const base = defaultState();
+  if (!state || typeof state !== 'object') state = {};
+  state = Object.assign({}, base, state);
+  state.care = Object.assign({}, base.care, state.care || {});
+
+  state.level = clamp(state.level, 1, MAX_LEVEL);
+  state.exp = Math.max(0, Number(state.exp) || 0);
+  state.coins = clamp(state.coins, 0, MAX_RESOURCE);
+  state.care.hunger = clamp(state.care.hunger, 0, 100);
+  state.care.mood = clamp(state.care.mood, 0, 100);
+  state.care.energy = clamp(state.care.energy, 0, 100);
+  state.care.clean = clamp(state.care.clean, 0, 100);
+  state.phase = getPhase(state.level);
+  initDailyTasks(state);
+  return state;
+}
+
 function getState() {
   let state = wx.getStorageSync(GAME_STATE_KEY);
-  if (!state || typeof state !== 'object') {
-    state = defaultState();
-    try { wx.setStorageSync(GAME_STATE_KEY, state); } catch (e) {}
-  }
-  // Ensure level is within valid range [1, 20]
-  state.level = Math.max(1, Math.min(20, Number(state.level) || 1));
-  state.coins = Math.max(0, Number(state.coins) || 0);
-  state.materials = Math.max(0, Number(state.materials) || 0);
-  state.inspiration = Math.max(0, Number(state.inspiration) || 0);
-  state.exp = Math.max(0, Number(state.exp) || 0);
+  state = normalizeState(state);
+  try { wx.setStorageSync(GAME_STATE_KEY, state); } catch (e) {}
   return state;
 }
 
@@ -75,17 +98,16 @@ function saveState(state) {
   if (!state) return;
   state.lastActiveTime = Date.now();
   try {
-    wx.setStorageSync(GAME_STATE_KEY, state);
+    wx.setStorageSync(GAME_STATE_KEY, normalizeState(state));
   } catch (e) {
-    // Storage quota exceeded or other error — degrade gracefully
     console.warn('[game_helper] saveState failed:', e);
   }
 }
 
 function getPhase(level) {
   for (const key of ['manager', 'senior', 'junior', 'intern']) {
-    const p = PHASES[key];
-    if (level >= p.levelRange[0] && level <= p.levelRange[1]) return key;
+    const item = PHASES[key];
+    if (level >= item.levelRange[0] && level <= item.levelRange[1]) return key;
   }
   return 'intern';
 }
@@ -95,30 +117,26 @@ function getPhaseInfo(phase) {
 }
 
 function getExpToNextLevel(level) {
-  return level * 40;
+  return level * 45;
 }
 
 function addExp(state, amount) {
   if (!state || amount <= 0) return state;
   state.exp += amount;
-  while (state.level < 20) {
-    const needed = getExpToNextLevel(state.level);
-    if (state.exp < needed) break;
-    state.exp -= needed;
+  while (state.level < MAX_LEVEL) {
+    const need = getExpToNextLevel(state.level);
+    if (state.exp < need) break;
+    state.exp -= need;
     state.level += 1;
   }
-  if (state.level >= 20) {
-    state.exp = 0;
-  }
+  if (state.level >= MAX_LEVEL) state.exp = 0;
   state.phase = getPhase(state.level);
   return state;
 }
 
-const MAX_RESOURCE = 9999999;
-
 function addCoins(state, amount) {
   if (!state || amount <= 0) return state;
-  state.coins = Math.min(MAX_RESOURCE, (state.coins || 0) + amount);
+  state.coins = clamp((state.coins || 0) + amount, 0, MAX_RESOURCE);
   return state;
 }
 
@@ -129,121 +147,135 @@ function spendCoins(state, amount) {
   return true;
 }
 
-function addMaterials(state, amount) {
-  if (!state || amount <= 0) return state;
-  state.materials = Math.min(MAX_RESOURCE, (state.materials || 0) + amount);
-  return state;
+function calcCareScore(state) {
+  const c = state.care || {};
+  return Math.floor(((c.hunger || 0) + (c.mood || 0) + (c.energy || 0) + (c.clean || 0)) / 4);
 }
 
-function addInspiration(state, amount) {
-  if (!state || amount <= 0) return state;
-  state.inspiration = Math.min(MAX_RESOURCE, (state.inspiration || 0) + amount);
-  return state;
+function applyCareAction(state, actionId) {
+  state = normalizeState(state);
+  const c = state.care;
+  const actions = {
+    feed: { name: '喂食', cost: 8, exp: 4, care: { hunger: 18, mood: 3, clean: -3 } },
+    play: { name: '玩耍', cost: 6, exp: 6, care: { mood: 18, energy: -8, hunger: -4 } },
+    rest: { name: '休息', cost: 0, exp: 3, care: { energy: 20, mood: 4, hunger: -5 } },
+    clean: { name: '清洁', cost: 5, exp: 5, care: { clean: 22, mood: 2, energy: -3 } },
+  };
+  const action = actions[actionId];
+  if (!action) return { ok: false, msg: '养成动作不存在' };
+  if (action.cost && !spendCoins(state, action.cost)) return { ok: false, msg: '金币不够啦' };
+
+  Object.keys(action.care).forEach(key => {
+    c[key] = clamp((c[key] || 0) + action.care[key], 0, 100);
+  });
+  addExp(state, action.exp);
+  state.dailyCareCount = (state.dailyCareCount || 0) + 1;
+  saveState(state);
+  syncToPetState(state);
+  addPlayLog('care', calcCareScore(state), { exp: action.exp, coins: -action.cost });
+  return { ok: true, action, state, score: calcCareScore(state) };
 }
 
 function claimDailyCheckin(state) {
-  if (!state) return { ok: false, msg: '数据异常' };
-  const today = new Date().toISOString().slice(0, 10);
+  state = normalizeState(state);
+  const today = todayKey();
   if (state.dailyCheckinDate === today && state.dailyCheckin) {
-    return { ok: false, msg: '今天已经签到啦' };
+    return { ok: false, msg: '今天已经签到过啦' };
   }
   state.dailyCheckin = true;
   state.dailyCheckinDate = today;
-  state.coins = (state.coins || 0) + 20;
+  addCoins(state, 20);
   addExp(state, 5);
+  state.care.mood = clamp(state.care.mood + 6, 0, 100);
   saveState(state);
   return { ok: true, coins: 20, exp: 5 };
 }
 
 function calcOfflineReward(state) {
-  if (!state || !state.lastActiveTime) return null;
-  const now = Date.now();
-  const elapsed = now - state.lastActiveTime;
+  state = normalizeState(state);
+  const elapsed = Date.now() - (state.lastActiveTime || Date.now());
   const hours = elapsed / (1000 * 60 * 60);
   if (hours < 1) return null;
-  const maxHours = Math.min(hours, 24);
-  const coins = Math.floor(maxHours * 3);
-  const materials = Math.floor(maxHours * 1.5);
-  const inspiration = Math.floor(maxHours * 1);
-  const exp = Math.floor(maxHours * 2);
-  return { coins, materials, inspiration, exp, hours: Math.floor(maxHours) };
+  const h = Math.min(Math.floor(hours), 12);
+  return {
+    coins: h * 3,
+    exp: h * 2,
+    hours: h,
+  };
 }
 
-// ===== 每日任务系统 =====
 const DAILY_TASK_DEFS = [
-  { id: 'play1',    desc: '玩一局小游戏',       check: (s) => s.dailyPlayCount >= 1,  reward: { coins: 15, exp: 3 } },
-  { id: 'play3',    desc: '玩3局小游戏',         check: (s) => s.dailyPlayCount >= 3,  reward: { coins: 30, exp: 8 } },
-  { id: 'checkin',  desc: '每日签到',             check: (s) => s.dailyCheckin,         reward: { coins: 10, exp: 2 } },
-  { id: 'score10',  desc: '单局得分超过10',       check: (s) => s.dailyBestScore >= 10, reward: { coins: 20, exp: 5 } },
-  { id: 'combo5',   desc: '达成5连击',            check: (s) => s.dailyBestCombo >= 5,  reward: { coins: 25, exp: 6 } },
+  { id: 'checkin', desc: '完成今日签到', check: s => !!s.dailyCheckin, reward: { coins: 10, exp: 2 } },
+  { id: 'care2', desc: '照顾小猫 2 次', check: s => (s.dailyCareCount || 0) >= 2, reward: { coins: 16, exp: 5 } },
+  { id: 'play1', desc: '玩任意小游戏 1 局', check: s => (s.dailyPlayCount || 0) >= 1, reward: { coins: 20, exp: 6 } },
+  { id: 'tower1', desc: '守店塔防胜利 1 次', check: s => (s.dailyTowerWin || 0) >= 1, reward: { coins: 35, exp: 10 } },
 ];
 
 function initDailyTasks(state) {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayKey();
   if (state.dailyTaskDate !== today) {
     state.dailyTaskDate = today;
-    state.dailyTasks = DAILY_TASK_DEFS.map(t => ({ id: t.id, claimed: false }));
+    state.dailyTasks = DAILY_TASK_DEFS.map(item => ({ id: item.id, claimed: false }));
+    state.dailyCheckin = false;
     state.dailyPlayCount = 0;
+    state.dailyCareCount = 0;
+    state.dailyTowerWin = 0;
     state.dailyBestScore = 0;
-    state.dailyBestCombo = 0;
   }
-  if (!state.dailyTasks || !Array.isArray(state.dailyTasks)) {
-    state.dailyTasks = DAILY_TASK_DEFS.map(t => ({ id: t.id, claimed: false }));
+  if (!Array.isArray(state.dailyTasks)) {
+    state.dailyTasks = DAILY_TASK_DEFS.map(item => ({ id: item.id, claimed: false }));
   }
   return state;
 }
 
 function getDailyTaskStatus(state) {
-  initDailyTasks(state);
+  state = normalizeState(state);
   return DAILY_TASK_DEFS.map(def => {
-    const task = state.dailyTasks.find(t => t.id === def.id) || { claimed: false };
+    const task = state.dailyTasks.find(item => item.id === def.id) || { claimed: false };
     return {
       id: def.id,
       desc: def.desc,
       done: def.check(state),
-      claimed: task.claimed,
+      claimed: !!task.claimed,
       reward: def.reward,
     };
   });
 }
 
 function claimDailyTask(state, taskId) {
-  initDailyTasks(state);
-  const def = DAILY_TASK_DEFS.find(t => t.id === taskId);
+  state = normalizeState(state);
+  const def = DAILY_TASK_DEFS.find(item => item.id === taskId);
   if (!def) return { ok: false, msg: '任务不存在' };
-  const task = state.dailyTasks.find(t => t.id === taskId);
+  const task = state.dailyTasks.find(item => item.id === taskId);
   if (!task) return { ok: false, msg: '任务不存在' };
-  if (task.claimed) return { ok: false, msg: '已领取' };
-  if (!def.check(state)) return { ok: false, msg: '未完成' };
+  if (task.claimed) return { ok: false, msg: '已经领取过啦' };
+  if (!def.check(state)) return { ok: false, msg: '任务还没完成' };
   task.claimed = true;
   if (def.reward.coins) addCoins(state, def.reward.coins);
-  if (def.reward.materials) addMaterials(state, def.reward.materials);
-  if (def.reward.inspiration) addInspiration(state, def.reward.inspiration);
   if (def.reward.exp) addExp(state, def.reward.exp);
   saveState(state);
   return { ok: true, reward: def.reward };
 }
 
-function recordGameResult(state, score, combo) {
-  initDailyTasks(state);
+function recordGameResult(state, gameId, result) {
+  state = normalizeState(state);
   state.dailyPlayCount = (state.dailyPlayCount || 0) + 1;
+  const score = Number(result.score) || 0;
   if (score > (state.dailyBestScore || 0)) state.dailyBestScore = score;
-  if (combo > (state.dailyBestCombo || 0)) state.dailyBestCombo = combo;
+  if (gameId === 'tower' && result.win) state.dailyTowerWin = (state.dailyTowerWin || 0) + 1;
+  if (result.coins) addCoins(state, result.coins);
+  if (result.exp) addExp(state, result.exp);
   saveState(state);
+  syncToPetState(state);
+  addPlayLog(gameId, score, result);
 }
 
 function addPlayLog(gameId, score, reward) {
   try {
     let logs = wx.getStorageSync(GAME_PLAY_LOG_KEY);
     if (!Array.isArray(logs)) logs = [];
-    logs.unshift({
-      gameId,
-      score,
-      reward,
-      time: Date.now(),
-    });
-    if (logs.length > 50) logs = logs.slice(0, 50);
-    wx.setStorageSync(GAME_PLAY_LOG_KEY, logs);
+    logs.unshift({ gameId, score, reward, time: Date.now() });
+    wx.setStorageSync(GAME_PLAY_LOG_KEY, logs.slice(0, 50));
   } catch (e) {
     console.warn('[game_helper] addPlayLog failed:', e);
   }
@@ -269,18 +301,17 @@ function syncFromPetState() {
       state.level = pet.level;
       state.exp = pet.exp || 0;
       state.phase = getPhase(state.level);
+      saveState(state);
     }
-    saveState(state);
   } catch (e) {}
 }
 
 module.exports = {
-  PHASES,
-  GAME_TYPES,
-  TILE_COLORS,
   GAME_STATE_KEY,
   GAME_PLAY_LOG_KEY,
-  GAME_GUIDE_KEY,
+  PET_KEY,
+  PHASES,
+  GAME_TYPES,
   DAILY_TASK_DEFS,
   defaultState,
   getState,
@@ -291,15 +322,15 @@ module.exports = {
   addExp,
   addCoins,
   spendCoins,
-  addMaterials,
-  addInspiration,
+  calcCareScore,
+  applyCareAction,
   claimDailyCheckin,
   calcOfflineReward,
-  addPlayLog,
-  syncToPetState,
-  syncFromPetState,
   initDailyTasks,
   getDailyTaskStatus,
   claimDailyTask,
   recordGameResult,
+  addPlayLog,
+  syncToPetState,
+  syncFromPetState,
 };

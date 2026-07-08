@@ -1,153 +1,80 @@
-<!-- 3-2-1 倒计时 -->
-<view class="countdown-overlay" wx:if="{{countdown > 0}}">
-  <view class="countdown-number {{countdownAnim ? 'zoom' : ''}}">{{countdown}}</view>
-</view>
-
-<!-- 开始界面 -->
-<view class="play-container" wx:if="{{!playing && !result && countdown <= 0}}">
-  <view class="game-header-card">
-    <view class="game-icon-wrap">
-      <text class="game-icon">{{gameId === 'photo' ? '🔨' : gameId === 'retouch' ? '🃏' : '🧩'}}</text>
-    </view>
+<view class="play-page">
+  <view class="intro" wx:if="{{!playing && !result}}">
     <text class="game-title">{{gameInfo.name}}</text>
     <text class="game-desc">{{gameInfo.desc}}</text>
   </view>
 
-  <view class="rules-card">
-    <text class="rules-title">玩法说明</text>
-    <view class="rule-item" wx:if="{{gameId === 'photo'}}">
-      <text class="rule-bullet">-</text>
-      <text class="rule-text">角色从洞里冒出来，快速点击</text>
-    </view>
-    <view class="rule-item" wx:if="{{gameId === 'photo'}}">
-      <text class="rule-bullet">-</text>
-      <text class="rule-text">金色角色额外加分，猫咪扣时间</text>
-    </view>
-    <view class="rule-item" wx:if="{{gameId === 'retouch'}}">
-      <text class="rule-bullet">-</text>
-      <text class="rule-text">翻开卡牌，找出相同装备配对</text>
-    </view>
-    <view class="rule-item" wx:if="{{gameId === 'retouch'}}">
-      <text class="rule-bullet">-</text>
-      <text class="rule-text">用最少步数全部配对即为胜利</text>
-    </view>
-    <view class="rule-item" wx:if="{{gameId === 'post'}}">
-      <text class="rule-bullet">-</text>
-      <text class="rule-text">上下左右滑动，合并相同装备</text>
-    </view>
-    <view class="rule-item" wx:if="{{gameId === 'post'}}">
-      <text class="rule-bullet">-</text>
-      <text class="rule-text">目标：合成出2048大镜头!</text>
-    </view>
-  </view>
-
-  <view class="start-btn" bind:tap="onStartTap">
-    <text class="start-text">开始游戏</text>
-  </view>
-</view>
-
-<!-- 游戏中 -->
-<view class="play-container {{screenShake ? 'shake' : ''}}" wx:if="{{playing}}">
-  <view class="screen-flash {{flashShow ? 'show' : ''}}" wx:if="{{flashShow}}"></view>
-
-  <!-- 顶部信息栏 -->
-  <view class="play-header">
-    <view class="play-timer {{timeLeft <= 30 ? 'danger' : ''}}">
-      <text class="hdr-label">时间</text>
-      <text class="hdr-value">{{timeDisplay}}</text>
-    </view>
-    <view class="play-score">
-      <text class="hdr-label">{{gameId === 'retouch' ? '步数' : '得分'}}</text>
-      <text class="hdr-value">{{gameId === 'retouch' ? attempts : score}}</text>
-    </view>
-    <view class="play-combo" wx:if="{{gameId === 'photo'}}">
-      <text class="hdr-label">连击</text>
-      <text class="hdr-value">{{combo}}</text>
-    </view>
-  </view>
-
-  <!-- 命中反馈浮层 -->
-  <view class="hit-feedback {{hitFeedbackShow ? 'show' : ''}}" wx:if="{{hitFeedbackShow}}">
-    <text class="hit-text">{{hitFeedback}}</text>
-  </view>
-
-  <!-- ===== 猫咪快抓 (打地鼠) ===== -->
-  <block wx:if="{{gameId === 'photo'}}">
-    <canvas type="2d" id="gameCanvas" class="game-canvas" bind:tap="onCanvasTap"></canvas>
-    <text class="play-tip">快速点击冒出来的角色</text>
-  </block>
-
-  <!-- ===== 记忆翻牌 ===== -->
-  <block wx:if="{{gameId === 'retouch'}}">
-    <view class="mem-grid">
-      <view class="mem-card {{item.flipped ? 'flipped' : ''}} {{item.matched ? 'matched' : ''}}"
-        wx:for="{{memCards}}" wx:key="id"
-        data-idx="{{index}}" bind:tap="onMemCardTap">
-        <view class="mem-card-inner">
-          <view class="mem-card-front">
-            <text class="mem-face">{{item.emoji}}</text>
-          </view>
-          <view class="mem-card-back">
-            <text class="mem-back">?</text>
-          </view>
+  <block wx:if="{{gameId === 'care'}}">
+    <view class="care-board" wx:if="{{gameState}}">
+      <view class="care-cat">
+        <view class="cat-head">
+          <view class="cat-ear left"></view>
+          <view class="cat-ear right"></view>
+          <view class="cat-eye"></view>
+          <view class="cat-eye"></view>
+          <view class="cat-mouth"></view>
+        </view>
+      </view>
+      <text class="care-score">当前状态 {{careScore}}</text>
+      <view class="care-grid">
+        <view class="care-stat"><text>饱腹</text><text>{{gameState.care.hunger}}</text></view>
+        <view class="care-stat"><text>心情</text><text>{{gameState.care.mood}}</text></view>
+        <view class="care-stat"><text>体力</text><text>{{gameState.care.energy}}</text></view>
+        <view class="care-stat"><text>清洁</text><text>{{gameState.care.clean}}</text></view>
+      </view>
+      <view class="action-list">
+        <view class="action" wx:for="{{careActions}}" wx:key="id" data-id="{{item.id}}" bind:tap="onCareActionTap">
+          <text class="action-name">{{item.name}}</text>
+          <text class="action-desc">{{item.desc}}</text>
         </view>
       </view>
     </view>
-    <text class="play-tip">剩余时间越多，完成时得分越高</text>
   </block>
 
-  <!-- ===== 合成2048 ===== -->
-  <block wx:if="{{gameId === 'post'}}">
-    <view class="t-wrap"
-      bindtouchstart="on2048TouchStart"
-      bindtouchend="on2048TouchEnd">
-      <view class="t-grid">
-        <view class="t-cell" wx:for="{{tBgCells}}" wx:key="id"></view>
-      </view>
-      <view class="t-tile t-v{{item.value}} {{item.merged ? 'merged' : ''}} {{item.isNew ? 'tile-new' : ''}}"
-        wx:for="{{tTiles}}" wx:key="id"
-        style="transform: translate({{item.x}}rpx, {{item.y}}rpx);">
-        <text class="t-tile-num">{{item.value}}</text>
-      </view>
+  <block wx:if="{{gameId === 'tower'}}">
+    <view class="tower-hud">
+      <view><text>波次</text><text>{{wave}} / 5</text></view>
+      <view><text>生命</text><text>{{lives}}</text></view>
+      <view><text>金币</text><text>{{coins}}</text></view>
+      <view><text>得分</text><text>{{score}}</text></view>
     </view>
-    <view class="t-info">
-      <text class="t-best">最高分: {{tBestScore}}</text>
-    </view>
-  </block>
-</view>
 
-<!-- 结算弹窗 -->
-<view class="result-modal" wx:if="{{result}}">
-  <view class="confetti-wrap">
-    <view class="confetti c1"></view>
-    <view class="confetti c2"></view>
-    <view class="confetti c3"></view>
-    <view class="confetti c4"></view>
-    <view class="confetti c5"></view>
-    <view class="confetti c6"></view>
-  </view>
-  <view class="result-card">
-    <text class="result-emoji">{{result.win ? '🎉' : '💪'}}</text>
-    <text class="result-title">{{result.win ? '恭喜完成!' : '游戏结束'}}</text>
-    <text class="result-score">得分: {{result.score}}</text>
-    <view class="result-rewards">
-      <view class="rw-row" wx:if="{{result.coins > 0}}">
-        <text class="rw-icon">💰</text>
-        <text class="rw-val">+{{result.coins}} 金币</text>
-      </view>
-      <view class="rw-row" wx:if="{{result.materials > 0}}">
-        <text class="rw-icon">✨</text>
-        <text class="rw-val">+{{result.materials}} 素材</text>
-      </view>
-      <view class="rw-row" wx:if="{{result.inspiration > 0}}">
-        <text class="rw-icon">💡</text>
-        <text class="rw-val">+{{result.inspiration}} 灵感</text>
-      </view>
-      <view class="rw-row" wx:if="{{result.exp > 0}}">
-        <text class="rw-icon">⭐</text>
-        <text class="rw-val">+{{result.exp}} 经验</text>
+    <view class="tower-select">
+      <view class="tower-type {{selectedTower === item.id ? 'active' : ''}}" wx:for="{{towerTypes}}" wx:key="id" data-id="{{item.id}}" bind:tap="onSelectTower">
+        <text class="tower-short">{{item.short}}</text>
+        <text class="tower-name">{{item.name}}</text>
+        <text class="tower-cost">{{item.cost}}金币</text>
       </view>
     </view>
-    <view class="result-btn" bind:tap="onResultTap">返回工作室</view>
+
+    <view class="battlefield">
+      <view class="path p1"></view>
+      <view class="path p2"></view>
+      <view class="path p3"></view>
+      <view class="path p4"></view>
+      <view class="base start">入口</view>
+      <view class="base end">店铺</view>
+
+      <view class="slot" wx:for="{{towerSlots}}" wx:key="id" style="left: {{item.x}}%; top: {{item.y}}%;" data-id="{{item.id}}" bind:tap="onSlotTap">+</view>
+      <view class="tower" wx:for="{{towers}}" wx:key="slotId" style="left: {{item.x}}%; top: {{item.y}}%;">
+        <text>{{item.short}}</text>
+      </view>
+      <view class="enemy {{item.id}}" wx:for="{{enemies}}" wx:key="uid" style="left: {{item.x}}%; top: {{item.y}}%;">
+        <text>{{item.short}}</text>
+        <view class="hp"><view class="hp-fill" style="width: {{item.hp * 100 / item.maxHp}}%"></view></view>
+      </view>
+    </view>
+
+    <text class="log">{{logText}}</text>
+    <view class="start-btn" wx:if="{{!playing}}" bind:tap="onStartTower">开始守店</view>
+  </block>
+
+  <view class="result-modal" wx:if="{{result}}">
+    <view class="result-card">
+      <text class="result-title">{{result.win ? '守店成功' : '本轮结束'}}</text>
+      <text class="result-line">得分 {{result.score}}</text>
+      <text class="result-line">奖励 +{{result.coins}}金币 +{{result.exp}}经验</text>
+      <view class="result-btn" bind:tap="onResultBack">返回小游戏</view>
+    </view>
   </view>
 </view>
